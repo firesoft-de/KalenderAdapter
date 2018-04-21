@@ -1,0 +1,15 @@
+<resources>
+    <string name="app_name">KalenderAdapter</string>
+
+    <string name="card_settings">Einstellungen</string>
+    <string name="card_settings_user">Nutzername</string>
+    <string name="card_settings_password">Passwort</string>
+    <string name="card_settings_url">URL</string>
+
+    <string name="card_calendar">Kalenderauswahl</string>
+    <string name="card_calendar_description">Verfügbare Kalender</string>
+    <string name="bt_start_download">Download starten und Einträge hinzufügen</string>
+    <string name="bt_deleteAll">Alle hinzugefügten Einträge löschen</string>
+
+
+</resources>
