@@ -13,7 +13,6 @@
 
 package firesoft.de.kalenderadapter.interfaces;
 
-import android.support.annotation.Nullable;
 
 public interface IErrorCallback {
 

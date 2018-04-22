@@ -89,14 +89,9 @@ public class PreferencesManager {
         preferences = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
 
         // Aktuelle Versionsnummer abrufen
-        PackageInfo packageInfo = null;
+        PackageInfo packageInfo;
 
-        try {
-            packageInfo = context.getPackageManager().getPackageInfo(context.getPackageName(),0);
-        } catch (PackageManager.NameNotFoundException e) {
-            // Fehler im Paketmanager, die verwendete Version kann nicht identifiziert werden.
-            throw e;
-        }
+        packageInfo = context.getPackageManager().getPackageInfo(context.getPackageName(),0);
 
         switch (packageInfo.versionCode) {
 

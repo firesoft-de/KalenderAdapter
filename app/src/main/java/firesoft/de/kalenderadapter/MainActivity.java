@@ -137,6 +137,16 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
             displayMessage("Fehler beim Laden der Einstellungen! " + e.getMessage(), Snackbar.LENGTH_LONG);
         }
 
+        // Gespeicherte Zugangsdaten, falls vorhanden, einfügen
+        if (!pManager.getUrl().equals("")) {
+            EditText etURL = this.findViewById(R.id.eT_url);
+            etURL.setText(pManager.getUrl());
+        }
+
+        if (!pManager.getUser().equals("")) {
+            EditText etUser = this.findViewById(R.id.eT_user);
+            etUser.setText(pManager.getUser());
+        }
 
     }
 
@@ -221,6 +231,10 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
         displayMessage(message,Snackbar.LENGTH_LONG);
     }
 
+    /**
+     * Zeigt dem Nutzer eine Nachricht an
+     * @param message Nachricht
+     */
     @SuppressLint("SetTextI18n")
     @Override
     public void publishProgress(String message) {
@@ -229,6 +243,10 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
     }
 
 
+    /**
+     * Prüft, ob die benötigten Berechtigungen zum Zugriff auf den Kalender vorliegen
+     * @param requestCode Ein Anwenderdefinierter Marker
+     */
     public void checkPermission(int requestCode) {
         if (ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.WRITE_CALENDAR) != PackageManager.PERMISSION_GRANTED ||
                 ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.READ_CALENDAR) != PackageManager.PERMISSION_GRANTED  ) {
@@ -249,6 +267,9 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
                 .show();
     }
 
+    /**
+     * Startet den AsyncTaskLoader (Hintergrundthread) für den Datendownload
+     */
     private void startLoader() {
 
         EditText user = this.findViewById(R.id.eT_user);
@@ -261,6 +282,7 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
             return;
         }
 
+        // Die einzelnen Parameter hinzufügen und im Preferences Manager speichern
         ArrayList<ServerParameter> parameters = new ArrayList<>();
         ServerParameter param = new ServerParameter("url", url.getText().toString());
         parameters.add(param);
@@ -271,6 +293,10 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
         param = new ServerParameter("pw", password.getText().toString());
         parameters.add(param);
 
+        // Eingabe speichern
+        savePrefs();
+
+        // AsyncTask mit den Parametern starten
         taskManager = new AsyncTaskManager(getSupportLoaderManager(), getApplicationContext(),this,cManager, pManager, messageFromBackground);
         taskManager.startDownload(this,parameters);
 

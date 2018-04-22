@@ -23,7 +23,6 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 import firesoft.de.kalenderadapter.data.DigestContainer;
-import firesoft.de.kalenderadapter.utility.NetworkTool;
 
 import static org.hamcrest.CoreMatchers.is;
 
@@ -68,8 +67,8 @@ public class DigestAuthTest {
 
 
         // String A1 (RFC2617 3.2.2.2) erstellen und hashen. Dieser enthält Nutzername, Realm und Passwort
-        String rawA1 = null;
-        String hashedA1 = null;
+        String rawA1;
+        String hashedA1;
 
         rawA1 = user + ":" + container.getRealm() + ":" + password;
         digest.update(rawA1.getBytes("ISO-8859-1"));
@@ -110,22 +109,20 @@ public class DigestAuthTest {
 
 
         // Die Authentifzierungsbestandteile zusammenführen und an die Connection anhängen
-        StringBuilder builder = new StringBuilder(128);
-
-        builder.append("Digest ");
-        builder.append("username").append("=\"").append(user).append("\", ");
-        builder.append("realm").append("=\"").append(container.getRealm()).append("\", ");
-        builder.append("nonce").append("=\"").append(container.getNonce()).append("\", ");
-        builder.append("uri").append("=\"").append("/").append("\", ");
-        builder.append("algorithm").append("=\"").append(container.getAlgorithm()).append("\", ");
-        builder.append("response").append("=\"").append(hashedResponse).append("\", ");
-        builder.append("qop").append("=").append(container.getQop()).append(", ");
-        builder.append("nc").append("=").append("00000001").append(", ");
-        builder.append("cnonce").append("=\"").append("fkjwSDtW").append("\"");
+        String builder = "Digest " +
+                "username" + "=\"" + user + "\", " +
+                "realm" + "=\"" + container.getRealm() + "\", " +
+                "nonce" + "=\"" + container.getNonce() + "\", " +
+                "uri" + "=\"" + "/" + "\", " +
+                "algorithm" + "=\"" + container.getAlgorithm() + "\", " +
+                "response" + "=\"" + hashedResponse + "\", " +
+                "qop" + "=" + container.getQop() + ", " +
+                "nc" + "=" + "00000001" + ", " +
+                "cnonce" + "=\"" + "fkjwSDtW" + "\"";
 
         String correct = "Digest username=\"DavidS\", realm=\"THW-Dienstplaner Login\", nonce=\"i3hKaeRpBQA=bc8f16ca586395187b0cc820afce188b9a6b2eeb\", uri=\"/\", algorithm=\"MD5\", qop=auth, nc=00000001, cnonce=\"fkjwSDtW\", response=\"54195f47877016f3268be902bcecc48c\"\n";
 
-        Assert.assertThat(builder.toString(), is(correct));
+        Assert.assertThat(builder, is(correct));
     }
 
 

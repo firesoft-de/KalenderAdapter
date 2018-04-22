@@ -36,6 +36,8 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.AbstractMap;
 import java.util.ArrayList;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.net.ssl.HttpsURLConnection;
 
@@ -51,7 +53,7 @@ public class NetworkTool {
     //=====================KONSTANTEN========================
     //=======================================================
 
-    private static int CONNECTION_TIMEOUT = 20 * 1000; // Millisekunden
+    private static int CONNECTION_TIMEOUT = 10 * 1000; // Millisekunden
 
     public enum REQUEST_METHOD {
         POST,
@@ -66,7 +68,7 @@ public class NetworkTool {
      * Führt eine Abfrage mittels HTTP oder HTTPS durch. Standardmäßig wird eine HTTPS Verbindung aufgebaut und HTTP nur als Rückfallebene verwendet.
      * @param context Context in dem die Anwendung läuft
      * @param url Adresse des Servers
-     * @param parameters List mit Parameter die via POST geschickt werden sollen
+     * @param parameters List mit Parameter die via POST geschickt werden sollen (In der aktuellen App werden hierüber Passwort und Nutzername in die Methode geschleust.
      * @param forceHTTP Erzwingt die Verwendung von HTTP
      * @return Inhalt der HTTP(S)-Antwort als String
      */
@@ -79,7 +81,7 @@ public class NetworkTool {
 
         InputStream stream = null;
 
-        // Passwort und Nutzernamen ermitteln
+        // Passwort und Nutzernamen ermitteln und im Anschluss diese aus den Parametern streichen
         String user = null;
         String password = null;
 
@@ -119,7 +121,6 @@ public class NetworkTool {
             parameters.remove(removeIndex[0]);
         }
 
-        //TODO: Nutzernamen und Zugangsdaten einpflegen
 
         // Prüfen ob HTTP erzwungen wird. Falls dies nicht der Fall ist, eine HTTPS Abfrage starten. Ansonsten eine HTTP Anfrage starten
         if (!forceHTTP) {
@@ -227,18 +228,17 @@ public class NetworkTool {
         // Antwortcode prüfen
         int response = connection.getResponseCode();
 
-        if (response == HttpURLConnection.HTTP_OK) {
-            // Verbindung hergestellt, jetzt Daten abrufen
-            return connection.getInputStream();
-        }
-        else if(response == HttpsURLConnection.HTTP_UNAUTHORIZED) {
-            // Authorisierung per Digest erforderlich -> Digest anhängen und neue Anfrage starten
-            String auth = appendDigestAuth(connection,user, password);
+        switch (response) {
+            case HttpURLConnection.HTTP_OK:
+                // Verbindung hergestellt, jetzt Daten abrufen
+                return connection.getInputStream();
+            case HttpsURLConnection.HTTP_UNAUTHORIZED:
+                // Authorisierung per Digest erforderlich -> Digest anhängen und neue Anfrage starten
+                String auth = appendDigestAuth(connection, user, password);
 
-            return httpsRequest(url,parameters, REQUEST_METHOD.GET,user,password,auth);
-        }
-        else {
-            throw new IOException("Fehler bei der HTTP Anfrage! Fehlercode:" + String.valueOf(response));
+                return httpsRequest(url, parameters, REQUEST_METHOD.GET, user, password, auth);
+            default:
+                throw new IOException("Fehler bei der HTTP Anfrage! Fehlercode:" + String.valueOf(response));
         }
     }
 
@@ -290,18 +290,17 @@ public class NetworkTool {
         // Antwortcode prüfen
         int response = connection.getResponseCode();
 
-        if (response == HttpsURLConnection.HTTP_OK) {
-            // Verbindung hergestellt, jetzt Daten abrufen
-            return connection.getInputStream();
-        }
-        else if(response == HttpsURLConnection.HTTP_UNAUTHORIZED) {
-            // Authorisierung per Digest erforderlich -> Digest anhängen und neue Anfrage starten
-            String auth = appendDigestAuth(connection,user, password);
+        switch (response) {
+            case HttpsURLConnection.HTTP_OK:
+                // Verbindung hergestellt, jetzt Daten abrufen
+                return connection.getInputStream();
+            case HttpsURLConnection.HTTP_UNAUTHORIZED:
+                // Authorisierung per Digest erforderlich -> Digest anhängen und neue Anfrage starten
+                String auth = appendDigestAuth(connection, user, password);
 
-            return httpsRequest(url,parameters, REQUEST_METHOD.GET,user,password,auth);
-        }
-        else {
-            throw new IOException("Fehler bei der HTTP Anfrage! Fehlercode:" + String.valueOf(response));
+                return httpsRequest(url, parameters, REQUEST_METHOD.GET, user, password, auth);
+            default:
+                throw new IOException("Fehler bei der HTTP Anfrage! Fehlercode:" + String.valueOf(response));
         }
     }
 
@@ -387,6 +386,14 @@ public class NetworkTool {
      */
     private static URL generateURL(String url, boolean targetHTTP) throws MalformedURLException {
         URL _url;
+
+        // Infrastruktur für Regex erstellen
+        Pattern word = Pattern.compile("(http)[s]?[:]?(//)");
+
+        // Prüfe, ob http oder https vorangestellt wurde
+        if (!word.matcher(url).find()) {
+            url = "https://" + url;
+        }
 
         // Protkollprüfung
         if (url.contains("https://")) {
@@ -489,20 +496,18 @@ public class NetworkTool {
 
 
         // Die Authentifzierungsbestandteile zusammenführen und an die Connection anhängen
-        StringBuilder builder = new StringBuilder(128);
+        String builder = "Digest " +
+                "username" + "=\"" + user + "\", " +
+                "realm" + "=\"" + container.getRealm() + "\", " +
+                "nonce" + "=\"" + container.getNonce() + "\", " +
+                "uri" + "=\"" + "/ical/" + "\", " +
+                "algorithm" + "=\"" + container.getAlgorithm() + "\", " +
+                "response" + "=\"" + hashedResponse + "\", " +
+                "qop" + "=" + container.getQop() + ", " +
+                "nc" + "=" + "00000001" + ", " +
+                "cnonce" + "=\"" + container.getCnonce() + "\"";
 
-        builder.append("Digest ");
-        builder.append("username").append("=\"").append(user).append("\", ");
-        builder.append("realm").append("=\"").append(container.getRealm()).append("\", ");
-        builder.append("nonce").append("=\"").append(container.getNonce()).append("\", ");
-        builder.append("uri").append("=\"").append("/ical/").append("\", ");
-        builder.append("algorithm").append("=\"").append(container.getAlgorithm()).append("\", ");
-        builder.append("response").append("=\"").append(hashedResponse).append("\", ");
-        builder.append("qop").append("=").append(container.getQop()).append(", ");
-        builder.append("nc").append("=").append("00000001").append(", ");
-        builder.append("cnonce").append("=\"").append(container.getCnonce()).append("\"");
-
-        return builder.toString();
+        return builder;
 
     }
 
@@ -516,6 +521,30 @@ public class NetworkTool {
             sb.append(HEX_LOOKUP.charAt((aByte & 0x0F)));
         }
         return sb.toString();
+    }
+
+    /**
+     * Diese Methode bearbeitet die eingebene URL so, dass sie konform mit den nachfolgenden Arbeitschritte ist.
+     */
+    private static String checkURL(String url) {
+
+        // Infrastruktur für Regex erstellen
+        Pattern word = Pattern.compile("(http)[s]?[:]?(//)");
+
+        // Prüfe, ob http oder https vorangestellt wurde
+        if (!word.matcher(url).find()) {
+            url = "https://" + url;
+            return url;
+        }
+
+        // Prüfen, ob am Anfang des String http:// steht und das ggf. korrigieren
+        word = Pattern.compile("^(http)[^s](//)");
+
+        if (word.matcher(url).find()) {
+            url = url.replace("http","https");
+        }
+
+        return url;
     }
 
 }

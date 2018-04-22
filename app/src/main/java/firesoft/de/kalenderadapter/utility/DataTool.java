@@ -194,9 +194,10 @@ public class DataTool extends AsyncTaskLoader<ResultWrapper> {
     /**
      * Fügt einen neuen Eintrag in den Kalender ein
      * @param entry Ein Abschnitt eines ICS Strings
+     * @param checkIfExists Gibt an, ob vor dem Hinzufügen des Eintrags geprüft werden soll, ob der Eintrag bereits existiert
      * @return -1, falls der Eintrag nicht hinzugefügt wurde, -2 falls der Eintrag schon vorhanden ist, -3 falls keine Vergleichsdaten vorliegen
      */
-    private int addCalenderEntry(CustomCalendarEntry entry, boolean dontCheck) {
+    private int addCalenderEntry(CustomCalendarEntry entry, boolean checkIfExists) {
 
         ContentResolver cr = getContext().getContentResolver();
 
@@ -218,7 +219,8 @@ public class DataTool extends AsyncTaskLoader<ResultWrapper> {
             return -1;
         }
 
-        if (dontCheck) {
+        // Wenn nicht überprüft werden soll, die Einträge hier direkt hinzufügen
+        if (!checkIfExists) {
             long eventID = -1;
             if (uri != null) {
                 eventID = Long.parseLong(uri.getLastPathSegment());

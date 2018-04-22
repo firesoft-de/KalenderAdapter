@@ -22,14 +22,12 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.provider.CalendarContract;
 import android.provider.CalendarContract.*;
-import android.util.EventLog;
 
 import java.util.ArrayList;
 
 import firesoft.de.kalenderadapter.data.CustomCalendar;
 import firesoft.de.kalenderadapter.data.CustomCalendarEntry;
 import firesoft.de.kalenderadapter.interfaces.IErrorCallback;
-import firesoft.de.kalenderadapter.utility.DataTool;
 
 public class CalendarManager {
 
@@ -107,12 +105,14 @@ public class CalendarManager {
             Events.DESCRIPTION,                 // 1
             Events.DTSTART,                     // 2
             Events.DTEND,                       // 3
+            Events.TITLE,                 // 1
     };
     // The indices for the projection array above.
     private static final int EVENT_ID_INDEX = 0;
     private static final int EVENT_DESCRIPTION = 1;
     private static final int EVENT_DTSTART = 2;
     private static final int EVENT_DTEND = 3;
+    private static final int EVENT_TITLE = 4;
 
     //=======================================================
     //==================PRIVATE METHODEN=====================
@@ -154,7 +154,7 @@ public class CalendarManager {
                 ) {
 
             // Cursor für den Datenabruf erstellen. Es wird anhand der ID (welche in dem Array mitgeliefert wird) nach einem Event gesucht
-            Cursor cur = cr.query(CalendarContract.Events.CONTENT_URI, CALENDAR_PROJECTION, Events._ID + " = ?",  new String[]{Integer.toString(id)},
+            Cursor cur = cr.query(CalendarContract.Events.CONTENT_URI, EVENT_PROJECTION, Events._ID + " = ?",  new String[]{Integer.toString(id)},
                     null);
 
             if (cur != null && cur.moveToFirst()) {
@@ -163,8 +163,13 @@ public class CalendarManager {
                 CustomCalendarEntry entry = new CustomCalendarEntry();
                 entry.setCalendarID(cur.getInt(EVENT_ID_INDEX));
                 entry.setDescription(cur.getString(EVENT_DESCRIPTION));
-                entry.setStartMillis(cur.getInt(EVENT_DTSTART));
-                entry.setEndMillis(cur.getInt(EVENT_DTEND));
+
+                String tmpString = cur.getString(EVENT_DTSTART);
+                long tmpInt = Long.valueOf(tmpString);
+
+                entry.setStartMillis(tmpInt);
+                entry.setEndMillis(Long.valueOf(cur.getString(EVENT_DTEND)));
+                entry.setTitle(cur.getString(EVENT_TITLE));
 
                 cur.close();
 
@@ -331,7 +336,10 @@ public class CalendarManager {
     }
 
     public void setEntryIds(ArrayList<Integer> entryIds) {
-        this.entryIds = entryIds;
+        // Alle Einträge hinzufügen (ohne Duplikate)
+
+        this.entryIds.removeAll(entryIds);
+        this.entryIds.addAll(entryIds);
     }
 
     public void setEntryIdsFromString(String ids) {
@@ -341,7 +349,10 @@ public class CalendarManager {
         entryIds = new ArrayList<>();
 
         for (int i = 0; i < list.length - 1; i++) {
-            entryIds.add(Integer.valueOf(list[i]));
+            int id = Integer.valueOf(list[i]);
+            if (!entryIds.contains(id)) {
+                entryIds.add(id);
+            }
         }
 
     }

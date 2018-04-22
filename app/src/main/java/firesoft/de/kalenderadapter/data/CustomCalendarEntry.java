@@ -20,7 +20,7 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
-import java.util.Map;
+import java.util.TimeZone;
 
 public class CustomCalendarEntry {
 
@@ -102,7 +102,13 @@ public class CustomCalendarEntry {
      * @return true wenn die überprüften Felder zeichengenau! übereinstimmen, false wenn dies nicht der Fall ist
      */
     public boolean equals(CustomCalendarEntry candidate) {
-        return (this.title.equals(candidate.title) && this.description.equals(candidate.description) && this.startMillis == candidate.startMillis && this.endMillis == candidate.endMillis);
+
+        boolean checkresult_1 = this.title.equals(candidate.title);
+        boolean checkresult_2 = this.description.equals(candidate.description);
+        boolean checkresult_3 = (this.startMillis == candidate.startMillis);
+        boolean checkresult_4 = (this.endMillis == candidate.endMillis);
+
+        return (checkresult_1 && checkresult_2 && checkresult_3 && checkresult_4);
     }
 
     //=======================================================

@@ -81,7 +81,7 @@ public class ServerParameter implements AbstractMap.Entry {
             this.value = String.valueOf(input);
         }
         else if (value instanceof Integer) {
-            this.value = (Integer) input;
+            this.value = input;
         }
 
         return null;

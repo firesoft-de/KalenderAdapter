@@ -47,7 +47,7 @@ public class AsyncTaskManager implements LoaderManager.LoaderCallbacks {
     private ArrayList<ServerParameter> params;
     private CalendarManager calendarManager;
     private PreferencesManager pManager;
-    MutableLiveData<String> progress;
+    private MutableLiveData<String> progress;
 
     private static final int MAIN_LOADER = 1;
 
