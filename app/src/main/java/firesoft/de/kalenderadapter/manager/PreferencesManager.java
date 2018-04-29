@@ -59,6 +59,16 @@ public class PreferencesManager {
      */
     private String entryIds;
 
+    /**
+     * Enthält das Kennwort für den Datenabruf
+     */
+    private String password;
+
+    /**
+     * Enthält die ID des aktuell vom Nutzer ausgewählten Kalender
+     */
+    private int activeCalendarId;
+
     //=======================================================
     //=====================KONSTANTEN========================
     //=======================================================
@@ -68,6 +78,8 @@ public class PreferencesManager {
     private static final String LOG = "log";
     private static final String USER = "user";
     private static final String ENTRYIDS = "entryids";
+    private static final String PASSWORD = "zulu";
+    private static final String ACTIVE_CALENDAR = "active_calendar";
 
     //=======================================================
     //===================PUBLIC METHODEN=====================
@@ -107,6 +119,11 @@ public class PreferencesManager {
 //
 //                break;
 
+            case 3:
+                // Version 0.1
+                loadv1();
+                break;
+
             case 2:
                 // Version 0.1
                 loadv1();
@@ -123,7 +140,9 @@ public class PreferencesManager {
         editor.putString(URL,url);
         editor.putString(USER,user);
         editor.putString(ENTRYIDS,entryIds);
+        editor.putString(PASSWORD,password);
         editor.putBoolean(LOG,logEnabled);
+        editor.putInt(ACTIVE_CALENDAR, activeCalendarId);
 
         editor.apply();
     }
@@ -143,6 +162,10 @@ public class PreferencesManager {
      */
     public void reset() {
         url = "";
+        user = "";
+        password = "";
+        activeCalendarId = 0;
+        entryIds = "";
         logEnabled = false;
     }
 
@@ -158,6 +181,8 @@ public class PreferencesManager {
         logEnabled = preferences.getBoolean(LOG,false);
         user = preferences.getString(USER,"");
         entryIds = preferences.getString(ENTRYIDS,"");
+        password = preferences.getString(PASSWORD,"");
+        activeCalendarId = preferences.getInt(ACTIVE_CALENDAR,0);
     }
 
     //=======================================================
@@ -203,5 +228,20 @@ public class PreferencesManager {
         this.entryIds = ids;
     }
 
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public int getActiveCalendarId() {
+        return activeCalendarId;
+    }
+
+    public void setActiveCalendarId(int activeCalendarId) {
+        this.activeCalendarId = activeCalendarId;
+    }
 }
 

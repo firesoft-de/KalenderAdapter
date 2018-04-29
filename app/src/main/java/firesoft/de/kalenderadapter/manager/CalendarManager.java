@@ -121,13 +121,29 @@ public class CalendarManager {
     /**
      * Findet einen Kalender anhand des Kalendernamens
      * @param name Der Name des gesuchten Kalenders
-     * @return Der gefundene Kalender
+     * @return Der gefundene Kalender oder null, falls kein passender Kalender gefunden wurde
      */
     private CustomCalendar findCalendarByName(String name) {
 
         for (CustomCalendar cal: cals
              ) {
             if (cal.getDisplayName().equals(name)) {
+                return cal;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Findet einen Kalender anhand der ID
+     * @param id Id welche gesucht wird
+     * @return Der gefundene Kalender oder null, falls kein passender Kalender gefunden wurde
+     */
+    private CustomCalendar findCalenderById(int id) {
+
+        for (CustomCalendar cal: cals
+                ) {
+            if (cal.getId() == id) {
                 return cal;
             }
         }
@@ -186,11 +202,17 @@ public class CalendarManager {
     //=======================================================
 
     /**
-     *
-     * @param name Kalendername der zum setzten des aktiven Kalenders verwendet werden soll.
+     * Setzt anhand des Kalendernames den aktiven Kalender
      */
     public void setActiveCalendar(String name) {
         activeCalendar = findCalendarByName(name);
+    }
+
+    /**
+     * Setzt anhand einer ID den aktiven Kalender
+     */
+    public void setActiveCalendar(int id) {
+        activeCalendar = findCalenderById(id);
     }
 
     /**
@@ -210,7 +232,7 @@ public class CalendarManager {
             cur = cr.query(uri, CALENDAR_PROJECTION, null, null, null);
         } catch (SecurityException e) {
             e.printStackTrace();
-            errorCallback.publishError("Eine Sicherheitsaußnahme ist aufgertreten! (CalendarManager.getCalendars");
+            //errorCallback.publishError("Eine Sicherheitsaußnahme ist aufgetreten! (CalendarManager.getCalendars");
             return null;
         }
 

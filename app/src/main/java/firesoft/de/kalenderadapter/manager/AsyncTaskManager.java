@@ -35,7 +35,7 @@ import firesoft.de.kalenderadapter.data.ServerParameter;
 import firesoft.de.kalenderadapter.interfaces.IErrorCallback;
 import firesoft.de.kalenderadapter.utility.DataTool;
 
-public class AsyncTaskManager implements LoaderManager.LoaderCallbacks {
+public class AsyncTaskManager implements LoaderManager.LoaderCallbacks<ResultWrapper> {
 
     //=======================================================
     //=====================VARIABLEN=========================
@@ -86,7 +86,7 @@ public class AsyncTaskManager implements LoaderManager.LoaderCallbacks {
 
     @NonNull
     @Override
-    public Loader onCreateLoader(int id, @Nullable Bundle args) {
+    public Loader<ResultWrapper> onCreateLoader(int id, @Nullable Bundle args) {
 
         if (id == MAIN_LOADER) {
             return new DataTool(params,errorCallback,context, calendarManager, progress);
@@ -97,17 +97,15 @@ public class AsyncTaskManager implements LoaderManager.LoaderCallbacks {
     }
 
     @Override
-    public void onLoadFinished(@NonNull Loader loader, Object data) {
+    public void onLoadFinished(@NonNull Loader<ResultWrapper> loader, ResultWrapper data) {
 
-        ResultWrapper result = (ResultWrapper) data;
-
-        if (result.getException() != null) {
-            errorCallback.publishError(result.getException().getMessage());
-            result.getException().printStackTrace();
+        if (data.getException() != null) {
+            errorCallback.publishError(data.getException().getMessage());
+            data.getException().printStackTrace();
         }
         else {
 
-            calendarManager.setEntryIds(result.getIds());
+            calendarManager.setEntryIds(data.getIds());
             pManager.setEntryIds(calendarManager.getEntryIdsAsString());
             pManager.save();
 

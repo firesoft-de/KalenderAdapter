@@ -146,6 +146,9 @@ public class DataTool extends AsyncTaskLoader<ResultWrapper> {
                     case -3:
                         // Es existieren noch gar keine Einträge -> Es muss nicht weiter geprüft werden
                         equalityCheckNeeded = false;
+
+                        // Ersten Eintrag nochmal hinzufügen, da er bei der Antwort -3 nicht bearbeitet wurde
+                        eventIds.add(addCalenderEntry(entry, false));
                         break;
 
                     default:
@@ -170,7 +173,7 @@ public class DataTool extends AsyncTaskLoader<ResultWrapper> {
 
     @Override
     protected void onStartLoading() {
-        forceLoad();
+        //forceLoad();
     }
 
 
@@ -210,6 +213,23 @@ public class DataTool extends AsyncTaskLoader<ResultWrapper> {
         values.put(CalendarContract.Events.CALENDAR_ID, entry.getCalendarID());
         values.put(CalendarContract.Events.EVENT_TIMEZONE, entry.getTimezone());
 
+        // Prüfen, ob der Eintrag bereits hinzugefügt wurde
+        if (checkIfExists) { // Wenn auf vorhandensein geprüft werden soll. Ansonsten wird übersprungen
+            switch (cManager.checkEntryExists(entry)) {
+
+                case EQUAL:
+                    return -2;
+
+                case UNKNOWN:
+                    // Der Eintrag ist unbekannt. Also wird hier nichts getan und die Switch Anweisung übersprungen
+                    break;
+
+                case NO_REFERENCE_VALUE:
+                    return -3;
+            }
+        }
+
+        // Eintrag in den Kalender einfügen
         Uri uri;
         try {
             uri = cr.insert(CalendarContract.Events.CONTENT_URI, values);
@@ -219,34 +239,11 @@ public class DataTool extends AsyncTaskLoader<ResultWrapper> {
             return -1;
         }
 
-        // Wenn nicht überprüft werden soll, die Einträge hier direkt hinzufügen
-        if (!checkIfExists) {
-            long eventID = -1;
-            if (uri != null) {
-                eventID = Long.parseLong(uri.getLastPathSegment());
-            }
-            return (int) eventID;
+        long eventID = -1;
+        if (uri != null) {
+            eventID = Long.parseLong(uri.getLastPathSegment());
         }
-
-        // Prüfen, ob der Eintrag bereits hinzugefügt wurde
-        switch (cManager.checkEntryExists(entry)) {
-
-            case EQUAL:
-                return -2;
-
-            case UNKNOWN:
-                // Eintrag ist neu -> hinzufügen
-                long eventID = -1;
-                if (uri != null) {
-                    eventID = Long.parseLong(uri.getLastPathSegment());
-                }
-                return (int) eventID;
-
-            case NO_REFERENCE_VALUE:
-                return -3;
-        }
-
-        return -1;
+        return (int) eventID;
 
     }
 }

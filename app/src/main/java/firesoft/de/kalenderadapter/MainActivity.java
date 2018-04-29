@@ -14,9 +14,9 @@
 package firesoft.de.kalenderadapter;
 
 import android.Manifest;
-import android.annotation.SuppressLint;
 import android.arch.lifecycle.MutableLiveData;
 import android.arch.lifecycle.Observer;
+import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
@@ -42,6 +42,8 @@ import firesoft.de.kalenderadapter.data.ServerParameter;
 import firesoft.de.kalenderadapter.interfaces.IErrorCallback;
 import firesoft.de.kalenderadapter.manager.AsyncTaskManager;
 import firesoft.de.kalenderadapter.manager.CalendarManager;
+import firesoft.de.kalenderadapter.service.BackgroundService;
+import firesoft.de.kalenderadapter.service.ServiceUtil;
 
 public class MainActivity extends AppCompatActivity implements IErrorCallback {
 
@@ -75,12 +77,17 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
         card = this.findViewById(R.id.card_settings);
         card.setBackground(drawable);
 
+        drawable = getResources().getDrawable(android.R.drawable.dialog_holo_light_frame);
+
+        card = this.findViewById(R.id.card_about);
+        card.setBackground(drawable);
+
         // UI Feedbacks für den Spinner erstellen
         Spinner spinner = this.findViewById(R.id.spinner_calendar);
         spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-                spinnerSelectionChanged(adapterView, view, i, l);
+                spinnerSelectionChanged(adapterView, i);
             }
 
             @Override
@@ -89,8 +96,24 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
             }
         });
 
+        // Preferences Manager erstellen
+        pManager = new PreferencesManager(getApplicationContext());
+
         // Einen CalenderManager erstellen
         cManager = new CalendarManager(getApplicationContext(),this);
+
+
+        // Daten des PreferencesManager und des CalendarManager laden
+        try {
+            pManager.load();
+
+            // Entry-IDS laden
+            cManager.setEntryIdsFromString(pManager.getEntryIds());
+
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+            displayMessage("Fehler beim Laden der Einstellungen! " + e.getMessage(), Snackbar.LENGTH_LONG);
+        }
 
         // Die verf. Kalender in den Spinner schreiben
         populateSpinner();
@@ -123,29 +146,17 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
             }
         });
 
-        // Preferences Manager erstellen
-        pManager = new PreferencesManager(getApplicationContext());
+        fillFromPreferences();
 
-        try {
-            pManager.load();
+        setVersion();
 
-            // Entry-IDS laden
-            cManager.setEntryIdsFromString(pManager.getEntryIds());
-
-        } catch (PackageManager.NameNotFoundException e) {
-            e.printStackTrace();
-            displayMessage("Fehler beim Laden der Einstellungen! " + e.getMessage(), Snackbar.LENGTH_LONG);
+        // Prüfen, ob der Hintergrundservice läuft oder nicht
+        if (ServiceUtil.checkServiceIsRunning(this, BackgroundService.class)) {
+            // Service läuft
         }
-
-        // Gespeicherte Zugangsdaten, falls vorhanden, einfügen
-        if (!pManager.getUrl().equals("")) {
-            EditText etURL = this.findViewById(R.id.eT_url);
-            etURL.setText(pManager.getUrl());
-        }
-
-        if (!pManager.getUser().equals("")) {
-            EditText etUser = this.findViewById(R.id.eT_user);
-            etUser.setText(pManager.getUser());
+        else {
+            // Service läuft nicht -> starten
+            ServiceUtil.startService(getApplicationContext());
         }
 
     }
@@ -193,9 +204,10 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
     /**
      * Verarbeitet die Auswahl des Nutzers im Spinner
      */
-    private void spinnerSelectionChanged(AdapterView<?> adapterView, View view, int i, long l) {
+    private void spinnerSelectionChanged(AdapterView<?> adapterView, int i) {
         String selectedElement = adapterView.getItemAtPosition(i).toString();
         cManager.setActiveCalendar(selectedElement);
+        pManager.setActiveCalendarId(cManager.getActiveCalendar().getId());
     }
 
     /**
@@ -208,14 +220,91 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
         // Abfragen welche Kalender verfügbar sind
         ArrayList<String> availableCalendars = cManager.getCalendars();
 
+        if (availableCalendars == null) {
+            return;
+        }
+
+        // Den aktiven Kalender anhand der in den Prefs gespeicherten ID setzen
+        cManager.setActiveCalendar(pManager.getActiveCalendarId());
+
         // Spinner einrichten (Layout festlegen)
         Spinner spinner = this.findViewById(R.id.spinner_calendar);
 
         // Daten in den Spinner schreiben (via Adapter)
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(getApplicationContext(), R.layout.custom_spinner_item,availableCalendars);
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spinner.setAdapter(adapter);
+        if (availableCalendars!= null || availableCalendars.size() > 0) {
+            ArrayAdapter<String> adapter = new ArrayAdapter<>(getApplicationContext(), R.layout.custom_spinner_item,availableCalendars);
+            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            spinner.setAdapter(adapter);
+        }
 
+        // Aktiven Kalender anzeigen (falls vorhanden)
+        if (cManager.getActiveCalendar() != null) {
+            String calendarName = cManager.getActiveCalendar().getDisplayName();
+            spinner.setSelection(availableCalendars.indexOf(calendarName));
+        }
+
+    }
+
+    /**
+     * Setzt die Version in der About Karte
+     */
+    private void setVersion() {
+        TextView tvVersion = this.findViewById(R.id.about_version);
+        String version = "";
+
+        try {
+            PackageInfo info = this.getPackageManager().getPackageInfo(this.getPackageName(),0);
+            version = info.versionName;
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        if (!version.equals("")) {
+            tvVersion.setText(version);
+        }
+        else {
+            tvVersion.setText("Version unbekannt");
+        }
+    }
+
+    /**
+     * Füllt die UI-Elemente mit den Daten aus dem Preferences Manager
+     */
+    private void fillFromPreferences() {
+
+        // Gespeicherte Zugangsdaten, falls vorhanden, einfügen
+        if (!pManager.getUrl().equals("")) {
+            EditText etURL = this.findViewById(R.id.eT_url);
+            etURL.setText(pManager.getUrl());
+        }
+
+        if (!pManager.getUser().equals("")) {
+            EditText etUser = this.findViewById(R.id.eT_user);
+            etUser.setText(pManager.getUser());
+        }
+
+        if (!pManager.getPassword().equals("")) {
+            EditText etPassword = this.findViewById(R.id.et_pw);
+            etPassword.setText(pManager.getPassword());
+        }
+
+    }
+
+    /**
+     * Schreibt die vom Nutzer eingegebenen Daten in den Preferences Manager
+     */
+    private void savePrefs() {
+
+        EditText etURL = this.findViewById(R.id.eT_url);
+        EditText etUser = this.findViewById(R.id.eT_user);
+        EditText etPassword = this.findViewById(R.id.et_pw);
+
+        pManager.setUrl(etURL.getText().toString());
+        pManager.setUser(etUser.getText().toString());
+        pManager.setPassword(etPassword.getText().toString());
+        // Die Id des aktiven Kalenders wird über die spinnerSelectionChanged Methode automatisch auf dem aktuellen Stand gehalten
+
+        pManager.save();
     }
 
     //=======================================================
@@ -235,7 +324,6 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
      * Zeigt dem Nutzer eine Nachricht an
      * @param message Nachricht
      */
-    @SuppressLint("SetTextI18n")
     @Override
     public void publishProgress(String message) {
         TextView tv = this.findViewById(R.id.tV_progress);
@@ -300,17 +388,6 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
         taskManager = new AsyncTaskManager(getSupportLoaderManager(), getApplicationContext(),this,cManager, pManager, messageFromBackground);
         taskManager.startDownload(this,parameters);
 
-    }
-
-    private void savePrefs() {
-
-        EditText etURL = this.findViewById(R.id.eT_url);
-        EditText etUser = this.findViewById(R.id.eT_user);
-
-        pManager.setUrl(etURL.getText().toString());
-        pManager.setUser(etUser.getText().toString());
-
-        pManager.save();
     }
 
 }
