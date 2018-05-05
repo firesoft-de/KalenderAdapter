@@ -419,6 +419,11 @@ public class NetworkTool {
             throw new MalformedURLException("Kein korrektes Protkoll gefunden!");
         }
 
+        // Prüfen, ob ein abschließendes '/' vorhanden ist
+        if (url.substring(url.length()-2,url.length()-1).equals("/")) {
+            url = url + "/";
+        }
+
         // URL erzeugen
         _url = new URL(url);
         return _url;

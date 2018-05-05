@@ -42,19 +42,29 @@ public class DataTool extends AsyncTaskLoader<ResultWrapper> {
     private IErrorCallback errorCallback;
     private CalendarManager cManager;
     private MutableLiveData<String> progress;
-
+    private boolean managed;
 
     //=======================================================
     //====================KONSTRUKTOR========================
     //=======================================================
 
-    public DataTool(ArrayList<ServerParameter> params, IErrorCallback errorCallback, Context context, CalendarManager cManager, MutableLiveData<String> progress) {
+    /**
+     * Instanziert ein neues DataToolkit
+     * @param params Parametersatz
+     * @param errorCallback Callback für Fehlerberichte an den Nutzer
+     * @param context Context in dem der Loader läuft
+     * @param cManager Ein CalendarManager
+     * @param progress Callback für Fortschrittsberichte an den Nutzer
+     * @param managed Gibt an, ob der Loader durch einen Manager verwaltet wird. True = verwaltet, false = eigenständig (aktiviert oder deaktiviert forceLoad())
+     */
+    public DataTool(ArrayList<ServerParameter> params, IErrorCallback errorCallback, Context context, CalendarManager cManager, MutableLiveData<String> progress, boolean managed) {
         super(context);
 
         this.params = params;
         this.errorCallback = errorCallback;
         this.cManager = cManager;
         this.progress = progress;
+        this.managed = managed;
     }
 
     //=======================================================
@@ -173,7 +183,9 @@ public class DataTool extends AsyncTaskLoader<ResultWrapper> {
 
     @Override
     protected void onStartLoading() {
-        //forceLoad();
+        if (managed) {
+            forceLoad();
+        }
     }
 
 

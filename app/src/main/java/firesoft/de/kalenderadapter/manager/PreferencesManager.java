@@ -119,13 +119,8 @@ public class PreferencesManager {
 //
 //                break;
 
-            case 3:
-                // Version 0.1
-                loadv1();
-                break;
-
-            case 2:
-                // Version 0.1
+            case 4:
+                // Version 0.2
                 loadv1();
                 break;
         }

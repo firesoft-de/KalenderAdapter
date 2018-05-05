@@ -23,7 +23,8 @@
                                           <PersistentState>
                                             <option name="values">
                                               <map>
-                                                <entry key="scalingPercent" value="56" />
+                                                <entry key="scalingPercent" value="88" />
+                                                <entry key="trimmed" value="true" />
                                               </map>
                                             </option>
                                           </PersistentState>
@@ -34,10 +35,11 @@
                                   <option name="values">
                                     <map>
                                       <entry key="backgroundAssetType" value="COLOR" />
-                                      <entry key="backgroundColor" value="3d4040" />
-                                      <entry key="foregroundImage" value="D:\Development\Android\KalenderAdapter\marketing\logo.png" />
-                                      <entry key="outputName" value="ic_logoasd" />
+                                      <entry key="backgroundColor" value="f7ffee" />
+                                      <entry key="foregroundImage" value="D:\Development\Android\KalenderAdapter\marketing\icon_v2.1.png" />
+                                      <entry key="outputName" value="ic_icon" />
                                       <entry key="previewDensity" value="XXHIGH" />
+                                      <entry key="showSafeZone" value="false" />
                                     </map>
                                   </option>
                                 </PersistentState>
@@ -49,14 +51,20 @@
                                   <option name="values">
                                     <map>
                                       <entry key="assetType" value="IMAGE" />
+                                      <entry key="backgroundColor" value="ff0017" />
                                       <entry key="iconShape" value="NONE" />
-                                      <entry key="imageAsset" value="D:\Development\Android\KalenderAdapter\marketing\logo.png" />
-                                      <entry key="outputName" value="ic_logo_simple" />
+                                      <entry key="imageAsset" value="D:\Development\Android\KalenderAdapter\marketing\icon_v2.1.png" />
+                                      <entry key="outputName" value="ic_icon" />
                                     </map>
                                   </option>
                                 </PersistentState>
                               </value>
                             </entry>
+                          </map>
+                        </option>
+                        <option name="values">
+                          <map>
+                            <entry key="outputIconType" value="LAUNCHER_LEGACY" />
                           </map>
                         </option>
                       </PersistentState>

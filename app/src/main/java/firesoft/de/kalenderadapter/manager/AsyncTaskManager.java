@@ -89,7 +89,7 @@ public class AsyncTaskManager implements LoaderManager.LoaderCallbacks<ResultWra
     public Loader<ResultWrapper> onCreateLoader(int id, @Nullable Bundle args) {
 
         if (id == MAIN_LOADER) {
-            return new DataTool(params,errorCallback,context, calendarManager, progress);
+            return new DataTool(params,errorCallback,context, calendarManager, progress, true);
         }
 
         throw new IllegalArgumentException("Kein passender Loader verfügbar! (AsyncTaskManager.onCreateLoader))");
@@ -111,6 +111,9 @@ public class AsyncTaskManager implements LoaderManager.LoaderCallbacks<ResultWra
 
         }
 
+        // Loader zerstören, da er nicht mehr gebraucht wird und es ansonsten beim Wiederaufrufen der App aus dem Hintergrund (vom Backstack) zu einem ungewollten neustart des Loaders kommen würde.
+        this.loaderManager.destroyLoader(loader.getId());
+
     }
 
     @Override
@@ -129,7 +132,10 @@ public class AsyncTaskManager implements LoaderManager.LoaderCallbacks<ResultWra
         } else {
             loaderManager.restartLoader(MAIN_LOADER, null, this);
         }
+
     }
+
+
 
 
 
