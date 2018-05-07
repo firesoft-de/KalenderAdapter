@@ -19,9 +19,9 @@
    id="svg8"
    inkscape:version="0.92.2 (5c3e80d, 2017-08-06)"
    sodipodi:docname="icon_v2.1.svg"
-   inkscape:export-filename="D:\Development\Android\KalenderAdapter\marketing\icon_v2.1.png"
-   inkscape:export-xdpi="506.47"
-   inkscape:export-ydpi="506.47">
+   inkscape:export-filename="D:\Development\Android\KalenderAdapter\marketing\icon_v2.1_big.png"
+   inkscape:export-xdpi="2593.75"
+   inkscape:export-ydpi="2593.75">
   <defs
      id="defs2">
     <linearGradient
@@ -342,11 +342,11 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="2.828427"
-     inkscape:cx="-20.760232"
-     inkscape:cy="50.798201"
+     inkscape:zoom="1.9999999"
+     inkscape:cx="-58.913323"
+     inkscape:cy="158.73732"
      inkscape:document-units="px"
-     inkscape:current-layer="layer19"
+     inkscape:current-layer="layer17"
      showgrid="false"
      units="px"
      inkscape:window-width="2560"
@@ -426,7 +426,9 @@
   <g
      inkscape:groupmode="layer"
      id="layer19"
-     inkscape:label="Base 1">
+     inkscape:label="Base 1"
+     sodipodi:insensitive="true"
+     style="display:none">
     <rect
        style="opacity:1;fill:#ffffff;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.32291663;stroke-linecap:square;stroke-linejoin:bevel;stroke-miterlimit:10;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:normal"
        id="rect1098"
@@ -442,8 +444,7 @@
      id="layer7"
      inkscape:label="Design Midlayer"
      style="display:inline"
-     transform="translate(-6.3833958,-6.0020727)"
-     sodipodi:insensitive="true">
+     transform="translate(-6.3833958,-6.0020727)">
     <rect
        transform="translate(-0.23386083,-82.549999)"
        y="92.134338"
@@ -465,7 +466,8 @@
      id="layer9"
      inkscape:label="Design Baselayer"
      style="display:inline"
-     transform="translate(-6.3833958,-6.0020727)">
+     transform="translate(-6.3833958,-6.0020727)"
+     sodipodi:insensitive="true">
     <g
        style="display:inline"
        id="g1107"
@@ -551,8 +553,7 @@
      id="layer1"
      inkscape:label="Aufdruck"
      style="display:inline"
-     transform="translate(-6.3833958,-6.0020727)"
-     sodipodi:insensitive="true">
+     transform="translate(-6.3833958,-6.0020727)">
     <g
        inkscape:groupmode="layer"
        id="layer16"
@@ -614,7 +615,8 @@
     <g
        inkscape:groupmode="layer"
        id="layer17"
-       inkscape:label="Außenschatten">
+       inkscape:label="Außenschatten"
+       style="display:none">
       <circle
          style="display:inline;opacity:0.5;fill:none;fill-opacity:1;fill-rule:nonzero;stroke:#000000;stroke-width:0.79374999;stroke-linecap:square;stroke-linejoin:bevel;stroke-miterlimit:10;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:normal;filter:url(#filter1934)"
          id="path1077"
@@ -626,8 +628,7 @@
        inkscape:groupmode="layer"
        id="layer4"
        inkscape:label="Top"
-       style="display:inline"
-       sodipodi:insensitive="true">
+       style="display:inline">
       <path
          style="display:inline;fill:#c62828;fill-opacity:1;fill-rule:nonzero;stroke:#4d4d4d;stroke-width:0.02645833;stroke-linecap:square;stroke-linejoin:bevel;stroke-miterlimit:10;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:normal"
          d="M 26.257441,18.169126 A 10.296859,10.296859 0 0 0 15.960397,28.466171 10.296859,10.296859 0 0 0 26.257441,38.763217 10.296859,10.296859 0 0 0 36.55397,28.466171 10.296859,10.296859 0 0 0 26.257441,18.169126 Z m 0.308509,2.783809 h 1.236098 v 7.700305 h 3.817855 l -5.44256,7.326169 -5.282882,-7.318933 h 3.711403 v -7.69979 h 1.182357 z"

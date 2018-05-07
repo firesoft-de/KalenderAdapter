@@ -16,10 +16,13 @@
 package firesoft.de.kalenderadapter.manager;
 
 
+import android.app.AlarmManager;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+
+import java.util.Date;
 
 /**
  * Manager Klasse mit der die gespeicherten Einstellungen zentrak verwaltet und bereitgestellt werden
@@ -69,6 +72,21 @@ public class PreferencesManager {
      */
     private int activeCalendarId;
 
+    /**
+     * Enthält den Zeitpunkt von dem an Synchronisiert werden soll als Millisekunden beginnend um 00:00 Uhr
+     */
+    private long sync_from;
+
+    /**
+     * Enthält das Intervall mit dem synchronisiert werden soll in Millisekunden
+     */
+    private long sync_interval;
+
+    /**
+     * Enthält einen Wert der angibt, ob der Nutzer aktiv den Hintergrundprozess beendet hat
+     */
+    private boolean sync_disabled;
+
     //=======================================================
     //=====================KONSTANTEN========================
     //=======================================================
@@ -80,6 +98,11 @@ public class PreferencesManager {
     private static final String ENTRYIDS = "entryids";
     private static final String PASSWORD = "zulu";
     private static final String ACTIVE_CALENDAR = "active_calendar";
+    private static final String SYNC_FROM = "sync_from";
+    private static final String SYNC_INTERVAL = "sync_interval";
+    private static final String SYNC_DISABLED = "sync_disabled";
+
+    public static final long default_sync_start = 10800000;
 
     //=======================================================
     //===================PUBLIC METHODEN=====================
@@ -109,15 +132,16 @@ public class PreferencesManager {
 
             default:
 
-//            case 3:
-                // Version
-//
+//            case xyz:
+//                // Version xyz
+//                loadvxyz();
 //                break;
-//
-//            case 2:
-                // Version
-//
-//                break;
+
+
+            case 5:
+                // Version 0.3
+                loadv2();
+                break;
 
             case 4:
                 // Version 0.2
@@ -138,6 +162,9 @@ public class PreferencesManager {
         editor.putString(PASSWORD,password);
         editor.putBoolean(LOG,logEnabled);
         editor.putInt(ACTIVE_CALENDAR, activeCalendarId);
+        editor.putLong(SYNC_FROM, sync_from);
+        editor.putLong(SYNC_INTERVAL,sync_interval);
+        editor.putBoolean(SYNC_DISABLED, sync_disabled);
 
         editor.apply();
     }
@@ -162,11 +189,28 @@ public class PreferencesManager {
         activeCalendarId = 0;
         entryIds = "";
         logEnabled = false;
+        sync_from = default_sync_start; // Standard 03:00 Uhr
+        sync_from = AlarmManager.INTERVAL_DAY; // Standard 24 Stunden
     }
 
     //=======================================================
     //====================LOAD METHODEN======================
     //=======================================================
+
+    /**
+     * Lädt die Einstellungen der Appversion 0.1 und aller kompatiblen Versionen
+     */
+    private void loadv2() {
+        url = preferences.getString(URL, "");
+        logEnabled = preferences.getBoolean(LOG,false);
+        user = preferences.getString(USER,"");
+        entryIds = preferences.getString(ENTRYIDS,"");
+        password = preferences.getString(PASSWORD,"");
+        activeCalendarId = preferences.getInt(ACTIVE_CALENDAR,0);
+        sync_from = preferences.getLong(SYNC_FROM,default_sync_start ); // Standard 03:00 Uhr
+        sync_interval = preferences.getLong(SYNC_INTERVAL, AlarmManager.INTERVAL_DAY); // Standard 24 Stunden
+        sync_disabled = preferences.getBoolean(SYNC_DISABLED, true);
+    }
 
     /**
      * Lädt die Einstellungen der Appversion 0.1 und aller kompatiblen Versionen
@@ -237,6 +281,30 @@ public class PreferencesManager {
 
     public void setActiveCalendarId(int activeCalendarId) {
         this.activeCalendarId = activeCalendarId;
+    }
+
+    public long getSyncFrom() {
+        return sync_from;
+    }
+
+    public void setSyncFrom(long sync_from) {
+        this.sync_from = sync_from;
+    }
+
+    public long getSyncInterval() {
+        return sync_interval;
+    }
+
+    public void setSyncInterval(long sync_interval) {
+        this.sync_interval = sync_interval;
+    }
+
+    public boolean isSyncDisabled() {
+        return sync_disabled;
+    }
+
+    public void setSyncDisabled(boolean sync_disabled) {
+        this.sync_disabled = sync_disabled;
     }
 }
 
