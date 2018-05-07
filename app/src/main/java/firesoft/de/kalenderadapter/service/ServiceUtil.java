@@ -21,9 +21,11 @@ import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.util.Log;
 
 import java.util.Calendar;
 
+import firesoft.de.kalenderadapter.BuildConfig;
 import firesoft.de.kalenderadapter.MainActivity;
 
 import static android.content.Context.ALARM_SERVICE;
@@ -45,19 +47,62 @@ public class ServiceUtil extends BroadcastReceiver {
         calendar.set(Calendar.SECOND, 0);
 
         //AlarmManager aktivieren
-        if (alarmManager != null) { //AlarmManager.INTERVAL_DAY
+        if (alarmManager != null) {
             alarmManager.setRepeating(AlarmManager.RTC_WAKEUP,calendar.getTimeInMillis(),AlarmManager.INTERVAL_DAY,startServiceIntent);
         }
 
     }
 
+    /**
+     *
+     * @param context Context des Aufrufs
+     * @param start Startzeit in Millisekunden (gezählt von 00:00)
+     * @param interval Ausführungsintervall
+     */
+    public static void startService(Context context, long start, long interval) {
+
+        AlarmManager alarmManager = (AlarmManager) context.getSystemService(ALARM_SERVICE);
+
+        Intent serviceIntent = new Intent(context, BackgroundService.class);
+        PendingIntent startServiceIntent = PendingIntent.getService(context,0,serviceIntent,0);
+
+        // setRepeating benötigt den Startzeitpunkt als UNIX-Zeit
+        Calendar calendar = Calendar.getInstance();
+
+        calendar.set(Calendar.HOUR_OF_DAY, 0);
+        calendar.set(Calendar.MINUTE, 0);
+        calendar.set(Calendar.SECOND, 0);
+
+        // Einen Tag in der Zukunft beginnen, damit der Service auf jeden Fall gestartet wird.
+        // Eventuell wird der Service nicht gestartet, wenn das Startdatum in der Vergangenheit liegt. Dies kann passieren, wenn der Nutzer eine Uhrzeit eingibt, die am aktuellen Tag bereits vergangen ist.
+        // calendar.add(Calendar.DAY_OF_MONTH,1);
+
+        long s = calendar.getTimeInMillis() + start;
+
+        if (BuildConfig.DEBUG) {
+            Log.d("STARTING TIME", "Starting Timestamp: " + String.valueOf(s));
+            Log.d("INTERVAL TIME", "Interval: " + String.valueOf(interval));
+        }
+
+        //AlarmManager aktivieren
+        if (alarmManager != null) {
+            alarmManager.setRepeating(AlarmManager.RTC_WAKEUP,s,interval,startServiceIntent);
+        }
+
+    }
+
     public static void stopService(Context context) {
-        context.stopService(new Intent(context, BackgroundService.class));
+
+        // https://stackoverflow.com/questions/47545634/how-to-stop-service-using-alarmmanager
+
+        Intent serviceIntent = new Intent(context, BackgroundService.class);
+        PendingIntent pendingIntent = PendingIntent.getService(context, 0, serviceIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        pendingIntent.cancel();
     }
 
     @Override
     public void onReceive(Context context, Intent intent) {
-
         if (intent != null && intent.getAction() != null) {
             // Wird aufgerufen, wenn das Telefon neugestartet wird
             if (intent.getAction().equals("android.intent.action.BOOT_COMPLETED")) {
@@ -68,22 +113,10 @@ public class ServiceUtil extends BroadcastReceiver {
 
     /**
      * Prüft, ob der Hintergrundservice läuft oder nicht. Basiert auf https://stackoverflow.com/questions/600207/how-to-check-if-a-service-is-running-on-android
-     * @param activity Aufrufende MainActivity
      */
-    public static boolean checkServiceIsRunning(MainActivity activity, Class serviceClass) {
-
-        ActivityManager manager = (ActivityManager) activity.getSystemService(Context.ACTIVITY_SERVICE);
-
-        if (manager == null) {
-            return false;
-        }
-
-        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
-            if (serviceClass.getClass().getName().equals(service.service.getClassName())) {
-                return true;
-            }
-        }
-        return false;
+    public static boolean checkServiceIsRunning(Context context, Class serviceClass) {
+        //https://stackoverflow.com/questions/4556670/how-to-check-if-alarmmanager-already-has-an-alarm-set
+        return (PendingIntent.getService(context, 0, new Intent(context,BackgroundService.class), PendingIntent.FLAG_NO_CREATE) != null);
     }
 
 }

@@ -146,7 +146,7 @@
                     android:id="@+id/tV_user_description"
                     style="@style/AppTheme.TextViewHint"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    android:layout_height="0dp"
                     android:layout_marginTop="8dp"
                     android:text="@string/card_settings_user"
                     app:layout_constraintStart_toStartOf="parent"
@@ -167,40 +167,110 @@
                     style="SettingsInputFields"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_marginEnd="16dp"
                     android:layout_marginTop="8dp"
                     android:ems="10"
                     android:inputType="textPassword"
+                    android:text=""
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintHorizontal_bias="1.0"
                     app:layout_constraintStart_toStartOf="@+id/tV_pw_description"
-                    app:layout_constraintTop_toTopOf="@+id/tV_pw_description"
-                    android:text=""/>
+                    app:layout_constraintTop_toTopOf="@+id/tV_pw_description" />
 
                 <EditText
                     android:id="@+id/eT_user"
                     style="SettingsInputFields"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_marginEnd="16dp"
                     android:layout_marginTop="8dp"
                     android:ems="10"
                     android:inputType="textPersonName"
+                    android:text=""
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="@+id/tV_user_description"
-                    app:layout_constraintTop_toTopOf="@+id/tV_user_description"
-                    android:text=""/>
+                    app:layout_constraintTop_toTopOf="@+id/tV_user_description" />
 
                 <EditText
                     android:id="@+id/eT_url"
                     style="SettingsInputFields"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_marginEnd="16dp"
                     android:layout_marginTop="8dp"
                     android:ems="10"
                     android:inputType="textPersonName"
+                    android:text=""
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="@+id/tV_url_description"
-                    app:layout_constraintTop_toTopOf="@+id/tV_url_description"
-                    android:text=""/>
+                    app:layout_constraintTop_toTopOf="@+id/tV_url_description" />
+
+                <Switch
+                    android:id="@+id/switch_service"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:checked="false"
+                    android:text="Hintergrundservice    "
+                    android:textAlignment="viewStart"
+                    android:textOff="@string/switch_service_off"
+                    android:textOn="@string/switch_service_on"
+                    app:layout_constraintStart_toStartOf="@id/et_pw"
+                    app:layout_constraintTop_toBottomOf="@id/et_pw" />
+
+                <TextView
+                    android:id="@+id/service_sync_interval_description"
+                    style="@style/AppTheme.TextViewHint"
+                    android:layout_width="wrap_content"
+                    android:layout_height="0dp"
+                    android:layout_marginTop="8dp"
+                    android:text="@string/service_sync_every"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/switch_service" />
+
+                <TextView
+                    android:id="@+id/service_sync_from_description"
+                    style="@style/AppTheme.TextViewHint"
+                    android:layout_width="wrap_content"
+                    android:layout_height="0dp"
+                    android:layout_marginTop="8dp"
+                    android:text="@string/service_sync_from"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/service_sync_interval" />
+
+                <EditText
+                    android:id="@+id/service_sync_interval"
+                    style="SettingsInputFields"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="16dp"
+                    android:ems="10"
+                    android:inputType="time"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="@+id/service_sync_interval_description"
+                    app:layout_constraintTop_toBottomOf="@+id/service_sync_interval_description" />
+
+                <EditText
+                    android:id="@+id/service_sync_from"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="16dp"
+                    android:ems="10"
+                    android:inputType="time"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="@+id/service_sync_from_description"
+                    app:layout_constraintTop_toBottomOf="@+id/service_sync_from_description" />
+
+                <Button
+                    android:id="@+id/bt_check_service_alive"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="8dp"
+                    android:layout_marginStart="8dp"
+                    android:text="Check service alive"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/service_sync_from" />
 
 
             </android.support.constraint.ConstraintLayout>

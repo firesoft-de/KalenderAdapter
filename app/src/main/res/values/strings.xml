@@ -17,4 +17,10 @@
     <string name="about_version">App-Version</string>
     <string name="about_appname">KalenderAdapter</string>
 
+    <string name="switch_service_off">Hintergrundservice inaktiv</string>
+    <string name="switch_service_on">Hintergrundservice aktiv</string>
+    <string name="service_sync_every">Synchronisierung mit einem Intervall von (HH:mm)</string>
+    <string name="service_sync_from">beginnend um (HH:mm)</string>
+    <string name="message_version_unknown">Version unbekannt</string>
+
 </resources>

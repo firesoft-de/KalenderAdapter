@@ -23,10 +23,12 @@ import android.os.IBinder;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.content.Loader;
+import android.util.Log;
 import android.widget.Toast;
 
 import java.util.ArrayList;
 
+import firesoft.de.kalenderadapter.BuildConfig;
 import firesoft.de.kalenderadapter.data.ResultWrapper;
 import firesoft.de.kalenderadapter.data.ServerParameter;
 import firesoft.de.kalenderadapter.interfaces.IErrorCallback;
@@ -50,6 +52,10 @@ public class BackgroundService extends Service implements IErrorCallback, Loader
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         AsyncTaskManager taskManager;
+
+        if (BuildConfig.DEBUG) {
+            Log.d("LOG_SERVICE", "Service run!");
+        }
 
         // PreferencesManager starten
         pManager = new PreferencesManager(getApplicationContext());
