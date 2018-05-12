@@ -36,6 +36,17 @@
                 android:layout_height="match_parent"
                 android:paddingBottom="8dp">
 
+                <Button
+                    android:id="@+id/bt_check_service_alive"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="8dp"
+                    android:layout_marginTop="8dp"
+                    android:text="Check service alive"
+                    app:layout_constraintEnd_toEndOf="@+id/bt_startDownload"
+                    app:layout_constraintStart_toStartOf="@+id/bt_startDownload"
+                    app:layout_constraintTop_toBottomOf="@+id/bt_deleteAll" />
+
                 <TextView
                     android:id="@+id/tv_card_calendar_description"
                     android:layout_width="match_parent"
@@ -199,24 +210,55 @@
                     android:layout_marginEnd="16dp"
                     android:layout_marginTop="8dp"
                     android:ems="10"
-                    android:inputType="textPersonName"
+                    android:inputType="textUri"
                     android:text=""
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="@+id/tV_url_description"
                     app:layout_constraintTop_toTopOf="@+id/tV_url_description" />
 
+            </android.support.constraint.ConstraintLayout>
+
+        </android.support.v7.widget.CardView>
+
+        <android.support.v7.widget.CardView
+            android:id="@+id/card_settings_extended"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            tools:layout_editor_absoluteX="8dp">
+
+            <android.support.constraint.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:paddingBottom="8dp">
+
+                <TextView
+                    android:id="@+id/tv_card_settings_extended_description"
+                    android:layout_width="match_parent"
+                    android:layout_height="28dp"
+                    android:background="@color/colorPrimary"
+                    android:gravity="center_vertical"
+                    android:paddingEnd="8dp"
+                    android:paddingStart="8dp"
+                    android:textColor="@color/text_white"
+                    android:textSize="@dimen/text_size_highlight"
+                    app:layout_constraintTop_toTopOf="parent"
+                    android:text="@string/card_settings"
+                    tools:text="Platzhalter" />
+
                 <Switch
                     android:id="@+id/switch_service"
+                    style="@style/TextAppearance"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
                     android:layout_marginTop="8dp"
                     android:checked="false"
-                    android:text="Hintergrundservice    "
+                    android:text="@string/background_service"
                     android:textAlignment="viewStart"
                     android:textOff="@string/switch_service_off"
                     android:textOn="@string/switch_service_on"
-                    app:layout_constraintStart_toStartOf="@id/et_pw"
-                    app:layout_constraintTop_toBottomOf="@id/et_pw" />
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/tv_card_settings_extended_description" />
 
                 <TextView
                     android:id="@+id/service_sync_interval_description"
@@ -244,33 +286,63 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="16dp"
+                    android:layout_marginTop="8dp"
                     android:ems="10"
                     android:inputType="time"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="@+id/service_sync_interval_description"
-                    app:layout_constraintTop_toBottomOf="@+id/service_sync_interval_description" />
+                    app:layout_constraintTop_toTopOf="@+id/service_sync_interval_description" />
 
                 <EditText
                     android:id="@+id/service_sync_from"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="16dp"
+                    android:layout_marginTop="8dp"
                     android:ems="10"
                     android:inputType="time"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="@+id/service_sync_from_description"
-                    app:layout_constraintTop_toBottomOf="@+id/service_sync_from_description" />
+                    app:layout_constraintTop_toTopOf="@+id/service_sync_from_description" />
 
-                <Button
-                    android:id="@+id/bt_check_service_alive"
+                <CheckBox
+                    android:id="@+id/cB_replace_existing"
+                    style="@style/TextAppearance"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="8dp"
-                    android:layout_marginStart="8dp"
-                    android:text="Check service alive"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginTop="8dp"
+                    android:text="@string/replace_existing_events"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/service_sync_from" />
+                    app:layout_constraintTop_toBottomOf="@+id/service_sync_from" />
+
+                <CheckBox
+                    android:id="@+id/cB_set_reminder"
+                    style="@style/TextAppearance"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="8dp"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginTop="8dp"
+                    android:text="@string/add_reminder"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/cB_replace_existing" />
+
+                <CheckBox
+                    android:id="@+id/cB_inteligent_reminder"
+                    style="@style/TextAppearance"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="8dp"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginTop="8dp"
+                    android:text="@string/inteligent_reminder"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/cB_set_reminder" />
 
 
             </android.support.constraint.ConstraintLayout>
@@ -357,12 +429,31 @@
                     app:layout_constraintTop_toBottomOf="@id/about_version"/>
 
                 <TextView
+                    android:id="@+id/about_security_note"
+                    style="@style/AboutText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/about_security"
+                    app:layout_constraintTop_toBottomOf="@id/about_description"/>
+
+                <TextView
                     android:id="@+id/about_license"
                     style="@style/AboutText"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="@string/about_license"
-                    app:layout_constraintTop_toBottomOf="@id/about_description"/>
+                    app:layout_constraintTop_toBottomOf="@id/about_security_note"/>
+
+                <Button
+                    android:id="@+id/bt_reset"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="16dp"
+                    android:layout_marginStart="16dp"
+                    android:text="@string/settings_reset"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/about_license" />
 
             </android.support.constraint.ConstraintLayout>
 

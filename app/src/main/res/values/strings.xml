@@ -1,7 +1,8 @@
 <resources>
     <string name="app_name">KalenderAdapter</string>
 
-    <string name="card_settings">Einstellungen</string>
+    <string name="card_settings">Zugangsdaten</string>
+    <string name="card_settings_extended">Einstellungen</string>
     <string name="card_settings_user">Nutzername</string>
     <string name="card_settings_password">Passwort</string>
     <string name="card_settings_url">URL</string>
@@ -13,14 +14,20 @@
 
     <string name="card_about">Über</string>
     <string name="about_text">Diese App ermöglicht den Import von Kalenderdaten im ICS in einen lokalen Kalender. Die Datenübertragung erfolgt dabei über eine sichere HTTPS-Verbindung und eine Digest-Authentifizierung beim Datenabruf.</string>
+    <string name="about_security">Sicherheitshinweis!\nDie eingegbenen Zugangsdaten werden aus Kompatibilitätsgründen in einer nicht gesicherten Form abgespeichert. Für den gängigen Anwendungsfall stellt dies kein Risiko dar. Sollte aber ein Driter physischen Zugriff auf das Gerät bekommen oder ein gerootetes Gerät verwendet werden, sind die Zugangsdaten gefährdet!\nEs wird die Verwendung eines Gerätepasswortes empfholen!</string>
     <string name="about_license">Dieses Projekt ist Open Source und steht unter der GNU GPL v3.0!\nDu findest das Repository unter\n<a href="https://github.com/firesoft-de/KalenderAdapter">https://github.com/firesoft-de/KalenderAdapter</a>\n\nDer Lizenztext ist unter\n<a href="https://www.gnu.org/licenses/gpl-3.0.de.html#content">https://www.gnu.org/licenses/gpl-3.0.html</a>\neinsehbar.</string>
     <string name="about_version">App-Version</string>
     <string name="about_appname">KalenderAdapter</string>
 
-    <string name="switch_service_off">Hintergrundservice inaktiv</string>
-    <string name="switch_service_on">Hintergrundservice aktiv</string>
+    <string name="switch_service_off">Hintergrundsynchronisierung inaktiv</string>
+    <string name="switch_service_on">Hintergrundsynchronisierung aktiv</string>
     <string name="service_sync_every">Synchronisierung mit einem Intervall von (HH:mm)</string>
     <string name="service_sync_from">beginnend um (HH:mm)</string>
     <string name="message_version_unknown">Version unbekannt</string>
+    <string name="background_service">Hintergrundsynchronisierung</string>
+    <string name="replace_existing_events">Vorhandene Einträge bei der Synchronisierung ersetzen</string>
+    <string name="add_reminder">Erinnerungen hinzufügen</string>
+    <string name="inteligent_reminder">Erinnerungen anhand des Terminstatus setzen</string>
+    <string name="settings_reset">Einstellungen zurücksetzen</string>
 
 </resources>

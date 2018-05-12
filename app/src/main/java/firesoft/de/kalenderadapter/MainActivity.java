@@ -14,8 +14,6 @@
 package firesoft.de.kalenderadapter;
 
 import android.Manifest;
-import android.annotation.SuppressLint;
-import android.app.AlarmManager;
 import android.arch.lifecycle.MutableLiveData;
 import android.arch.lifecycle.Observer;
 import android.content.pm.PackageInfo;
@@ -33,25 +31,22 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.Switch;
 import android.widget.TextView;
 
-import java.text.DateFormat;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
-import firesoft.de.kalenderadapter.manager.PreferencesManager;
 import firesoft.de.kalenderadapter.data.ServerParameter;
 import firesoft.de.kalenderadapter.interfaces.IErrorCallback;
 import firesoft.de.kalenderadapter.manager.AsyncTaskManager;
 import firesoft.de.kalenderadapter.manager.CalendarManager;
+import firesoft.de.kalenderadapter.manager.PreferencesManager;
 import firesoft.de.kalenderadapter.service.BackgroundService;
 import firesoft.de.kalenderadapter.service.ServiceUtil;
 
@@ -92,6 +87,11 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
         card = this.findViewById(R.id.card_about);
         card.setBackground(drawable);
 
+        drawable = getResources().getDrawable(android.R.drawable.dialog_holo_light_frame);
+
+        card = this.findViewById(R.id.card_settings_extended);
+        card.setBackground(drawable);
+
         //
         // UI Listener erstellen
         //
@@ -111,8 +111,7 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
         });
 
         // Downloadbutton
-        Button btStartDownload = this.findViewById(R.id.bt_startDownload);
-        btStartDownload.setOnClickListener(new View.OnClickListener() {
+        this.findViewById(R.id.bt_startDownload).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 startLoader();
@@ -120,12 +119,21 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
         });
 
         // Deletebutton
-        Button btDelete  = this.findViewById(R.id.bt_deleteAll);
-        btDelete.setOnClickListener(new View.OnClickListener() {
+        this.findViewById(R.id.bt_deleteAll).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 cManager.deleteEntries();
                 pManager.setEntryIds("");
+            }
+        });
+
+        // Resetbutton
+        this.findViewById(R.id.bt_reset).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                pManager.reset();
+                pManager.save();
+                fillFromPreferences();
             }
         });
 
@@ -438,6 +446,12 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
         EditText etSyncInterval = this.findViewById(R.id.service_sync_interval);
         etSyncInterval.setText(MillisToString(pManager.getSyncInterval()));
 
+        // Einstellungen für die Erinnerungen abrufen
+        ((CheckBox) this.findViewById(R.id.cB_set_reminder)).setChecked(pManager.isReminderActivated());
+        ((CheckBox) this.findViewById(R.id.cB_inteligent_reminder)).setChecked(pManager.isInteligentReminderActivated());
+
+        ((CheckBox) this.findViewById(R.id.cB_replace_existing)).setChecked(pManager.isReplaceExistingActivated());
+
     }
 
     /**
@@ -452,8 +466,18 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
         pManager.setUrl(etURL.getText().toString());
         pManager.setUser(etUser.getText().toString());
         pManager.setPassword(etPassword.getText().toString());
-        // Die Id des aktiven Kalenders wird über die spinnerSelectionChanged Methode automatisch auf dem aktuellen Stand gehalten
 
+        // Sync Einstellungen
+        pManager.setSyncDisabled(!((Switch) this.findViewById(R.id.switch_service)).isChecked());
+        // Sync Intervall und Startpunkt werden über die TextChange Events gespeichert, da bei Änderungen dieser Eigenschaften auch der Hintergrundservice angefasst werden muss
+
+        // Erinnerungseinstellungen
+        pManager.setReminder(((CheckBox) this.findViewById(R.id.cB_set_reminder)).isChecked());
+        pManager.setInteligentReminder(((CheckBox) this.findViewById(R.id.cB_inteligent_reminder)).isChecked());
+
+        pManager.setReplaceExisting(((CheckBox) this.findViewById(R.id.cB_replace_existing)).isChecked());
+
+        // Die Id des aktiven Kalenders wird über die spinnerSelectionChanged Methode automatisch auf dem aktuellen Stand gehalten
         pManager.save();
     }
 
@@ -520,6 +544,9 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
             return;
         }
 
+        // Eingabe speichern
+        savePrefs();
+
         // Die einzelnen Parameter hinzufügen und im Preferences Manager speichern
         ArrayList<ServerParameter> parameters = new ArrayList<>();
         ServerParameter param = new ServerParameter("url", url.getText().toString());
@@ -530,9 +557,6 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
 
         param = new ServerParameter("pw", password.getText().toString());
         parameters.add(param);
-
-        // Eingabe speichern
-        savePrefs();
 
         // AsyncTask mit den Parametern starten
         taskManager = new AsyncTaskManager(getSupportLoaderManager(), getApplicationContext(),this,cManager, pManager, messageFromBackground);

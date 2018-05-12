@@ -24,6 +24,8 @@ import android.content.pm.PackageManager;
 
 import java.util.Date;
 
+import firesoft.de.kalenderadapter.utility.NetworkTool;
+
 /**
  * Manager Klasse mit der die gespeicherten Einstellungen zentrak verwaltet und bereitgestellt werden
  */
@@ -87,6 +89,21 @@ public class PreferencesManager {
      */
     private boolean sync_disabled;
 
+    /**
+     * Gibt an, ob die existierenden Einträge ersetzt werden sollen oder nicht
+     */
+    private boolean replace_existing;
+
+    /**
+     * Enthält einen Wert der angibt, ob für jedes Event Erinnerungen hinzugefügt werden sollen
+     */
+    private boolean set_reminder;
+
+    /**
+     * Enthält einen Wert der angibt, ob Erinnerungen anhand des Status des Events hinzugefügt werden sollen
+     */
+    private boolean set_inteligent_reminder;
+
     //=======================================================
     //=====================KONSTANTEN========================
     //=======================================================
@@ -101,8 +118,11 @@ public class PreferencesManager {
     private static final String SYNC_FROM = "sync_from";
     private static final String SYNC_INTERVAL = "sync_interval";
     private static final String SYNC_DISABLED = "sync_disabled";
+    private static final String SET_REMINDER = "set_reminder";
+    private static final String SET_INTELIGENT_REMINDER = "set_inteligent_reminder";
+    private static final String REPLACE_EXISTING = "replace_existing";
 
-    public static final long default_sync_start = 10800000;
+    private static final long default_sync_start = 10800000;
 
     //=======================================================
     //===================PUBLIC METHODEN=====================
@@ -137,6 +157,10 @@ public class PreferencesManager {
 //                loadvxyz();
 //                break;
 
+            case 6:
+                // Version 0.3.1
+                loadv3();
+                break;
 
             case 5:
                 // Version 0.3
@@ -165,6 +189,9 @@ public class PreferencesManager {
         editor.putLong(SYNC_FROM, sync_from);
         editor.putLong(SYNC_INTERVAL,sync_interval);
         editor.putBoolean(SYNC_DISABLED, sync_disabled);
+        editor.putBoolean(SET_REMINDER,set_reminder);
+        editor.putBoolean(SET_INTELIGENT_REMINDER,set_inteligent_reminder);
+        editor.putBoolean(REPLACE_EXISTING,replace_existing);
 
         editor.apply();
     }
@@ -191,6 +218,8 @@ public class PreferencesManager {
         logEnabled = false;
         sync_from = default_sync_start; // Standard 03:00 Uhr
         sync_from = AlarmManager.INTERVAL_DAY; // Standard 24 Stunden
+        set_reminder = true;
+        set_inteligent_reminder = true;
     }
 
     //=======================================================
@@ -198,7 +227,25 @@ public class PreferencesManager {
     //=======================================================
 
     /**
-     * Lädt die Einstellungen der Appversion 0.1 und aller kompatiblen Versionen
+     * Lädt die Einstellungen der Appversion 0.3.1 und aller kompatiblen Versionen
+     */
+    private void loadv3() {
+        url = preferences.getString(URL, "");
+        logEnabled = preferences.getBoolean(LOG,false);
+        user = preferences.getString(USER,"");
+        entryIds = preferences.getString(ENTRYIDS,"");
+        password = preferences.getString(PASSWORD,"");
+        activeCalendarId = preferences.getInt(ACTIVE_CALENDAR,0);
+        sync_from = preferences.getLong(SYNC_FROM,default_sync_start ); // Standard 03:00 Uhr
+        sync_interval = preferences.getLong(SYNC_INTERVAL, AlarmManager.INTERVAL_DAY); // Standard 24 Stunden
+        sync_disabled = preferences.getBoolean(SYNC_DISABLED, true);
+        set_reminder = preferences.getBoolean(SET_REMINDER, true);
+        set_inteligent_reminder = preferences.getBoolean(SET_INTELIGENT_REMINDER, true);
+        replace_existing = preferences.getBoolean(REPLACE_EXISTING, true);
+    }
+
+    /**
+     * Lädt die Einstellungen der Appversion 0.3 und aller kompatiblen Versionen
      */
     private void loadv2() {
         url = preferences.getString(URL, "");
@@ -305,6 +352,30 @@ public class PreferencesManager {
 
     public void setSyncDisabled(boolean sync_disabled) {
         this.sync_disabled = sync_disabled;
+    }
+
+    public boolean isInteligentReminderActivated() {
+        return set_inteligent_reminder;
+    }
+
+    public void setInteligentReminder(boolean set_inteligent_reminder) {
+        this.set_inteligent_reminder = set_inteligent_reminder;
+    }
+
+    public boolean isReminderActivated() {
+        return set_reminder;
+    }
+
+    public void setReminder(boolean set_reminder) {
+        this.set_reminder = set_reminder;
+    }
+
+    public boolean isReplaceExistingActivated() {
+        return replace_existing;
+    }
+
+    public void setReplaceExisting(boolean replace_existing) {
+        this.replace_existing = replace_existing;
     }
 }
 

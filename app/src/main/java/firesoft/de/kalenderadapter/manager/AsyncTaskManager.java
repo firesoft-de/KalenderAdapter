@@ -89,7 +89,7 @@ public class AsyncTaskManager implements LoaderManager.LoaderCallbacks<ResultWra
     public Loader<ResultWrapper> onCreateLoader(int id, @Nullable Bundle args) {
 
         if (id == MAIN_LOADER) {
-            return new DataTool(params,errorCallback,context, calendarManager, progress, true);
+            return new DataTool(params,errorCallback,context, calendarManager, progress, pManager, true);
         }
 
         throw new IllegalArgumentException("Kein passender Loader verfügbar! (AsyncTaskManager.onCreateLoader))");

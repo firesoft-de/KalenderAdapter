@@ -17,15 +17,16 @@
         <item name="android:layout_marginTop">8dp</item>
     </style>
 
-    <style name="SettingsInputFields" parent="AppTheme">
-        <item name="android:layout_marginEnd">24dp</item>
+    <style name="TextAppearance" parent="AppTheme">
         <item name="android:textColor">@color/text</item>
         <item name="android:textSize">@dimen/text_size_normal</item>
     </style>
 
-    <style name="AboutText" parent="AppTheme">
-        <item name="android:textColor">@color/text</item>
-        <item name="android:textSize">@dimen/text_size_normal</item>
+    <style name="SettingsInputFields" parent="TextAppearance">
+        <item name="android:layout_marginEnd">24dp</item>
+    </style>
+
+    <style name="AboutText" parent="TextAppearance">
         <item name="android:layout_marginStart">12dp</item>
         <item name="android:layout_marginEnd">12dp</item>
         <item name="android:layout_marginTop">12dp</item>

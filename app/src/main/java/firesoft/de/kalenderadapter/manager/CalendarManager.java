@@ -155,7 +155,6 @@ public class CalendarManager {
      * @return Null falls keine Einträge in der internen ID-Liste hinterlegt sind, ansonsten eine Liste mit den, für einen Vergleich notwendigen, Eintragsdaten
      */
     private ArrayList<CustomCalendarEntry> getExistingEntries() throws SecurityException {
-        // TODO: Filterung hinzufügen, damit nur noch relevante Einträge die durch die App getätigt wurden geladen werden und keine durch den Benutzer generierten Einträge
         // Erstellt mit https://www.grokkingandroid.com/androids-calendarcontract-provider/
 
         ArrayList<CustomCalendarEntry> entries = new ArrayList<>();
