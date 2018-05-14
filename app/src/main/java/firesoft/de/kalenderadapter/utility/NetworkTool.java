@@ -36,7 +36,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.AbstractMap;
 import java.util.ArrayList;
-import java.util.regex.Matcher;
+import android.util.Base64;
 import java.util.regex.Pattern;
 
 import javax.net.ssl.HttpsURLConnection;
@@ -137,6 +137,12 @@ public class NetworkTool {
                 // Stack ausgeben und Fehler loggen
                 ex1.printStackTrace();
 
+                if (ex1.getCause().getMessage().equals("401")) {
+                    // 401 Fehler: Wiederholter Anmeldeversuch mit falschen Daten
+                    // An Nutzer melden und Neueingabe anfordern
+                    throw ex1;
+                }
+
                 // Rückfallebene ohne SSL benutzen
                 try {
                     stream = httpRequest(url, ServerParameter.convertToSimpleEntry(parameters), REQUEST_METHOD.GET, user, password, null);
@@ -233,10 +239,17 @@ public class NetworkTool {
                 // Verbindung hergestellt, jetzt Daten abrufen
                 return connection.getInputStream();
             case HttpsURLConnection.HTTP_UNAUTHORIZED:
-                // Authorisierung per Digest erforderlich -> Digest anhängen und neue Anfrage starten
-                String auth = appendDigestAuth(connection, user, password);
 
-                return httpsRequest(url, parameters, REQUEST_METHOD.GET, user, password, auth);
+                if (authentificationField != null) {
+                    // Es wurde bereits eine Kennung übergeben. Wenn jetzt immer noch ein 401 Fehler auftritt ist die eingegebene Kennung wahrsch. falsch
+                    throw new IOException("Server meldet 401: Eingegebene Zugangsdaten sind fehlerhaft.");
+                }
+                else {
+                    // Authorisierung  erforderlich -> Auth erstellen, anhängen und neue Anfrage starten
+                    String auth = appendAuth(connection, user, password);
+
+                    return httpRequest(url, parameters, REQUEST_METHOD.GET, user, password, auth);
+                }
             default:
                 throw new IOException("Fehler bei der HTTP Anfrage! Fehlercode:" + String.valueOf(response));
         }
@@ -294,11 +307,20 @@ public class NetworkTool {
             case HttpsURLConnection.HTTP_OK:
                 // Verbindung hergestellt, jetzt Daten abrufen
                 return connection.getInputStream();
-            case HttpsURLConnection.HTTP_UNAUTHORIZED:
-                // Authorisierung per Digest erforderlich -> Digest anhängen und neue Anfrage starten
-                String auth = appendDigestAuth(connection, user, password);
 
-                return httpsRequest(url, parameters, REQUEST_METHOD.GET, user, password, auth);
+            case HttpsURLConnection.HTTP_UNAUTHORIZED:
+
+                if (authentificationField != null) {
+                    // Es wurde bereits eine Kennung übergeben. Wenn jetzt immer noch ein 401 Fehler auftritt ist die eingegebene Kennung wahrsch. falsch
+                    throw new IOException("Server meldet 401: Eingegebene Zugangsdaten sind fehlerhaft.",new Throwable("401"));
+                }
+                else {
+                    // Authorisierung  erforderlich -> Auth erstellen, anhängen und neue Anfrage starten
+                    String auth = appendAuth(connection, user, password);
+
+                    return httpsRequest(url, parameters, REQUEST_METHOD.GET, user, password, auth);
+                }
+
             default:
                 throw new IOException("Fehler bei der HTTP Anfrage! Fehlercode:" + String.valueOf(response));
         }
@@ -429,6 +451,30 @@ public class NetworkTool {
         return _url;
     }
 
+    private static String appendAuth(HttpURLConnection connection, String user, String password) throws SecurityException, UnsupportedEncodingException {
+
+        // Headerfeld mit den Informationen für die Authentifizierung auslesen
+        String auth_field = connection.getHeaderField("WWW-Authenticate");
+
+        // Prüfen welche Authentifzierung verwendet wird
+        if (auth_field.equals("")) {
+            throw new SecurityException("Unbekanntes Authentifzierungs-Verfahren!");
+        }
+
+        if (auth_field.contains("Digest")) {
+            // Digest Authentifzierung
+            return appendDigestAuth(connection, user, password);
+        }
+        else if (auth_field.contains("Basic")) {
+            // Basic Authentifzierung
+            return appendBasicAuth(user, password);
+        }
+        else {
+            throw new SecurityException("Unbekanntes Authentifzierungs-Verfahren!");
+        }
+
+    }
+
     /**
      * Fügt an eine bestehende Verbindung eine Digest-Authentifizierung an. Erstellt auf Basis von https://tools.ietf.org/html/rfc2617#page-5 und https://gist.github.com/slightfoot/5624590
      * Achtung: Die Methode ist nicht in der Lage einen eingegebenen CNONCE (wie bspw. bei einem mehrmaligen Datenaustausch zwischen Server und Client vom Server mitgegeben wird) zu verarbeiten!
@@ -514,6 +560,17 @@ public class NetworkTool {
 
         return builder;
 
+    }
+
+    /**
+     * Erstellt eine Authentifzierung auf Basis der Basic-Auth
+     */
+    private static String appendBasicAuth(String user, String password) {
+
+        // Basierend auf https://robert-reiz.com/2014/10/05/java-http-request-with-basic-auth/
+        String user_pass = user + ":" + password;
+        String encoded = Base64.encodeToString(user_pass.getBytes(), android.util.Base64.DEFAULT);
+        return "Basic " + encoded;
     }
 
     // (c) Slightfood, https://gist.github.com/slightfoot/5624590

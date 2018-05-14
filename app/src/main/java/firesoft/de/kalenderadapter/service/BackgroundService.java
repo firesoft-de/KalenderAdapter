@@ -37,7 +37,7 @@ import firesoft.de.kalenderadapter.manager.CalendarManager;
 import firesoft.de.kalenderadapter.manager.PreferencesManager;
 import firesoft.de.kalenderadapter.utility.DataTool;
 
-public class BackgroundService extends Service implements IErrorCallback, Loader.OnLoadCompleteListener<ResultWrapper>{
+public class BackgroundService extends Service implements Loader.OnLoadCompleteListener<ResultWrapper>{
 
     PreferencesManager pManager;
     CalendarManager cManager;
@@ -66,7 +66,7 @@ public class BackgroundService extends Service implements IErrorCallback, Loader
         }
 
         // CalendarManager starten
-        cManager = new CalendarManager(getApplicationContext(),this);
+        cManager = new CalendarManager(getApplicationContext(),null);
         cManager.setActiveCalendar(pManager.getActiveCalendarId());
 
         // Prüfen, ob alle benötigten Daten vorliegen
@@ -89,7 +89,7 @@ public class BackgroundService extends Service implements IErrorCallback, Loader
         // Kommunikationskanal mit Backgroundthreads. Wird im BackgroundService nicht benötigt. Muss aber dem DataTool mitgegeben werden.
         MutableLiveData<String> messageFromBackground = new MutableLiveData<>();
 
-        dataTool = new DataTool(parameters,this,getApplicationContext(),cManager,messageFromBackground, false);
+        dataTool = new DataTool(parameters,getApplicationContext(),cManager,messageFromBackground, pManager,false);
 
         // Basierend auf https://stackoverflow.com/questions/8696146/can-you-use-a-loadermanager-from-a-service/24393728
         dataTool.registerListener(1,this); // 1 = Marker für MainLoader (im AsyncTaskManager definiert)
@@ -98,16 +98,6 @@ public class BackgroundService extends Service implements IErrorCallback, Loader
 
 
         return super.onStartCommand(intent, flags, startId);
-    }
-
-    @Override
-    public void publishError(String message) {
-        // Nichts tun
-    }
-
-    @Override
-    public void publishProgress(String message) {
-        // Nichts tun
     }
 
     /**

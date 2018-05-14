@@ -25,24 +25,34 @@ import java.io.IOException;
 import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import firesoft.de.kalenderadapter.manager.CalendarManager;
 import firesoft.de.kalenderadapter.data.CustomCalendarEntry;
 import firesoft.de.kalenderadapter.data.ResultWrapper;
 import firesoft.de.kalenderadapter.data.ServerParameter;
 import firesoft.de.kalenderadapter.interfaces.IErrorCallback;
+import firesoft.de.kalenderadapter.manager.PreferencesManager;
 
-public class DataTool extends AsyncTaskLoader<ResultWrapper> {
+public class DataTool extends AsyncTaskLoader<ResultWrapper> implements IErrorCallback {
 
     //=======================================================
     //=====================VARIABLEN=========================
     //=======================================================
 
     private ArrayList<ServerParameter> params;
-    private IErrorCallback errorCallback;
     private CalendarManager cManager;
     private MutableLiveData<String> progress;
     private boolean managed;
+    private PreferencesManager pManager;
+
+    //=======================================================
+    //=====================KONSTANTEN========================
+    //=======================================================
+
+    private final String reminder_two_days = String.valueOf(2*24*60); // 2 Tag * 24 Stunden * 60 Minuten
+    private final String reminder_one_days = String.valueOf(24*60); // 1 Tag * 24 Stunden * 60 Minuten
+    private final String early_reminder = String.valueOf(7*24*60); // 7 Tage * 24 Stunden * 60 Minuten
 
     //=======================================================
     //====================KONSTRUKTOR========================
@@ -51,20 +61,22 @@ public class DataTool extends AsyncTaskLoader<ResultWrapper> {
     /**
      * Instanziert ein neues DataToolkit
      * @param params Parametersatz
-     * @param errorCallback Callback für Fehlerberichte an den Nutzer
      * @param context Context in dem der Loader läuft
      * @param cManager Ein CalendarManager
      * @param progress Callback für Fortschrittsberichte an den Nutzer
      * @param managed Gibt an, ob der Loader durch einen Manager verwaltet wird. True = verwaltet, false = eigenständig (aktiviert oder deaktiviert forceLoad())
      */
-    public DataTool(ArrayList<ServerParameter> params, IErrorCallback errorCallback, Context context, CalendarManager cManager, MutableLiveData<String> progress, boolean managed) {
+    public DataTool(ArrayList<ServerParameter> params, Context context, CalendarManager cManager, MutableLiveData<String> progress, PreferencesManager pManager, boolean managed) {
         super(context);
 
         this.params = params;
-        this.errorCallback = errorCallback;
         this.cManager = cManager;
         this.progress = progress;
         this.managed = managed;
+        this.pManager = pManager;
+
+        cManager.redefineErrorCallback(this);
+
     }
 
     //=======================================================
@@ -116,14 +128,24 @@ public class DataTool extends AsyncTaskLoader<ResultWrapper> {
         ArrayList<String> events = parseServerResponse(serverResponse);
         ArrayList<Integer> eventIds = new ArrayList<>();
 
+        // Marker der angibt, ob auf bereits getätigte Eintragungen geprüft werden muss
+        boolean equalityCheckNeeded;
 
-        // Den CalendarManager anweisen zu den bestehenden ID's die Einträge zu laden
-        cManager.loadCalendarEntries();
+        // Prüfen, ob die bestehenden Einträge überschrieben werden sollen. In diesem Fall können jetzt alle Einträge gelöscht und die neuen direkt eingefügt werden. Das ist einfacher, als bei allen zu prüfen, ob sich etwas geändert hat.
+        if (pManager.isReplaceExistingActivated()) {
+            // Alle bestehenden Einträge löschen
+            cManager.deleteEntries();
+            pManager.setEntryIds("");
+            equalityCheckNeeded = false;
+        }
+        else {
+            // Einträge bleiben bestehen, es werden nur neue Einträge hinzugefügt
+            // Den CalendarManager anweisen zu den bestehenden ID's die Einträge zu laden
+            cManager.loadCalendarEntries();
+            equalityCheckNeeded = true;
+        }
 
         int counter = 0;
-
-        // Marker der angibt, ob auf bereits getätigte Eintragungen geprüft werden muss
-        boolean equalityCheckNeeded = true;
 
         // Die einzelnen Events durchgehen und jeweils einen Kalendereintrag erstellen
         for (String event: events
@@ -140,7 +162,7 @@ public class DataTool extends AsyncTaskLoader<ResultWrapper> {
             if (entry != null && entry.getEntryState() != CustomCalendarEntry.EntryState.DECLINED) {
                 // Wenn der Eintrag abgelehnt wurde, muss er auch nicht mehr zum Kalender hinzugefügt werden
 
-                int response = addCalenderEntry(entry, equalityCheckNeeded);
+                int response = addCalenderEntry(entry, equalityCheckNeeded, pManager.isReminderActivated(),pManager.isInteligentReminderActivated());
 
                 // Antwort auswerten
                 switch (response) {
@@ -158,7 +180,7 @@ public class DataTool extends AsyncTaskLoader<ResultWrapper> {
                         equalityCheckNeeded = false;
 
                         // Ersten Eintrag nochmal hinzufügen, da er bei der Antwort -3 nicht bearbeitet wurde
-                        eventIds.add(addCalenderEntry(entry, false));
+                        eventIds.add(addCalenderEntry(entry, false, pManager.isReminderActivated(),pManager.isInteligentReminderActivated()));
                         break;
 
                     default:
@@ -169,11 +191,9 @@ public class DataTool extends AsyncTaskLoader<ResultWrapper> {
 
             }
 
-            //errorCallback.publishProgress(counter, events.size(),null);
-
             counter ++;
 
-            progress.postValue("Fortschritt " + counter + "/" + events.size());
+            publishProgress("Fortschritt " + counter + "/" + events.size());
 
         }
 
@@ -210,9 +230,11 @@ public class DataTool extends AsyncTaskLoader<ResultWrapper> {
      * Fügt einen neuen Eintrag in den Kalender ein
      * @param entry Ein Abschnitt eines ICS Strings
      * @param checkIfExists Gibt an, ob vor dem Hinzufügen des Eintrags geprüft werden soll, ob der Eintrag bereits existiert
+     * @param setReminder Gibt an, ob für die Einträge eine Erinnerung hinzugefügt werden soll (falls keine andere eingetragen wurde)
+     * @param useInteligentReminder Gibt an, ob die Erinnerungen in Abhängigkeit des (Rückmelde-)Status gesetzt werden sollen
      * @return -1, falls der Eintrag nicht hinzugefügt wurde, -2 falls der Eintrag schon vorhanden ist, -3 falls keine Vergleichsdaten vorliegen
      */
-    private int addCalenderEntry(CustomCalendarEntry entry, boolean checkIfExists) {
+    private int addCalenderEntry(CustomCalendarEntry entry, boolean checkIfExists, boolean setReminder, boolean useInteligentReminder) {
 
         ContentResolver cr = getContext().getContentResolver();
 
@@ -247,15 +269,103 @@ public class DataTool extends AsyncTaskLoader<ResultWrapper> {
             uri = cr.insert(CalendarContract.Events.CONTENT_URI, values);
         } catch (SecurityException e) {
             e.printStackTrace();
-            errorCallback.publishError("Eine Sicherheitsaußnahme ist aufgertreten! (CalendarManager.addCalenderEntry");
+            publishError("Eine Sicherheitsausnahme ist aufgertreten! (CalendarManager.addCalenderEntry");
             return -1;
         }
 
-        long eventID = -1;
+        // ID des letzten Eintrags abrufen
+        int eventID = -1;
         if (uri != null) {
-            eventID = Long.parseLong(uri.getLastPathSegment());
+            eventID = Integer.parseInt(uri.getLastPathSegment());
         }
-        return (int) eventID;
 
+        // Erinnerungen hinzufügen, falls gewünscht
+        // Basierend auf https://www.quora.com/How-do-I-programmatically-set-a-reminder-message-for-a-particular-date-in-Android
+        if (setReminder && uri != null) {
+
+            // Erinnerung erstellen und die ID des zugehörigen Events eintragen
+            ArrayList<ContentValues> reminders = new ArrayList<>();
+             // Erinnerungsart einfügen. Es wird nur DEFAULT und ALARM unterstützt.
+
+            // Welche Art von Erinnerung soll hinzugefügt werden? Standardmäßig oder intelligent?
+            if (useInteligentReminder) {
+                ContentValues reminder;
+
+                switch (entry.getEntryState()) {
+                    case OPEN:
+                        // Erinnerung eine Woche zwei Tage und einen Tag vorher
+                        reminder = createNewReminder(eventID);
+                        reminder.put(CalendarContract.Reminders.MINUTES,early_reminder);
+                        reminders.add(reminder);
+                        // Kein break, da die nachfolgenden Einträge auch benötigt werden!
+
+                    case CONFIRMED:
+                        // Erinnerung zwei und einen Tage vorher reicht aus
+                        reminder = createNewReminder(eventID);
+                        reminder.put(CalendarContract.Reminders.MINUTES,reminder_two_days);
+                        reminders.add(reminder);
+
+                        reminder = createNewReminder(eventID);
+                        reminder.put(CalendarContract.Reminders.MINUTES,reminder_one_days);
+                        reminders.add(reminder);
+                        break;
+                }
+            }
+            else {
+                // Einfache Erinnerung zwei Tage vorher hinzufügen
+                ContentValues reminder = createNewReminder(eventID);
+                reminder.put(CalendarContract.Reminders.MINUTES,reminder_two_days);
+                reminders.add(reminder);
+            }
+
+            // Alle Erinnerungen hinzufügen
+            for (ContentValues reminder: reminders
+                 ) {
+                try {
+                    cr.insert(CalendarContract.Reminders.CONTENT_URI, reminder);
+                } catch (SecurityException e) {
+                    e.printStackTrace();
+                    publishError("Eine Sicherheitsausnahme ist aufgertreten! (CalendarManager.addCalenderEntry (Reminders)");
+                    return -1;
+                }
+            }
+
+        }
+
+        return eventID;
+
+    }
+
+    /**
+     * Hilfsmethode die einen neuen ContentValue erzeugt der einen Reminder enthält
+     */
+    private ContentValues createNewReminder(int entryId) {
+        ContentValues reminder = new ContentValues();
+        reminder.put(CalendarContract.Reminders.EVENT_ID, entryId);
+        reminder.put(CalendarContract.Reminders.METHOD, CalendarContract.Reminders.METHOD_DEFAULT);
+        return reminder;
+    }
+
+    /**
+     * Ermöglicht es threadsichere Meldungen an den Nutzer auszugeben
+     * @param message Nachricht die angezeigt werden soll
+     */
+    @Override
+    public void publishError(String message) {
+        progress.postValue(message);
+    }
+
+    /**
+     * Ermöglicht es threadsichere Meldungen an den Nutzer auszugeben
+     * @param message Nachricht die angezeigt werden soll
+     */
+    @Override
+    public void publishProgress(String message) {
+        progress.postValue(message);
+    }
+
+    @Override
+    public void appendProgress(String message) {
+        progress.postValue(progress.getValue() + " - " + message);
     }
 }

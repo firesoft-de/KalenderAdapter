@@ -89,7 +89,7 @@ public class AsyncTaskManager implements LoaderManager.LoaderCallbacks<ResultWra
     public Loader<ResultWrapper> onCreateLoader(int id, @Nullable Bundle args) {
 
         if (id == MAIN_LOADER) {
-            return new DataTool(params,errorCallback,context, calendarManager, progress, true);
+            return new DataTool(params,context, calendarManager, progress, pManager, true);
         }
 
         throw new IllegalArgumentException("Kein passender Loader verfügbar! (AsyncTaskManager.onCreateLoader))");
@@ -108,6 +108,10 @@ public class AsyncTaskManager implements LoaderManager.LoaderCallbacks<ResultWra
             calendarManager.setEntryIds(data.getIds());
             pManager.setEntryIds(calendarManager.getEntryIdsAsString());
             pManager.save();
+
+            // Erfolgsmeldung abgeben
+            errorCallback.appendProgress("Alle Termine erfolgreich hinzugefügt");
+
 
         }
 
