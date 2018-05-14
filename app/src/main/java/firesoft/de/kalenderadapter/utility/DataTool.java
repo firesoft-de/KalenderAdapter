@@ -34,14 +34,13 @@ import firesoft.de.kalenderadapter.data.ServerParameter;
 import firesoft.de.kalenderadapter.interfaces.IErrorCallback;
 import firesoft.de.kalenderadapter.manager.PreferencesManager;
 
-public class DataTool extends AsyncTaskLoader<ResultWrapper> {
+public class DataTool extends AsyncTaskLoader<ResultWrapper> implements IErrorCallback {
 
     //=======================================================
     //=====================VARIABLEN=========================
     //=======================================================
 
     private ArrayList<ServerParameter> params;
-    private IErrorCallback errorCallback;
     private CalendarManager cManager;
     private MutableLiveData<String> progress;
     private boolean managed;
@@ -62,21 +61,22 @@ public class DataTool extends AsyncTaskLoader<ResultWrapper> {
     /**
      * Instanziert ein neues DataToolkit
      * @param params Parametersatz
-     * @param errorCallback Callback für Fehlerberichte an den Nutzer
      * @param context Context in dem der Loader läuft
      * @param cManager Ein CalendarManager
      * @param progress Callback für Fortschrittsberichte an den Nutzer
      * @param managed Gibt an, ob der Loader durch einen Manager verwaltet wird. True = verwaltet, false = eigenständig (aktiviert oder deaktiviert forceLoad())
      */
-    public DataTool(ArrayList<ServerParameter> params, IErrorCallback errorCallback, Context context, CalendarManager cManager, MutableLiveData<String> progress, PreferencesManager pManager, boolean managed) {
+    public DataTool(ArrayList<ServerParameter> params, Context context, CalendarManager cManager, MutableLiveData<String> progress, PreferencesManager pManager, boolean managed) {
         super(context);
 
         this.params = params;
-        this.errorCallback = errorCallback;
         this.cManager = cManager;
         this.progress = progress;
         this.managed = managed;
         this.pManager = pManager;
+
+        cManager.redefineErrorCallback(this);
+
     }
 
     //=======================================================
@@ -191,11 +191,9 @@ public class DataTool extends AsyncTaskLoader<ResultWrapper> {
 
             }
 
-            //errorCallback.publishProgress(counter, events.size(),null);
-
             counter ++;
 
-            progress.postValue("Fortschritt " + counter + "/" + events.size());
+            publishProgress("Fortschritt " + counter + "/" + events.size());
 
         }
 
@@ -271,7 +269,7 @@ public class DataTool extends AsyncTaskLoader<ResultWrapper> {
             uri = cr.insert(CalendarContract.Events.CONTENT_URI, values);
         } catch (SecurityException e) {
             e.printStackTrace();
-            errorCallback.publishError("Eine Sicherheitsausnahme ist aufgertreten! (CalendarManager.addCalenderEntry");
+            publishError("Eine Sicherheitsausnahme ist aufgertreten! (CalendarManager.addCalenderEntry");
             return -1;
         }
 
@@ -327,7 +325,7 @@ public class DataTool extends AsyncTaskLoader<ResultWrapper> {
                     cr.insert(CalendarContract.Reminders.CONTENT_URI, reminder);
                 } catch (SecurityException e) {
                     e.printStackTrace();
-                    errorCallback.publishError("Eine Sicherheitsausnahme ist aufgertreten! (CalendarManager.addCalenderEntry (Reminders)");
+                    publishError("Eine Sicherheitsausnahme ist aufgertreten! (CalendarManager.addCalenderEntry (Reminders)");
                     return -1;
                 }
             }
@@ -348,4 +346,26 @@ public class DataTool extends AsyncTaskLoader<ResultWrapper> {
         return reminder;
     }
 
+    /**
+     * Ermöglicht es threadsichere Meldungen an den Nutzer auszugeben
+     * @param message Nachricht die angezeigt werden soll
+     */
+    @Override
+    public void publishError(String message) {
+        progress.postValue(message);
+    }
+
+    /**
+     * Ermöglicht es threadsichere Meldungen an den Nutzer auszugeben
+     * @param message Nachricht die angezeigt werden soll
+     */
+    @Override
+    public void publishProgress(String message) {
+        progress.postValue(message);
+    }
+
+    @Override
+    public void appendProgress(String message) {
+        progress.postValue(progress.getValue() + " - " + message);
+    }
 }

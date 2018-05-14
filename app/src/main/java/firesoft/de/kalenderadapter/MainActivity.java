@@ -504,6 +504,16 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
         tv.setText(message);
     }
 
+    /**
+     * Hängt eine Nachricht an die zuletzt angezeigte Nachricht an
+     * @param message Anzuhängende Nachricht. Es wird automatisch der folgende Trenner eingefügt: " - "
+     */
+    @Override
+    public void appendProgress(String message) {
+        TextView tv = this.findViewById(R.id.tV_progress);
+        tv.append(" - ");
+        tv.append(message);
+    }
 
     /**
      * Prüft, ob die benötigten Berechtigungen zum Zugriff auf den Kalender vorliegen

@@ -22,6 +22,7 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.provider.CalendarContract;
 import android.provider.CalendarContract.*;
+import android.support.annotation.Nullable;
 
 import java.util.ArrayList;
 
@@ -57,7 +58,7 @@ public class CalendarManager {
      * Erstellt eine neue Instanz der Klasse
      * @param context Eine Kopie des Context
      */
-    public CalendarManager(Context context, IErrorCallback errorCallback) {
+    public CalendarManager(Context context, @Nullable IErrorCallback errorCallback) {
         this.context = context;
         cals = new ArrayList<>();
         this.errorCallback = errorCallback;
@@ -265,7 +266,9 @@ public class CalendarManager {
         }
 
         // Es wurden keine Elemente gefunden -> Fehlermeldung ausgeben
-        errorCallback.publishError("Es konnten keine Kalender gefunden werden.");
+        if (errorCallback != null) {
+            errorCallback.publishError("Es konnten keine Kalender gefunden werden.");
+        }
         return null;
     }
 
@@ -287,9 +290,14 @@ public class CalendarManager {
                 int rows = cr.delete(deleteUri, null, null);
 
                 counter ++;
-
-                errorCallback.publishProgress(String.valueOf(counter) + "/" +  String.valueOf(entryIds.size()) + " gelöscht");
-
+                if (errorCallback != null) {
+                    errorCallback.publishProgress(String.valueOf(counter) + "/" + String.valueOf(entryIds.size()) + " gelöscht");
+                }
+            }
+        }
+        else {
+            if (errorCallback != null) {
+                errorCallback.publishProgress("Keine Termine zum Löschen vorhanden!");
             }
         }
 
@@ -375,7 +383,15 @@ public class CalendarManager {
                 entryIds.add(id);
             }
         }
-
     }
+
+    /**
+     * Bietet die Möglichkeit das Callback Interface zu erneuern. Wird bspw. bei der Übergabe eines Objektes an einen anderen Thread benötigt, da der neue Thread sein eigenes Callback Interface eintragen muss.
+     * @param callback Das neue Callback Interface
+     */
+    public void redefineErrorCallback(IErrorCallback callback) {
+        errorCallback = callback;
+    }
+
 }
 

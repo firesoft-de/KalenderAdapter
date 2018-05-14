@@ -137,6 +137,12 @@ public class NetworkTool {
                 // Stack ausgeben und Fehler loggen
                 ex1.printStackTrace();
 
+                if (ex1.getCause().getMessage().equals("401")) {
+                    // 401 Fehler: Wiederholter Anmeldeversuch mit falschen Daten
+                    // An Nutzer melden und Neueingabe anfordern
+                    throw ex1;
+                }
+
                 // Rückfallebene ohne SSL benutzen
                 try {
                     stream = httpRequest(url, ServerParameter.convertToSimpleEntry(parameters), REQUEST_METHOD.GET, user, password, null);
@@ -233,10 +239,17 @@ public class NetworkTool {
                 // Verbindung hergestellt, jetzt Daten abrufen
                 return connection.getInputStream();
             case HttpsURLConnection.HTTP_UNAUTHORIZED:
-                // Authorisierung  erforderlich -> Auth erstellen, anhängen und neue Anfrage starten
-                String auth = appendAuth(connection, user, password);
 
-                return httpsRequest(url, parameters, REQUEST_METHOD.GET, user, password, auth);
+                if (authentificationField != null) {
+                    // Es wurde bereits eine Kennung übergeben. Wenn jetzt immer noch ein 401 Fehler auftritt ist die eingegebene Kennung wahrsch. falsch
+                    throw new IOException("Server meldet 401: Eingegebene Zugangsdaten sind fehlerhaft.");
+                }
+                else {
+                    // Authorisierung  erforderlich -> Auth erstellen, anhängen und neue Anfrage starten
+                    String auth = appendAuth(connection, user, password);
+
+                    return httpRequest(url, parameters, REQUEST_METHOD.GET, user, password, auth);
+                }
             default:
                 throw new IOException("Fehler bei der HTTP Anfrage! Fehlercode:" + String.valueOf(response));
         }
@@ -296,10 +309,18 @@ public class NetworkTool {
                 return connection.getInputStream();
 
             case HttpsURLConnection.HTTP_UNAUTHORIZED:
-                // Authorisierung  erforderlich -> Auth erstellen, anhängen und neue Anfrage starten
-                String auth = appendAuth(connection, user, password);
 
-                return httpsRequest(url, parameters, REQUEST_METHOD.GET, user, password, auth);
+                if (authentificationField != null) {
+                    // Es wurde bereits eine Kennung übergeben. Wenn jetzt immer noch ein 401 Fehler auftritt ist die eingegebene Kennung wahrsch. falsch
+                    throw new IOException("Server meldet 401: Eingegebene Zugangsdaten sind fehlerhaft.",new Throwable("401"));
+                }
+                else {
+                    // Authorisierung  erforderlich -> Auth erstellen, anhängen und neue Anfrage starten
+                    String auth = appendAuth(connection, user, password);
+
+                    return httpsRequest(url, parameters, REQUEST_METHOD.GET, user, password, auth);
+                }
+
             default:
                 throw new IOException("Fehler bei der HTTP Anfrage! Fehlercode:" + String.valueOf(response));
         }

@@ -13,7 +13,9 @@
 
 package firesoft.de.kalenderadapter.interfaces;
 
-
+/**
+ * Standartisiertes Interface zum Anzeigen von Meldungen an den Benutzer
+ */
 public interface IErrorCallback {
 
     /**
@@ -24,8 +26,14 @@ public interface IErrorCallback {
 
     /**
      * Gibt ein Fortschrittsfeedback an den Nutzer aus
-     * @param message Nachricht
+     * @param message Nachricht die angezeigt werden soll
      */
     void publishProgress(String message);
+
+    /**
+     * Hängt eine Meldung an die zuletzt angezeigte Meldung an
+     * @param message Anzuhängende Nachricht
+     */
+    void appendProgress(String message);
 
 }
