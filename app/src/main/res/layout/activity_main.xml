@@ -344,6 +344,16 @@
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@+id/cB_set_reminder" />
 
+                <ImageView
+                    android:id="@+id/indicator_background_process"
+                    android:layout_width="60dp"
+                    android:layout_height="0dp"
+                    android:layout_marginStart="16dp"
+                    android:background="@drawable/round_indicator"
+                    app:layout_constraintBottom_toBottomOf="@+id/switch_service"
+                    app:layout_constraintStart_toEndOf="@+id/switch_service"
+                    app:layout_constraintTop_toTopOf="@+id/switch_service" />
+
 
             </android.support.constraint.ConstraintLayout>
 

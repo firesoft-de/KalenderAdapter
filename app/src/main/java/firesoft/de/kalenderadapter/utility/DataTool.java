@@ -25,7 +25,6 @@ import java.io.IOException;
 import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
 import firesoft.de.kalenderadapter.manager.CalendarManager;
 import firesoft.de.kalenderadapter.data.CustomCalendarEntry;

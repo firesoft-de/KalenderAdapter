@@ -11,4 +11,7 @@
     <color name="background_light">#9e9e9e</color>
 
     <color name="icon_background">#424242</color>
+
+    <color name="background_process_running">#2f5732</color>
+    <color name="background_process_dead">#ae4343</color>
 </resources>

@@ -547,7 +547,8 @@ public class NetworkTool {
 
 
         // Die Authentifzierungsbestandteile zusammenführen und an die Connection anhängen
-        String builder = "Digest " +
+
+        return "Digest " +
                 "username" + "=\"" + user + "\", " +
                 "realm" + "=\"" + container.getRealm() + "\", " +
                 "nonce" + "=\"" + container.getNonce() + "\", " +
@@ -557,8 +558,6 @@ public class NetworkTool {
                 "qop" + "=" + container.getQop() + ", " +
                 "nc" + "=" + "00000001" + ", " +
                 "cnonce" + "=\"" + container.getCnonce() + "\"";
-
-        return builder;
 
     }
 
