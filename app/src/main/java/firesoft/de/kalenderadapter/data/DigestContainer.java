@@ -72,8 +72,8 @@ public class DigestContainer {
                         break;
 
                     case "nc":
-                        qop = element_fields[1];
-                        qop = qop.replace("\"","");
+                        String tmp = element_fields[1].replace("\"","");
+                        nc = Integer.valueOf(tmp);
                         break;
 
                 }

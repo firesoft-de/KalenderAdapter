@@ -18,6 +18,8 @@ import android.arch.lifecycle.MutableLiveData;
 import android.arch.lifecycle.Observer;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
+import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -25,6 +27,7 @@ import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.content.res.ResourcesCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.CardView;
 import android.view.View;
@@ -34,6 +37,7 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.Switch;
 import android.widget.TextView;
@@ -153,6 +157,8 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
                     ServiceUtil.startService(getApplicationContext(),pManager.getSyncFrom(),pManager.getSyncInterval());
                 }
 
+                change_service_indivator();
+
             }
         });
 
@@ -233,6 +239,7 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
             }
         });
 
+        // Test Button für Hintergrundservice
         Button btCheckServiceAlive = this.findViewById(R.id.bt_check_service_alive);
         btCheckServiceAlive.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -309,6 +316,9 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
         else {
             setServiceSwitch(true);
         }
+
+        // Anzeige für den Status des Hintergrundprozesses aktualisieren
+        change_service_indivator();
 
     }
 
@@ -628,6 +638,31 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
 
     private void setServiceSwitch(boolean checked) {
         ((Switch) this.findViewById(R.id.switch_service)).setChecked(checked);
+    }
+
+    private void change_service_indivator() {
+
+        boolean res = ServiceUtil.checkServiceIsRunning(getApplicationContext(),BackgroundService.class);
+
+        int color;
+
+        if (res) {
+            color = ResourcesCompat.getColor(getResources(), R.color.background_process_running, null);
+        }
+        else {
+            color = ResourcesCompat.getColor(getResources(), R.color.background_process_dead, null);
+        }
+
+        Drawable round_indicator = this.getDrawable(R.drawable.round_indicator);
+        assert round_indicator != null;
+        round_indicator.setColorFilter(color, PorterDuff.Mode.SRC_ATOP);
+
+        ((ImageView) this.findViewById(R.id.indicator_background_process)).setImageDrawable(round_indicator);
+
+        // Felder ein- bzw. ausschalten
+        this.findViewById(R.id.service_sync_interval).setEnabled(res);
+        this.findViewById(R.id.service_sync_from).setEnabled(res);
+
     }
 
 }
