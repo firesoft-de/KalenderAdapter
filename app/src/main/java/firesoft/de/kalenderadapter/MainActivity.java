@@ -45,6 +45,8 @@ import android.widget.Spinner;
 import android.widget.Switch;
 import android.widget.TextView;
 
+import com.github.zagum.switchicon.SwitchIconView;
+
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
@@ -310,23 +312,15 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
         setVersion();
 
         // Prüfen, ob der Hintergrundservice läuft oder nicht
-        if (!ServiceUtil.checkServiceIsRunning(this, BackgroundService.class)) { //
-            // Service läuft nicht -> starten
-//            ServiceUtil.startService(getApplicationContext());
-
+        if (!ServiceUtil.checkServiceIsRunning(this, BackgroundService.class)) {
             // UI Switch setzen
             setServiceSwitch(false);
-
-            // Standardwerte für Intervall und Startzeit in den Preferences Manager schreiben
-//            pManager.setSyncFrom(PreferencesManager.default_sync_start);
-//            pManager.setSyncInterval(AlarmManager.INTERVAL_DAY);
+            ((SwitchIconView) this.findViewById(R.id.switch_icon_view)).setIconEnabled(false);
         }
         else {
             setServiceSwitch(true);
+            ((SwitchIconView) this.findViewById(R.id.switch_icon_view)).setIconEnabled(true);
         }
-
-        // Anzeige für den Status des Hintergrundprozesses aktualisieren
-        change_service_indivator();
 
     }
 
@@ -691,6 +685,8 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
 
     private void setServiceSwitch(boolean checked) {
         ((Switch) this.findViewById(R.id.switch_service)).setChecked(checked);
+        this.findViewById(R.id.service_sync_interval).setEnabled(checked);
+        this.findViewById(R.id.service_sync_from).setEnabled(checked);
     }
 
     /**
@@ -699,21 +695,8 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
     private void change_service_indivator() {
 
         boolean res = ServiceUtil.checkServiceIsRunning(getApplicationContext(),BackgroundService.class);
-
-        int color;
-
-        if (res) {
-            color = ResourcesCompat.getColor(getResources(), R.color.background_process_running, null);
-        }
-        else {
-            color = ResourcesCompat.getColor(getResources(), R.color.background_process_dead, null);
-        }
-
-        Drawable round_indicator = this.getDrawable(R.drawable.round_indicator);
-        assert round_indicator != null;
-        round_indicator.setColorFilter(color, PorterDuff.Mode.SRC_ATOP);
-
-        ((ImageView) this.findViewById(R.id.indicator_background_process)).setImageDrawable(round_indicator);
+        SwitchIconView siv = ((SwitchIconView) this.findViewById(R.id.switch_icon_view));
+        siv.switchState();
 
         // Felder ein- bzw. ausschalten
         this.findViewById(R.id.service_sync_interval).setEnabled(res);
