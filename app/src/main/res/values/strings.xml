@@ -10,6 +10,7 @@
     <string name="card_calendar">Kalenderauswahl</string>
     <string name="card_calendar_description">Verfügbare Kalender</string>
     <string name="bt_start_download">Download starten und Einträge hinzufügen</string>
+    <string name="bt_rights_managment">Zugriffsrechte erneut anfragen</string>
     <string name="bt_deleteAll">Alle hinzugefügten Einträge löschen</string>
 
     <string name="card_about">Über</string>
@@ -29,5 +30,10 @@
     <string name="add_reminder">Erinnerungen hinzufügen</string>
     <string name="inteligent_reminder">Erinnerungen anhand des Terminstatus setzen</string>
     <string name="settings_reset">Einstellungen zurücksetzen</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="info_bt_ok">Ok</string>
+    <string name="info_text">Um die Termine korrekt in den Kalender übernehmen zu können, benötigt diese App die entsprechende Zugriffsberechtigung.   Nachfolgend werden Sie vom System aufgefordert diese Berechtigung zu erteilen. Falls Sie die Berechtigung verweigern, wird die App nicht wie erwartet funktionieren.</string>
 
 </resources>

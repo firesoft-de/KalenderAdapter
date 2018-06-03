@@ -3,6 +3,7 @@
     <color name="colorPrimary">#3f51b5</color>
     <color name="colorPrimaryDark">#303F9F</color>
     <color name="colorAccent">#ffffff</color>
+    <color name="information">#2a5b96</color>
 
     <color name="text">#455a64</color>
     <color name="text_white">#ffffff</color>
@@ -14,4 +15,5 @@
 
     <color name="background_process_running">#2f5732</color>
     <color name="background_process_dead">#ae4343</color>
+
 </resources>
