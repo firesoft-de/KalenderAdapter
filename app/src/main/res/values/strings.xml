@@ -34,6 +34,6 @@
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="info_bt_ok">Ok</string>
-    <string name="info_text">Um die Termine korrekt in den Kalender übernehmen zu können, benötigt diese App die entsprechende Zugriffsberechtigung.   Nachfolgend werden Sie vom System aufgefordert diese Berechtigung zu erteilen. Falls Sie die Berechtigung verweigern, wird die App nicht wie erwartet funktionieren.</string>
+    <string name="info_text">Um die Termine korrekt in den Kalender übernehmen zu können, benötigt diese App eine Zugriffsberechtigung auf Ihren Kalender.\nSie werden nun einen Systemdialog zur Freigabe der Berechtigung angezeigt bekommen. Falls Sie die Berechtigung verweigern, wird die App nicht wie erwartet funktionieren.</string>
 
 </resources>

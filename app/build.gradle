@@ -55,4 +55,10 @@ dependencies {
 //    androidTestImplementation 'com.android.support.test:runner:1.0.1'
 //    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.1'
 
+    // Android Switch-Icon importieren
+    implementation 'com.github.zagum:Android-SwitchIcon:1.3.7'
+
+    // Netlib importieren
+    implementation 'com.github.firesoft-de:libfirenet:1.0.1'
+
 }

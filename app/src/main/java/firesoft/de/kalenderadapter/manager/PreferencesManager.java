@@ -22,10 +22,6 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 
-import java.util.Date;
-
-import firesoft.de.kalenderadapter.utility.NetworkTool;
-
 /**
  * Manager Klasse mit der die gespeicherten Einstellungen zentrak verwaltet und bereitgestellt werden
  */
