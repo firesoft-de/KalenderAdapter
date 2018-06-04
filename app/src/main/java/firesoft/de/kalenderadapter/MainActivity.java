@@ -14,11 +14,11 @@
 package firesoft.de.kalenderadapter;
 
 import android.Manifest;
+import android.app.Dialog;
 import android.arch.lifecycle.MutableLiveData;
 import android.arch.lifecycle.Observer;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
-import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
@@ -31,6 +31,8 @@ import android.support.v4.content.res.ResourcesCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.CardView;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.Window;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -38,9 +40,12 @@ import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.ScrollView;
 import android.widget.Spinner;
 import android.widget.Switch;
 import android.widget.TextView;
+
+import com.github.zagum.switchicon.SwitchIconView;
 
 import java.text.ParseException;
 import java.util.ArrayList;
@@ -239,6 +244,14 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
             }
         });
 
+        // Button für die erneute Aufforderung zur Rechtevergabe
+        ((Button) this.findViewById(R.id.bt_showRightsManagment)).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                populateSpinner();
+            }
+        });
+
         // Test Button für Hintergrundservice
         Button btCheckServiceAlive = this.findViewById(R.id.bt_check_service_alive);
         btCheckServiceAlive.setOnClickListener(new View.OnClickListener() {
@@ -292,9 +305,6 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
             displayMessage("Fehler beim Laden der Einstellungen! " + e.getMessage(), Snackbar.LENGTH_LONG);
         }
 
-        // Die verf. Kalender in den Spinner schreiben
-        populateSpinner();
-
         // Preference Einstellungen in die UI schreiben
         fillFromPreferences();
 
@@ -302,25 +312,26 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
         setVersion();
 
         // Prüfen, ob der Hintergrundservice läuft oder nicht
-        if (!ServiceUtil.checkServiceIsRunning(this, BackgroundService.class)) { //
-            // Service läuft nicht -> starten
-//            ServiceUtil.startService(getApplicationContext());
-
+        if (!ServiceUtil.checkServiceIsRunning(this, BackgroundService.class)) {
             // UI Switch setzen
             setServiceSwitch(false);
-
-            // Standardwerte für Intervall und Startzeit in den Preferences Manager schreiben
-//            pManager.setSyncFrom(PreferencesManager.default_sync_start);
-//            pManager.setSyncInterval(AlarmManager.INTERVAL_DAY);
+            ((SwitchIconView) this.findViewById(R.id.switch_icon_view)).setIconEnabled(false);
         }
         else {
             setServiceSwitch(true);
+            ((SwitchIconView) this.findViewById(R.id.switch_icon_view)).setIconEnabled(true);
         }
 
-        // Anzeige für den Status des Hintergrundprozesses aktualisieren
-        change_service_indivator();
-
     }
+
+    @Override
+    public void onAttachedToWindow() {
+        super.onAttachedToWindow();
+
+        // Die verf. Kalender in den Spinner schreiben
+        populateSpinner();
+    }
+
 
     /**
      * Wird aufgerufen, wenn die App beendet wird
@@ -350,7 +361,22 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
             case 2: {
                 // Aufruf aus dem populateSpinner
 
-                populateSpinner();
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+
+                    changeUiElementsEnabled((ViewGroup) this.findViewById(R.id.MainFrame), true);
+                    this.findViewById(R.id.bt_showRightsManagment).setVisibility(View.GONE);
+
+                    // Berechtigung wurde gegeben
+                    populateSpinner();
+
+                }
+                else {
+                    // Keine Berechtigung erteilt. Alle UI-Elemente sperren und einen Button zur erneuten Anzeige der Aufforderung anzeigen.
+                    this.findViewById(R.id.bt_showRightsManagment).setVisibility(View.VISIBLE);
+                    changeUiElementsEnabled((ViewGroup) this.findViewById(R.id.MainFrame),false);
+                }
 
             }
 
@@ -529,13 +555,34 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
      * Prüft, ob die benötigten Berechtigungen zum Zugriff auf den Kalender vorliegen
      * @param requestCode Ein Anwenderdefinierter Marker
      */
-    public void checkPermission(int requestCode) {
+    public void checkPermission(final int requestCode) {
         if (ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.WRITE_CALENDAR) != PackageManager.PERMISSION_GRANTED ||
                 ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.READ_CALENDAR) != PackageManager.PERMISSION_GRANTED  ) {
             // Keine Erlaubnis vorhanden.
 
+            final MainActivity activity = this;
+
+            // https://stackoverflow.com/a/31279458/9854602
+            final Dialog informationDialog = new Dialog(MainActivity.this);
+
+            informationDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+            informationDialog.setCancelable(false);
+            informationDialog.setContentView(R.layout.layout_information_dialog);
+
+            Button dialogButton = (Button) informationDialog.findViewById(R.id.info_button);
+            dialogButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    informationDialog.dismiss();
+                    ActivityCompat.requestPermissions(activity, new String[]{Manifest.permission.WRITE_CALENDAR, Manifest.permission.READ_CALENDAR}, requestCode);
+                }
+            });
+
+            informationDialog.show();
+
             // Nutzer nach der Erlaubnis fragen
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_CALENDAR, Manifest.permission.READ_CALENDAR}, requestCode);
+            // ActivityCompat.requestPermissions(activity, new String[]{Manifest.permission.WRITE_CALENDAR, Manifest.permission.READ_CALENDAR}, requestCode);
+
         }
     }
 
@@ -638,30 +685,56 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
 
     private void setServiceSwitch(boolean checked) {
         ((Switch) this.findViewById(R.id.switch_service)).setChecked(checked);
+        this.findViewById(R.id.service_sync_interval).setEnabled(checked);
+        this.findViewById(R.id.service_sync_from).setEnabled(checked);
     }
 
+    /**
+     * Ändert den Anzeigestatus und zwei Einstellungselemente auf Basis des Hintergrundstatus
+     */
     private void change_service_indivator() {
 
         boolean res = ServiceUtil.checkServiceIsRunning(getApplicationContext(),BackgroundService.class);
-
-        int color;
-
-        if (res) {
-            color = ResourcesCompat.getColor(getResources(), R.color.background_process_running, null);
-        }
-        else {
-            color = ResourcesCompat.getColor(getResources(), R.color.background_process_dead, null);
-        }
-
-        Drawable round_indicator = this.getDrawable(R.drawable.round_indicator);
-        assert round_indicator != null;
-        round_indicator.setColorFilter(color, PorterDuff.Mode.SRC_ATOP);
-
-        ((ImageView) this.findViewById(R.id.indicator_background_process)).setImageDrawable(round_indicator);
+        SwitchIconView siv = ((SwitchIconView) this.findViewById(R.id.switch_icon_view));
+        siv.switchState();
 
         // Felder ein- bzw. ausschalten
         this.findViewById(R.id.service_sync_interval).setEnabled(res);
         this.findViewById(R.id.service_sync_from).setEnabled(res);
+
+    }
+
+    /**
+     * Schaltet alle UI-Elemente ein oder aus
+     */
+    private void changeUiElementsEnabled(ViewGroup viewGroup, boolean enabled) {
+
+        int childCount = viewGroup.getChildCount();
+
+        for (int i = 0; i < childCount; i++) {
+
+            // Der Button zum erneuten Anzeigen der Berechtigung darf nicht abgeschaltet werden
+            if (viewGroup.getChildAt(i) instanceof Button) {
+                Button bt = (Button) viewGroup.getChildAt(i);
+                if (!bt.getText().equals(getResources().getString(R.string.bt_rights_managment))) {
+                    // Es ist nicht der gesuchte Button -> Abschalten/Einschalten
+                    bt.setEnabled(enabled);
+                }
+            }
+            else {
+                View view = viewGroup.getChildAt(i);
+                view.setEnabled(enabled);
+            }
+
+            // Prüfen ob das aktuelle Viewobjekt Kinder hat
+            try {
+                if (((ViewGroup) viewGroup.getChildAt(i)).getChildCount() > 0) {
+                    changeUiElementsEnabled((ViewGroup) viewGroup.getChildAt(i), enabled);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
 
     }
 

@@ -10,12 +10,13 @@
     <string name="card_calendar">Kalenderauswahl</string>
     <string name="card_calendar_description">Verfügbare Kalender</string>
     <string name="bt_start_download">Download starten und Einträge hinzufügen</string>
+    <string name="bt_rights_managment">Zugriffsrechte erneut anfragen</string>
     <string name="bt_deleteAll">Alle hinzugefügten Einträge löschen</string>
 
     <string name="card_about">Über</string>
     <string name="about_text">Diese App ermöglicht den Import von Kalenderdaten im ICS in einen lokalen Kalender. Die Datenübertragung erfolgt dabei über eine sichere HTTPS-Verbindung und eine Digest-Authentifizierung beim Datenabruf.</string>
     <string name="about_security">Sicherheitshinweis!\nDie eingegbenen Zugangsdaten werden aus Kompatibilitätsgründen in einer nicht gesicherten Form abgespeichert. Für den gängigen Anwendungsfall stellt dies kein Risiko dar. Sollte aber ein Driter physischen Zugriff auf das Gerät bekommen oder ein gerootetes Gerät verwendet werden, sind die Zugangsdaten gefährdet!\nEs wird die Verwendung eines Gerätepasswortes empfholen!</string>
-    <string name="about_license">Dieses Projekt ist Open Source und steht unter der GNU GPL v3.0!\nDu findest das Repository unter\n<a href="https://github.com/firesoft-de/KalenderAdapter">https://github.com/firesoft-de/KalenderAdapter</a>\n\nDer Lizenztext ist unter\n<a href="https://www.gnu.org/licenses/gpl-3.0.de.html#content">https://www.gnu.org/licenses/gpl-3.0.html</a>\neinsehbar.</string>
+    <string name="about_license">Dieses Projekt ist Open Source und steht unter der GNU GPL v3.0!\nDu findest das Repository unter\n<a href="https://github.com/firesoft-de/KalenderAdapter">https://github.com/firesoft-de/KalenderAdapter</a>\n\nDer Lizenztext ist unter\n<a href="https://www.gnu.org/licenses/gpl-3.0.de.html#content">https://www.gnu.org/licenses/gpl-3.0.html</a>\neinsehbar. \n\n Eingesetzte Bibliotheken \n - Android-SwitchIcon von Evgenii Zagumennyi \n - Material Icons von Google</string>
     <string name="about_version">App-Version</string>
     <string name="about_appname">KalenderAdapter</string>
 
@@ -29,5 +30,10 @@
     <string name="add_reminder">Erinnerungen hinzufügen</string>
     <string name="inteligent_reminder">Erinnerungen anhand des Terminstatus setzen</string>
     <string name="settings_reset">Einstellungen zurücksetzen</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="info_bt_ok">Ok</string>
+    <string name="info_text">Um die Termine korrekt in den Kalender übernehmen zu können, benötigt diese App eine Zugriffsberechtigung auf Ihren Kalender.\nSie werden nun einen Systemdialog zur Freigabe der Berechtigung angezeigt bekommen. Falls Sie die Berechtigung verweigern, wird die App nicht wie erwartet funktionieren.</string>
 
 </resources>

@@ -13,25 +13,36 @@
 
 package firesoft.de.kalenderadapter.utility;
 
+import android.arch.lifecycle.Lifecycle;
+import android.arch.lifecycle.LifecycleOwner;
 import android.arch.lifecycle.MutableLiveData;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.net.Uri;
 import android.provider.CalendarContract;
+import android.support.annotation.NonNull;
 import android.support.v4.content.AsyncTaskLoader;
 
 import java.io.IOException;
-import java.security.InvalidParameterException;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Objects;
+import java.util.Observable;
+import java.util.Observer;
 
-import firesoft.de.kalenderadapter.manager.CalendarManager;
 import firesoft.de.kalenderadapter.data.CustomCalendarEntry;
 import firesoft.de.kalenderadapter.data.ResultWrapper;
 import firesoft.de.kalenderadapter.data.ServerParameter;
 import firesoft.de.kalenderadapter.interfaces.IErrorCallback;
+import firesoft.de.kalenderadapter.manager.CalendarManager;
 import firesoft.de.kalenderadapter.manager.PreferencesManager;
+import firesoft.de.libfirenet.authentication.Digest;
+import firesoft.de.libfirenet.http.HttpWorker;
+import firesoft.de.libfirenet.interfaces.ICallback;
+import firesoft.de.libfirenet.method.GET;
+import firesoft.de.libfirenet.util.HttpState;
 
 public class DataTool extends AsyncTaskLoader<ResultWrapper> implements IErrorCallback {
 
@@ -91,37 +102,59 @@ public class DataTool extends AsyncTaskLoader<ResultWrapper> implements IErrorCa
         String serverResponse = null;
 
         String url = null;
-        int removeIndex = -1;
+        String user = null;
+        String pass = null;
 
-        for (ServerParameter param: params
+        for (ServerParameter param : params
                 ) {
 
             switch (param.getKey()) {
 
                 case "url":
                     url = param.getValueAsString();
-                    removeIndex = params.indexOf(param);
+                    break;
+
+                case "user":
+                    user = param.getValueAsString();
+                    break;
+
+                case "pw":
+                    pass = param.getValueAsString();
                     break;
 
             }
 
-            if (removeIndex > -1) {break;}
-
         }
 
-        if (removeIndex == -1) {
-            InvalidParameterException e = new InvalidParameterException("Keine URL gefunden! (DataTool.loadInBackground)");
-            return new ResultWrapper(e);
-        }
+        // Passenden Authenticator erstellen
+        Digest authenticator = new Digest(user, pass);
 
-        params.remove(removeIndex);
+        // Worker Objekt erstellen
+        HttpWorker worker = null;
+        MutableLiveData<HttpState> stateData;
 
-        // Anfrage mit dem NetworkTool abschicken und die Antwort abrufen
         try {
-            serverResponse = NetworkTool.request(getContext(), url, params, false);
-        } catch (IOException e) {
-            return new ResultWrapper(e);
+            // HTTP-Worker initalisieren
+            worker = new HttpWorker(url, GET.class, getContext(), authenticator, null, false, null);
+
+            // Anfrage ausführen
+            worker.excecute();
+        } catch (InstantiationException | IllegalAccessException | InvocationTargetException | IOException | NoSuchMethodException e) {
+            new ResultWrapper(e);
         }
+
+
+        // Serverantwort abrufen
+        assert worker != null;
+        serverResponse = worker.toString();
+
+        if (serverResponse == null || serverResponse.equals("")) {
+            // Laut Status stimmt irgendwas nicht. -> Fehlermeldung werfen
+            return new ResultWrapper(new Exception("Download fehlgeschlagen! HTTP-Response: " + Objects.requireNonNull(worker.getResponseCode().getValue()).toString()));
+        }
+
+        // Verbindung trennen
+        worker.disconnect();
 
         // Die Serverantwort in einzelne Events aufteilen
         ArrayList<String> events = parseServerResponse(serverResponse);
@@ -324,7 +357,7 @@ public class DataTool extends AsyncTaskLoader<ResultWrapper> implements IErrorCa
                     cr.insert(CalendarContract.Reminders.CONTENT_URI, reminder);
                 } catch (SecurityException e) {
                     e.printStackTrace();
-                    publishError("Eine Sicherheitsausnahme ist aufgertreten! (CalendarManager.addCalenderEntry (Reminders)");
+                    publishError("Eine Sicherheitsausnahme ist aufgetreten! (CalendarManager.addCalenderEntry (Reminders)");
                     return -1;
                 }
             }
