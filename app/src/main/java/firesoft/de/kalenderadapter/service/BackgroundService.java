@@ -67,7 +67,9 @@ public class BackgroundService extends Service implements Loader.OnLoadCompleteL
 
         // CalendarManager starten
         cManager = new CalendarManager(getApplicationContext(),null);
-        cManager.setActiveCalendar(pManager.getActiveCalendarId());
+        cManager.setActiveCalendar(pManager.getActiveCalendarId());             // Aktiven Kalender laden
+        cManager.setEntryIdsFromString(pManager.getEntryIds());                 // Die von der App gesetzten Einträge laden
+        cManager.loadCalendarEntries();                                         // Die Kalender laden
 
         // Prüfen, ob alle benötigten Daten vorliegen
         if (pManager.getUrl().equals("") || pManager.getPassword().equals("") || pManager.getUrl().equals("") || cManager.getActiveCalendar() == null) {
@@ -94,8 +96,6 @@ public class BackgroundService extends Service implements Loader.OnLoadCompleteL
         // Basierend auf https://stackoverflow.com/questions/8696146/can-you-use-a-loadermanager-from-a-service/24393728
         dataTool.registerListener(1,this); // 1 = Marker für MainLoader (im AsyncTaskManager definiert)
         dataTool.startLoading();
-
-
 
         return super.onStartCommand(intent, flags, startId);
     }
