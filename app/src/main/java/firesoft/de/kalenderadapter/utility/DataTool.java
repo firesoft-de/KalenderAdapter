@@ -165,6 +165,12 @@ public class DataTool extends AsyncTaskLoader<ResultWrapper> implements IErrorCa
 
         // Prüfen, ob die bestehenden Einträge überschrieben werden sollen. In diesem Fall können jetzt alle Einträge gelöscht und die neuen direkt eingefügt werden. Das ist einfacher, als bei allen zu prüfen, ob sich etwas geändert hat.
         if (pManager.isReplaceExistingActivated()) {
+
+            // Prüfen, ob bereits Einträge geladen wurden. Falls dies nicht der Fall ist, sollte dies jetzt nachgeholt werden. Es kann sonst zu Fehlern in .deleteEntries() kommen.
+            if (cManager.getEntryIds() == null ||cManager.getEntryIds().size() == 0) {
+                cManager.loadCalendarEntries();
+            }
+
             // Alle bestehenden Einträge löschen
             cManager.deleteEntries();
             pManager.setEntryIds("");
@@ -235,9 +241,9 @@ public class DataTool extends AsyncTaskLoader<ResultWrapper> implements IErrorCa
 
     @Override
     protected void onStartLoading() {
-        if (managed) {
+        //if (managed) { // Kann so nicht stehen bleiben. Ohne forceLoad() wird der enthaltene Code überhaupt nicht ausgeführt :/
             forceLoad();
-        }
+        //}
     }
 
 

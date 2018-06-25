@@ -126,6 +126,12 @@ public class CalendarManager {
      */
     private CustomCalendar findCalendarByName(String name) {
 
+        // Falls noch keine Kalender geladen wurden, sollte dies jetzt nachgeholt werden.
+        if (cals.size() == 0) {
+            getCalendars();
+        }
+
+        // Die vorhandenen Kalender durchsuchen und den Kalender mit dem gesuchten Namen ausgeben.
         for (CustomCalendar cal: cals
              ) {
             if (cal.getDisplayName().equals(name)) {
@@ -142,6 +148,12 @@ public class CalendarManager {
      */
     private CustomCalendar findCalenderById(int id) {
 
+        // Falls noch keine Kalender geladen wurden, sollte dies jetzt nachgeholt werden.
+        if (cals.size() == 0) {
+            getCalendars();
+        }
+
+        // Die vorhandenen Kalender durchsuchen und den Kalender mit der gesuchten ID ausgeben.
         for (CustomCalendar cal: cals
                 ) {
             if (cal.getId() == id) {
@@ -162,9 +174,11 @@ public class CalendarManager {
 
         ContentResolver cr = context.getContentResolver();
 
-        if (entryIds.size() == 0) {
-            return null;
-        }
+        //if (entryIds != null) {
+            if (entryIds.size() == 0) {
+                return null;
+            }
+        //}
 
         for (Integer id: entryIds
                 ) {
@@ -278,6 +292,11 @@ public class CalendarManager {
     public void deleteEntries() {
 
         int counter = 0;
+
+        // Falls entryIds == null ist, muss beendet werden, da ansonsten Fehler auftreten.
+        if (entryIds == null) {
+            return;
+        }
 
         if (entryIds.size() != 0) {
 

@@ -25,8 +25,8 @@ android {
         applicationId "firesoft.de.kalenderadapter"
         minSdkVersion 21
         targetSdkVersion 27
-        versionCode 7
-        versionName "0.4.1"
+        versionCode 9
+        versionName "0.4.3"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
