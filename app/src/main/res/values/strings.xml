@@ -11,7 +11,8 @@
     <string name="card_calendar_description">Verfügbare Kalender</string>
     <string name="bt_start_download">Download starten und Einträge hinzufügen</string>
     <string name="bt_rights_managment">Zugriffsrechte erneut anfragen</string>
-    <string name="bt_deleteAll">Alle hinzugefügten Einträge löschen</string>
+    <string name="bt_deleteAll">Synchronisierte Einträge löschen</string>
+    <string name="bt_empty_complete_calendar">Gesamten Kalender leeren</string>
 
     <string name="card_about">Über</string>
     <string name="about_text">Diese App ermöglicht den Import von Kalenderdaten im ICS in einen lokalen Kalender. Die Datenübertragung erfolgt dabei über eine sichere HTTPS-Verbindung und eine Digest-Authentifizierung beim Datenabruf.</string>

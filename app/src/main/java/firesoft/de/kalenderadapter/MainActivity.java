@@ -50,6 +50,7 @@ import com.github.zagum.switchicon.SwitchIconView;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
+import java.util.function.ToDoubleBiFunction;
 
 import firesoft.de.kalenderadapter.data.ServerParameter;
 import firesoft.de.kalenderadapter.interfaces.IErrorCallback;
@@ -132,6 +133,19 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
             @Override
             public void onClick(View view) {
                 cManager.deleteEntries();
+                pManager.setEntryIds("");
+            }
+        });
+
+        // Deletebutton für alle Einträge im Kalender
+        this.findViewById(R.id.bt_deleteAll).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                TODO
+                // Abfrage hinzufügen -> Es werden alle Einträge gelöscht! Sind Sie sich sicher
+
+                cManager.clearCalendar();
                 pManager.setEntryIds("");
             }
         });

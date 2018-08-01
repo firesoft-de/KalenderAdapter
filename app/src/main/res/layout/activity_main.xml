@@ -96,18 +96,6 @@
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@+id/tV_progress" />
 
-                <Button
-                    android:id="@+id/bt_showRightsManagment"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="16dp"
-                    android:layout_marginStart="16dp"
-                    android:text="@string/bt_rights_managment"
-                    android:visibility="gone"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/bt_deleteAll" />
-
                 <TextView
                     android:id="@+id/tV_progress"
                     style="@style/AppTheme.TextViewHint"
@@ -123,10 +111,31 @@
                     android:id="@+id/bt_deleteAll"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:text="@string/bt_deleteAll"
+                    android:text="@string/bt_empty_complete_calendar"
                     app:layout_constraintEnd_toEndOf="@+id/bt_startDownload"
                     app:layout_constraintStart_toStartOf="@+id/bt_startDownload"
                     app:layout_constraintTop_toBottomOf="@+id/bt_startDownload" />
+
+                <Button
+                    android:id="@+id/bt_emptyCalendar"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:text="@string/bt_deleteAll"
+                    app:layout_constraintEnd_toEndOf="@+id/bt_startDownload"
+                    app:layout_constraintStart_toStartOf="@+id/bt_startDownload"
+                    app:layout_constraintTop_toBottomOf="@+id/bt_deleteAll" />
+
+                <Button
+                    android:id="@+id/bt_showRightsManagment"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="16dp"
+                    android:layout_marginStart="16dp"
+                    android:text="@string/bt_rights_managment"
+                    android:visibility="gone"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/bt_emptyCalendar" />
 
             </android.support.constraint.ConstraintLayout>
 
