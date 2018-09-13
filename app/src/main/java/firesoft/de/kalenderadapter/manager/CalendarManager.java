@@ -29,6 +29,7 @@ import android.support.v4.app.ActivityCompat;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.EventListenerProxy;
 
 import firesoft.de.kalenderadapter.data.CustomCalendar;
 import firesoft.de.kalenderadapter.data.CustomCalendarEntry;
@@ -340,21 +341,15 @@ public class CalendarManager {
         // Auf Berechtigung prüfen
         if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_CALENDAR) != PackageManager.PERMISSION_GRANTED) {
             // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
+
             return;
         }
 
         // Query festlegen nach welchem die Einträge gesucht werden
-        String selection = Calendars._ID + " = ?";
+        String selection = Events.CALENDAR_ID + " = ?";
 
         // Argumente des Querys definieren
         String[] selectionArgs = new String[] {String.valueOf(activeCalendar.getId())};
-
 
         // Cursor bauen, welcher alle Einträge im aktiven Kalender abruft.
         Cursor cur = cr.query(CalendarContract.Events.CONTENT_URI, EVENT_PROJECTION, selection, selectionArgs, null);

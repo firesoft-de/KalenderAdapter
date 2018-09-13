@@ -139,8 +139,9 @@ public class DataTool extends AsyncTaskLoader<ResultWrapper> implements IErrorCa
 
             // Anfrage ausführen
             worker.excecute();
-        } catch (InstantiationException | IllegalAccessException | InvocationTargetException | IOException | NoSuchMethodException e) {
-            new ResultWrapper(e);
+        } catch (InstantiationException | IllegalAccessException | InvocationTargetException | IOException | NoSuchMethodException e)
+        {
+            return new ResultWrapper(e);
         }
 
 

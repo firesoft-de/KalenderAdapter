@@ -216,18 +216,23 @@ public class CustomCalendarEntry {
         }
 
         //Zur Description noch den aktuellen Status hinzufügen
-        switch (entryState) {
-            case OPEN:
-                description += "\n" + "Noch keine Rückmeldung abgegeben!";
-                break;
+        if (entryState != null) {
+            switch (entryState) {
+                case OPEN:
+                    description += "\n" + "Noch keine Rückmeldung abgegeben!";
+                    break;
 
-            case DECLINED:
-                description += "\n" + "Termin abgelehnt!";
-                break;
+                case DECLINED:
+                    description += "\n" + "Termin abgelehnt!";
+                    break;
 
-            case CONFIRMED:
-                description += "\n" + "Termin bestätigt!";
-                break;
+                case CONFIRMED:
+                    description += "\n" + "Termin bestätigt!";
+                    break;
+            }
+        }
+        else {
+            description += "\n" + "Status unbekannt!";
         }
 
         // Falls keine Zeitzone angegeben wurde, wird diese hier auf Berlin gesetzt

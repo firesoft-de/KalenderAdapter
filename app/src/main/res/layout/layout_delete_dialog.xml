@@ -15,10 +15,10 @@
   -->
 
 <android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/popUp_Mainframe"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/popUp_Mainframe">
 
     <View
         android:id="@+id/backgroundView"
@@ -37,9 +37,9 @@
         android:layout_marginEnd="24dp"
         android:layout_marginStart="24dp"
         android:layout_marginTop="8dp"
-        android:text="@string/info_text"
+        android:text="@string/info_delete_text"
         android:textAlignment="center"
-        app:layout_constraintBottom_toTopOf="@+id/info_button"
+        app:layout_constraintBottom_toTopOf="@+id/bt_yes"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/backgroundView" />
@@ -48,23 +48,39 @@
         android:id="@+id/info_imageView"
         android:layout_width="30dp"
         android:layout_height="30dp"
-        android:src="@drawable/ic_info"
+        android:src="@drawable/ic_alert"
         app:layout_constraintBottom_toBottomOf="@+id/backgroundView"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        android:contentDescription="Icon symboling user attention needed" />
+
 
     <Button
-        android:id="@+id/info_button"
+        android:id="@+id/bt_yes"
         android:layout_width="wrap_content"
         android:layout_height="48dp"
         android:layout_marginBottom="8dp"
         android:layout_marginTop="8dp"
-        android:text="@string/info_bt_ok"
+        android:text="@string/info_bt_yes"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/bt_no"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/info_textView"
+        android:backgroundTint="@color/information"
+        android:textColor="@color/text_white"/>
+
+    <Button
+        android:id="@+id/bt_no"
+        android:layout_width="wrap_content"
+        android:layout_height="48dp"
+        android:layout_marginBottom="8dp"
+        android:layout_marginTop="8dp"
+        android:text="@string/info_bt_no"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/bt_yes"
+        app:layout_constraintTop_toTopOf="@id/bt_yes"
+        app:layout_constraintBottom_toBottomOf="@id/bt_yes"
         android:backgroundTint="@color/information"
         android:textColor="@color/text_white"/>
 
