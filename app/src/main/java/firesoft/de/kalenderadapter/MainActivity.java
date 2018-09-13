@@ -47,9 +47,12 @@ import android.widget.TextView;
 
 import com.github.zagum.switchicon.SwitchIconView;
 
+import org.w3c.dom.Text;
+
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
+import java.util.function.ToDoubleBiFunction;
 
 import firesoft.de.kalenderadapter.data.ServerParameter;
 import firesoft.de.kalenderadapter.interfaces.IErrorCallback;
@@ -128,11 +131,52 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
         });
 
         // Deletebutton
+//        this.findViewById(R.id.bt_deleteAll).setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//                cManager.deleteEntries();
+//                pManager.setEntryIds("");
+//            }
+//        });
+
+        // Gefährliche Option! Sollte in der Releaseversion deaktiviert sein
+        if (BuildConfig.DEBUG) {
+            this.findViewById(R.id.bt_deleteAll).setVisibility(View.VISIBLE);
+        }
+        else {
+            this.findViewById(R.id.bt_deleteAll).setVisibility(View.GONE);
+        }
+
+
+        // Deletebutton für alle Einträge im Kalender
         this.findViewById(R.id.bt_deleteAll).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                cManager.deleteEntries();
-                pManager.setEntryIds("");
+
+                // Bestätigung des Nutzers abfragen, ob wirjklich der gesamte Kalender gelöscht werden soll
+                final Dialog informationDialog = new Dialog(MainActivity.this);
+
+                informationDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+                informationDialog.setCancelable(true);
+                informationDialog.setContentView(R.layout.layout_information_dialog);
+
+
+                ((TextView) informationDialog.findViewById(R.id.info_button)).setText(R.string.info_delete_text);
+
+                Button dialogButton = (Button) informationDialog.findViewById(R.id.info_button);
+                dialogButton.setText("Ja, alle Einträge löschen");
+                dialogButton.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        informationDialog.dismiss();
+
+                        cManager.clearCalendar();
+                        pManager.setEntryIds("");
+                    }
+                });
+
+                informationDialog.show();
+
             }
         });
 
@@ -180,8 +224,8 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
                     try {
                         timeMilliSeconds= StringToMillis(etServiceSyncFrom.getText().toString());
                     }
-                    catch (NumberFormatException | ParseException e) {
-                        publishError("Ungültiger Eingabewert! Erwartet wird: HH:mm");
+                    catch (Exception e) {
+                        publishError("Ungültiger Eingabewert! Erwartet wird: HH:mm (HH <=23, mm<= 59)");
                         return;
                     }
 
@@ -219,8 +263,8 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
                     try {
                         timeMilliSeconds= StringToMillis(etServiceSyncInterval.getText().toString());
                     }
-                    catch (NumberFormatException | ParseException e) {
-                        publishError("Ungültiger Eingabewert! Erwartet wird: HH:mm");
+                    catch (Exception e) {
+                        publishError("Ungültiger Eingabewert! Erwartet wird: HH:mm (HH <=23, mm<= 59)");
                         return;
                     }
 
@@ -644,6 +688,10 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
         int minutes = Integer.valueOf(input.split(":")[1]);
 
         if (hours == 0 && minutes == 0) {
+            throw new ParseException("",1);
+        }
+
+        if (hours > 24 || minutes > 60) {
             throw new ParseException("",1);
         }
 
