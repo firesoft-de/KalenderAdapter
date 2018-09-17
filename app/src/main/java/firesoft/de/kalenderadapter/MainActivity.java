@@ -130,14 +130,13 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
             }
         });
 
-        // Deletebutton
-//        this.findViewById(R.id.bt_deleteAll).setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View view) {
-//                cManager.deleteEntries();
-//                pManager.setEntryIds("");
-//            }
-//        });
+        this.findViewById(R.id.bt_emptyCalendar).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                cManager.deleteEntries();
+                pManager.setEntryIds("");
+            }
+        });
 
         // Gefährliche Option! Sollte in der Releaseversion deaktiviert sein
         if (BuildConfig.DEBUG) {

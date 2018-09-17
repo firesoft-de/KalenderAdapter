@@ -198,8 +198,8 @@ public class DataTool extends AsyncTaskLoader<ResultWrapper> implements IErrorCa
                 return new ResultWrapper(e);
             }
 
-            if (entry != null && entry.getEntryState() != CustomCalendarEntry.EntryState.DECLINED) {
-                // Wenn der Eintrag abgelehnt wurde, muss er auch nicht mehr zum Kalender hinzugefügt werden
+            if (entry != null && entry.getEntryState() != CustomCalendarEntry.EntryState.DECLINED && entry.getEntryState() != CustomCalendarEntry.EntryState.CANCELED) {
+                // Wenn der Eintrag abgelehnt oder gecancelt wurde, muss er auch nicht mehr zum Kalender hinzugefügt werden
 
                 int response = addCalenderEntry(entry, equalityCheckNeeded, pManager.isReminderActivated(),pManager.isInteligentReminderActivated());
 

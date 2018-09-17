@@ -104,7 +104,8 @@ public class CustomCalendarEntry {
     public boolean equals(CustomCalendarEntry candidate) {
 
         boolean checkresult_1 = this.title.equals(candidate.title);
-        boolean checkresult_2 = this.description.equals(candidate.description);
+        //boolean checkresult_2 = this.description.equals(candidate.description);
+        boolean checkresult_2 = true;
         boolean checkresult_3 = (this.startMillis == candidate.startMillis);
         boolean checkresult_4 = (this.endMillis == candidate.endMillis);
 
@@ -146,7 +147,7 @@ public class CustomCalendarEntry {
             }
 
             if (!line.equals("")) {
-                String argument = line.split(":")[0];
+                String argument = line.split(":",1)[0];
                 argument = argument.replace("\t", "");
                 String value = line.split(":",2)[1];
 
@@ -163,6 +164,9 @@ public class CustomCalendarEntry {
                                 break;
                             case "TENTATIVE":
                                 entryState = EntryState.OPEN;
+                                break;
+                            case "CANCELED":
+                                entryState = EntryState.CANCELED;
                                 break;
                         }
                         break;
@@ -264,6 +268,7 @@ public class CustomCalendarEntry {
     public enum EntryState {
         CONFIRMED,
         DECLINED,
+        CANCELED,
         OPEN
     }
 
