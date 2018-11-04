@@ -104,9 +104,139 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
         card = this.findViewById(R.id.card_settings_extended);
         card.setBackground(drawable);
 
-        //
         // UI Listener erstellen
+        generateUIListener();
+
+
+        // Debug Optionen ein/ausschalten
+        if (BuildConfig.DEBUG) {
+            this.findViewById(R.id.bt_deleteAll).setVisibility(View.VISIBLE);
+            this.findViewById(R.id.bt_check_service_alive).setVisibility(View.VISIBLE);
+        }
+        else {
+            this.findViewById(R.id.bt_deleteAll).setVisibility(View.GONE);
+            this.findViewById(R.id.bt_check_service_alive).setVisibility(View.GONE);
+        }
+
+        // Livedata erstellen. Damit wird eine Möglichkeit geschaffen zwischen verschiedenen Threads zu kommunizieren
+        messageFromBackground = new MutableLiveData<>();
+        messageFromBackground.observe(this, new Observer<String>() {
+            @Override
+            public void onChanged(@Nullable String s) {
+                publishProgress(s);
+            }
+        });
+
         //
+        // Startprozedur (Datenobjekte initalisieren, Daten laden, weitere To_Do's erledigen)
+        //
+
+        // Preferences Manager erstellen
+        pManager = new PreferencesManager(getApplicationContext());
+
+        // Einen CalenderManager erstellen
+        cManager = new CalendarManager(getApplicationContext(),this);
+
+
+        // Daten des PreferencesManager und des CalendarManager laden
+        try {
+            pManager.load();
+
+            // Entry-IDS laden
+            cManager.setEntryIdsFromString(pManager.getEntryIds());
+
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+            displayMessage("Fehler beim Laden der Einstellungen! " + e.getMessage(), Snackbar.LENGTH_LONG);
+        }
+
+        // Preference Einstellungen in die UI schreiben
+        fillFromPreferences();
+
+        // Appversion anzeigen
+        setVersion();
+
+        // Prüfen, ob der Hintergrundservice läuft oder nicht
+        if (!ServiceUtil.checkServiceIsRunning(this, BackgroundService.class)) {
+            // UI Switch setzen
+            setServiceSwitch(false);
+            ((SwitchIconView) this.findViewById(R.id.switch_icon_view)).setIconEnabled(false);
+        }
+        else {
+            setServiceSwitch(true);
+            ((SwitchIconView) this.findViewById(R.id.switch_icon_view)).setIconEnabled(true);
+        }
+
+    }
+
+    @Override
+    public void onAttachedToWindow() {
+        super.onAttachedToWindow();
+
+        // Die verf. Kalender in den Spinner schreiben
+        populateSpinner();
+    }
+
+
+    /**
+     * Wird aufgerufen, wenn die App beendet wird
+     */
+    @Override
+    protected void onDestroy() {
+
+        savePrefs();
+
+        super.onDestroy();
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String permissions[], @NonNull int[] grantResults) {
+        switch (requestCode) {
+            case 1: {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+
+                    // Berechtigung wurde gegeben
+                    startLoader();
+
+                }
+            }
+
+            case 2: {
+                // Aufruf aus dem populateSpinner
+
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+
+                    changeUiElementsEnabled((ViewGroup) this.findViewById(R.id.MainFrame), true);
+                    this.findViewById(R.id.bt_showRightsManagment).setVisibility(View.GONE);
+
+                    // Berechtigung wurde gegeben
+                    populateSpinner();
+
+                }
+                else {
+                    // Keine Berechtigung erteilt. Alle UI-Elemente sperren und einen Button zur erneuten Anzeige der Aufforderung anzeigen.
+                    this.findViewById(R.id.bt_showRightsManagment).setVisibility(View.VISIBLE);
+                    changeUiElementsEnabled((ViewGroup) this.findViewById(R.id.MainFrame),false);
+                }
+
+            }
+
+            //Keine Berechtigung
+        }
+    }
+
+    //=======================================================
+    //====================UI-METHODEN=======================
+    //=======================================================
+
+        /**
+        * Erstellt die benötigten UI-Listener für die MainActivity
+        */
+        private void generateUIListener() {
 
         // Spinner
         Spinner spinner = this.findViewById(R.id.spinner_calendar);
@@ -138,16 +268,7 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
             }
         });
 
-        // Gefährliche Option! Sollte in der Releaseversion deaktiviert sein
-        if (BuildConfig.DEBUG) {
-            this.findViewById(R.id.bt_deleteAll).setVisibility(View.VISIBLE);
-        }
-        else {
-            this.findViewById(R.id.bt_deleteAll).setVisibility(View.GONE);
-        }
-
-
-        // Deletebutton für alle Einträge im Kalender
+        // Deletebutton für alle Einträge im Kalender (DEBUG-Option)
         this.findViewById(R.id.bt_deleteAll).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -163,7 +284,7 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
                 ((TextView) informationDialog.findViewById(R.id.info_button)).setText(R.string.info_delete_text);
 
                 Button dialogButton = (Button) informationDialog.findViewById(R.id.info_button);
-                dialogButton.setText("Ja, alle Einträge löschen");
+                dialogButton.setText(R.string.debug_delete_all_info);
                 dialogButton.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
@@ -305,131 +426,7 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
             }
         });
 
-        if (BuildConfig.DEBUG) {
-            btCheckServiceAlive.setVisibility(View.VISIBLE);
-        }
-        else {
-            btCheckServiceAlive.setVisibility(View.GONE);
-        }
-
-        //
-        // UI Listener ENDE
-        //
-
-        // Livedata erstellen. Damit wird eine Möglichkeit geschaffen zwischen verschiedenen Threads zu kommunizieren
-        messageFromBackground = new MutableLiveData<>();
-        messageFromBackground.observe(this, new Observer<String>() {
-            @Override
-            public void onChanged(@Nullable String s) {
-                publishProgress(s);
-            }
-        });
-
-        //
-        // Startprozedur (Datenobjekte initalisieren, Daten laden, weitere To_Do's erledigen)
-        //
-
-        // Preferences Manager erstellen
-        pManager = new PreferencesManager(getApplicationContext());
-
-        // Einen CalenderManager erstellen
-        cManager = new CalendarManager(getApplicationContext(),this);
-
-
-        // Daten des PreferencesManager und des CalendarManager laden
-        try {
-            pManager.load();
-
-            // Entry-IDS laden
-            cManager.setEntryIdsFromString(pManager.getEntryIds());
-
-        } catch (PackageManager.NameNotFoundException e) {
-            e.printStackTrace();
-            displayMessage("Fehler beim Laden der Einstellungen! " + e.getMessage(), Snackbar.LENGTH_LONG);
-        }
-
-        // Preference Einstellungen in die UI schreiben
-        fillFromPreferences();
-
-        // Appversion anzeigen
-        setVersion();
-
-        // Prüfen, ob der Hintergrundservice läuft oder nicht
-        if (!ServiceUtil.checkServiceIsRunning(this, BackgroundService.class)) {
-            // UI Switch setzen
-            setServiceSwitch(false);
-            ((SwitchIconView) this.findViewById(R.id.switch_icon_view)).setIconEnabled(false);
-        }
-        else {
-            setServiceSwitch(true);
-            ((SwitchIconView) this.findViewById(R.id.switch_icon_view)).setIconEnabled(true);
-        }
-
     }
-
-    @Override
-    public void onAttachedToWindow() {
-        super.onAttachedToWindow();
-
-        // Die verf. Kalender in den Spinner schreiben
-        populateSpinner();
-    }
-
-
-    /**
-     * Wird aufgerufen, wenn die App beendet wird
-     */
-    @Override
-    protected void onDestroy() {
-
-        savePrefs();
-
-        super.onDestroy();
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String permissions[], @NonNull int[] grantResults) {
-        switch (requestCode) {
-            case 1: {
-                // If request is cancelled, the result arrays are empty.
-                if (grantResults.length > 0
-                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-
-                    // Berechtigung wurde gegeben
-                    startLoader();
-
-                }
-            }
-
-            case 2: {
-                // Aufruf aus dem populateSpinner
-
-                // If request is cancelled, the result arrays are empty.
-                if (grantResults.length > 0
-                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-
-                    changeUiElementsEnabled((ViewGroup) this.findViewById(R.id.MainFrame), true);
-                    this.findViewById(R.id.bt_showRightsManagment).setVisibility(View.GONE);
-
-                    // Berechtigung wurde gegeben
-                    populateSpinner();
-
-                }
-                else {
-                    // Keine Berechtigung erteilt. Alle UI-Elemente sperren und einen Button zur erneuten Anzeige der Aufforderung anzeigen.
-                    this.findViewById(R.id.bt_showRightsManagment).setVisibility(View.VISIBLE);
-                    changeUiElementsEnabled((ViewGroup) this.findViewById(R.id.MainFrame),false);
-                }
-
-            }
-
-            //Keine Berechtigung
-        }
-    }
-
-    //=======================================================
-    //====================UI-METHODEN=======================
-    //=======================================================
 
     /**
      * Verarbeitet die Auswahl des Nutzers im Spinner

@@ -147,7 +147,7 @@ public class CustomCalendarEntry {
             }
 
             if (!line.equals("")) {
-                String argument = line.split(":",1)[0];
+                String argument = line.split(":",2)[0];
                 argument = argument.replace("\t", "");
                 String value = line.split(":",2)[1];
 

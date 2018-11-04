@@ -32,7 +32,6 @@
     <string name="inteligent_reminder">Erinnerungen anhand des Terminstatus setzen</string>
     <string name="settings_reset">Einstellungen zurücksetzen</string>
 
-    <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="info_text">Um die Termine korrekt in den Kalender übernehmen zu können, benötigt diese App eine Zugriffsberechtigung auf Ihren Kalender.\nSie werden nun einen Systemdialog zur Freigabe der Berechtigung angezeigt bekommen. Falls Sie die Berechtigung verweigern, wird die App nicht wie erwartet funktionieren.</string>
     <string name="info_delete_text">Achtung!\nSie sind dabei alle Einträge des Kalenders zu löschen. Sind Sie sich sicher das Sie dies tun wollen?\nFalls nein, verwenden Sie bitte die Zurück-Funktion Ihres Telefons.</string>
@@ -40,5 +39,7 @@
     <string name="info_bt_ok">Ok</string>
     <string name="info_bt_yes">Ja</string>
     <string name="info_bt_no">Nein</string>
+
+    <string name="debug_delete_all_info">Ja, alle Einträge löschen</string>
 
 </resources>
