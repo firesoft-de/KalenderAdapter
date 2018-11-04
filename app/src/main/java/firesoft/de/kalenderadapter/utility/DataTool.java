@@ -13,15 +13,12 @@
 
 package firesoft.de.kalenderadapter.utility;
 
-import android.arch.lifecycle.Lifecycle;
-import android.arch.lifecycle.LifecycleOwner;
 import android.arch.lifecycle.MutableLiveData;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.net.Uri;
 import android.provider.CalendarContract;
-import android.support.annotation.NonNull;
 import android.support.v4.content.AsyncTaskLoader;
 
 import java.io.IOException;
@@ -29,8 +26,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Objects;
-import java.util.Observable;
-import java.util.Observer;
 
 import firesoft.de.kalenderadapter.data.CustomCalendarEntry;
 import firesoft.de.kalenderadapter.data.ResultWrapper;
@@ -40,7 +35,6 @@ import firesoft.de.kalenderadapter.manager.CalendarManager;
 import firesoft.de.kalenderadapter.manager.PreferencesManager;
 import firesoft.de.libfirenet.authentication.Digest;
 import firesoft.de.libfirenet.http.HttpWorker;
-import firesoft.de.libfirenet.interfaces.ICallback;
 import firesoft.de.libfirenet.method.GET;
 import firesoft.de.libfirenet.util.HttpState;
 
@@ -138,16 +132,15 @@ public class DataTool extends AsyncTaskLoader<ResultWrapper> implements IErrorCa
             worker = new HttpWorker(url, GET.class, getContext(), authenticator, null, false, null);
 
             // Anfrage ausführen
-            worker.excecute();
+            worker.execute();
         } catch (InstantiationException | IllegalAccessException | InvocationTargetException | IOException | NoSuchMethodException e)
         {
             return new ResultWrapper(e);
         }
 
-
         // Serverantwort abrufen
         assert worker != null;
-        serverResponse = worker.toString();
+        serverResponse = worker.getResponse();
 
         if (serverResponse == null || serverResponse.equals("")) {
             // Laut Status stimmt irgendwas nicht. -> Fehlermeldung werfen
