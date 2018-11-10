@@ -27,10 +27,9 @@ import android.provider.CalendarContract.*;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
-import java.util.EventListenerProxy;
 
+import firesoft.de.kalenderadapter.R;
 import firesoft.de.kalenderadapter.data.CustomCalendar;
 import firesoft.de.kalenderadapter.data.CustomCalendarEntry;
 import firesoft.de.kalenderadapter.interfaces.IErrorCallback;
@@ -286,7 +285,8 @@ public class CalendarManager {
 
         // Es wurden keine Elemente gefunden -> Fehlermeldung ausgeben
         if (errorCallback != null) {
-            errorCallback.publishError("Es konnten keine Kalender gefunden werden.");
+            errorCallback.publishError(context.getString(R.string.error_no_calendars_found));
+            errorCallback.switchCalendarUIElements(false);
         }
         return null;
     }
@@ -315,12 +315,12 @@ public class CalendarManager {
 
                 counter++;
                 if (errorCallback != null) {
-                    errorCallback.publishProgress(String.valueOf(counter) + "/" + String.valueOf(entryIds.size()) + " gelöscht");
+                    errorCallback.publishProgress(String.valueOf(counter) + "/" + String.valueOf(entryIds.size()) + " gelöscht", counter, entryIds.size());
                 }
             }
         } else {
             if (errorCallback != null) {
-                errorCallback.publishProgress("Keine Termine zum Löschen vorhanden!");
+                errorCallback.publishProgress("Keine Termine zum Löschen vorhanden!",1,1);
             }
         }
 
@@ -375,7 +375,7 @@ public class CalendarManager {
             counter++;
 
             if (errorCallback != null) {
-                errorCallback.publishProgress(String.valueOf(counter) + "/" + String.valueOf(entries.size()) + " gelöscht");
+                errorCallback.publishProgress(String.valueOf(counter) + "/" + String.valueOf(entries.size()) + " gelöscht", counter, entries.size());
             }
         }
 

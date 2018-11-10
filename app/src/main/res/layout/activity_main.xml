@@ -37,6 +37,17 @@
                 android:layout_height="match_parent"
                 android:paddingBottom="8dp">
 
+                <TextView
+                    android:id="@+id/tV_Information"
+                    style="@style/AboutText"
+                    android:layout_width="0dp"
+                    android:layout_height="119dp"
+                    android:text="@string/usage_informations"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintHorizontal_bias="0.0"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/tv_card_calendar_description" />
+
                 <Button
                     android:id="@+id/bt_check_service_alive"
                     android:layout_width="0dp"
@@ -71,7 +82,7 @@
                     android:layout_marginTop="8dp"
                     android:text="@string/card_calendar_description"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/tv_card_calendar_description" />
+                    app:layout_constraintTop_toBottomOf="@+id/tV_Information" />
 
                 <Spinner
                     android:id="@+id/spinner_calendar"
@@ -102,10 +113,26 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="16dp"
+                    android:layout_marginTop="0dp"
                     android:text=""
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/spinner_calendar"
+                    app:layout_constraintTop_toBottomOf="@+id/progressBar"
                     tools:text="Fortschritt 1/62" />
+
+                <ProgressBar
+                    android:id="@+id/progressBar"
+                    style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginEnd="16dp"
+                    android:indeterminate="false"
+                    android:max="100"
+                    android:progress="0"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/spinner_calendar" />
 
                 <Button
                     android:id="@+id/bt_deleteAll"

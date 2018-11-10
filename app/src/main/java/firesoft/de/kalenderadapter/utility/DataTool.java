@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Objects;
 
+import firesoft.de.kalenderadapter.R;
 import firesoft.de.kalenderadapter.data.CustomCalendarEntry;
 import firesoft.de.kalenderadapter.data.ResultWrapper;
 import firesoft.de.kalenderadapter.data.ServerParameter;
@@ -47,6 +48,8 @@ public class DataTool extends AsyncTaskLoader<ResultWrapper> implements IErrorCa
     private ArrayList<ServerParameter> params;
     private CalendarManager cManager;
     private MutableLiveData<String> progress;
+    private MutableLiveData<Integer> progressValue;
+    private MutableLiveData<Integer> progressMax;
     private boolean managed;
     private PreferencesManager pManager;
 
@@ -70,12 +73,14 @@ public class DataTool extends AsyncTaskLoader<ResultWrapper> implements IErrorCa
      * @param progress Callback für Fortschrittsberichte an den Nutzer
      * @param managed Gibt an, ob der Loader durch einen Manager verwaltet wird. True = verwaltet, false = eigenständig (aktiviert oder deaktiviert forceLoad())
      */
-    public DataTool(ArrayList<ServerParameter> params, Context context, CalendarManager cManager, MutableLiveData<String> progress, PreferencesManager pManager, boolean managed) {
+    public DataTool(ArrayList<ServerParameter> params, Context context, CalendarManager cManager, MutableLiveData<String> progress, MutableLiveData<Integer> progressValue, MutableLiveData<Integer> progressMax, PreferencesManager pManager, boolean managed) {
         super(context);
 
         this.params = params;
         this.cManager = cManager;
         this.progress = progress;
+        this.progressMax = progressMax;
+        this.progressValue = progressValue;
         this.managed = managed;
         this.pManager = pManager;
 
@@ -225,7 +230,7 @@ public class DataTool extends AsyncTaskLoader<ResultWrapper> implements IErrorCa
 
             counter ++;
 
-            publishProgress("Fortschritt " + counter + "/" + events.size());
+            publishProgress("Fortschritt " + counter + "/" + events.size(), counter, events.size());
 
         }
 
@@ -357,7 +362,7 @@ public class DataTool extends AsyncTaskLoader<ResultWrapper> implements IErrorCa
                     cr.insert(CalendarContract.Reminders.CONTENT_URI, reminder);
                 } catch (SecurityException e) {
                     e.printStackTrace();
-                    publishError("Eine Sicherheitsausnahme ist aufgetreten! (CalendarManager.addCalenderEntry (Reminders)");
+                    publishError(getContext().getString(R.string.error_addCalendarEntry));
                     return -1;
                 }
             }
@@ -392,12 +397,19 @@ public class DataTool extends AsyncTaskLoader<ResultWrapper> implements IErrorCa
      * @param message Nachricht die angezeigt werden soll
      */
     @Override
-    public void publishProgress(String message) {
+    public void publishProgress(String message, int progressVal, int progressMx) {
         progress.postValue(message);
+        progressMax.postValue(progressMx);
+        progressValue.postValue(progressVal);
     }
 
     @Override
     public void appendProgress(String message) {
         progress.postValue(progress.getValue() + " - " + message);
+    }
+
+    @Override
+    public void switchCalendarUIElements(boolean enable) {
+        // Hier wird nichts gemacht
     }
 }

@@ -90,8 +90,10 @@ public class BackgroundService extends Service implements Loader.OnLoadCompleteL
 
         // Kommunikationskanal mit Backgroundthreads. Wird im BackgroundService nicht benötigt. Muss aber dem DataTool mitgegeben werden.
         MutableLiveData<String> messageFromBackground = new MutableLiveData<>();
+        MutableLiveData<Integer> valFromBackground = new MutableLiveData<>();
+        MutableLiveData<Integer> maxFromBackground = new MutableLiveData<>();
 
-        dataTool = new DataTool(parameters,getApplicationContext(),cManager,messageFromBackground, pManager,false);
+        dataTool = new DataTool(parameters,getApplicationContext(),cManager,messageFromBackground, valFromBackground, maxFromBackground, pManager,false);
 
         // Basierend auf https://stackoverflow.com/questions/8696146/can-you-use-a-loadermanager-from-a-service/24393728
         dataTool.registerListener(1,this); // 1 = Marker für MainLoader (im AsyncTaskManager definiert)

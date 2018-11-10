@@ -28,12 +28,27 @@ public interface IErrorCallback {
      * Gibt ein Fortschrittsfeedback an den Nutzer aus
      * @param message Nachricht die angezeigt werden soll
      */
-    void publishProgress(String message);
+    //void publishProgress(String message);
+
+    /**
+     * Gibt ein Fortschrittsfeedback an den Nutzer aus
+     * @param message Nachricht die angezeigt werden soll
+     * @param current Gibt den aktuellen Fortschrittswert an
+     * @param max Gibt den maximalen Fortschrittswert an
+     */
+    void publishProgress(String message, int current, int max);
 
     /**
      * Hängt eine Meldung an die zuletzt angezeigte Meldung an
      * @param message Anzuhängende Nachricht
      */
     void appendProgress(String message);
+
+    /**
+     * Ändert den Aktivierungszustand der UI-Elemente welche mit dem Import von Kalendereinträgen zu tun haben
+     * @param enable true = aktiviert, false = deaktiviert
+     */
+    void switchCalendarUIElements(boolean enable);
+
 
 }
