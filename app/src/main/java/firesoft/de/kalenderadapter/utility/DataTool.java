@@ -332,7 +332,10 @@ public class DataTool extends AsyncTaskLoader<ResultWrapper> implements IErrorCa
 
             int attachResponse = attachReminders(entry, cr, eventID, useInteligentReminder);
             if (attachResponse < 0) {
-                return -1;
+                values.put(CalendarContract.Events.HAS_ALARM, false);
+            }
+            else {
+                values.put(CalendarContract.Events.HAS_ALARM, true);
             }
 
         }
