@@ -27,13 +27,13 @@ import android.provider.CalendarContract.*;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
-import java.util.EventListenerProxy;
 
+import firesoft.de.kalenderadapter.R;
 import firesoft.de.kalenderadapter.data.CustomCalendar;
 import firesoft.de.kalenderadapter.data.CustomCalendarEntry;
 import firesoft.de.kalenderadapter.interfaces.IErrorCallback;
+import firesoft.de.kalenderadapter.utility.DataTool;
 
 public class CalendarManager {
 
@@ -111,8 +111,22 @@ public class CalendarManager {
             Events.DESCRIPTION,                 // 1
             Events.DTSTART,                     // 2
             Events.DTEND,                       // 3
-            Events.TITLE,                 // 1
+            Events.TITLE,                       // 4
     };
+
+    /**
+     * Projektionsarray für den Eventabruf. Wird genutzt um die gewünschten Daten über die Events zu erhalten
+     */
+    private static final String[] EVENT_PROJECTION_WITH_ORGANIZER = new String[]{
+            Events._ID,                         // 0
+            Events.ORGANIZER,                   // 1
+            Events.DESCRIPTION,                 // 2
+            Events.DTSTART,                     // 3
+            Events.DTEND,                       // 4
+            Events.TITLE,                       // 5
+    };
+
+
     // The indices for the projection array above.
     private static final int EVENT_ID_INDEX = 0;
     private static final int EVENT_DESCRIPTION = 1;
@@ -179,11 +193,9 @@ public class CalendarManager {
 
         ContentResolver cr = context.getContentResolver();
 
-        //if (entryIds != null) {
         if (entryIds.size() == 0) {
             return null;
         }
-        //}
 
         for (Integer id : entryIds
                 ) {
@@ -212,7 +224,84 @@ public class CalendarManager {
                 entries.add(entry);
             }
         }
+
+        entries = mergeEntryLists(entries, getExistingEntriesByMarker());
+
         return entries;
+    }
+
+    /**
+     * Findet Einträge die mit dem spezifischen Marker der App im Feld ORGANIZER versehen wurden.
+     * @return Liste die auch alle zusätzlich gefundenen Einträge enthält
+     */
+    private ArrayList<CustomCalendarEntry> getExistingEntriesByMarker() throws SecurityException {
+
+        ArrayList<CustomCalendarEntry> entries = new ArrayList<>();
+        ContentResolver cr = context.getContentResolver();
+
+        // Cursor für den Datenabruf erstellen. Es wird anhand der ID (welche in dem Array mitgeliefert wird) nach einem Event gesucht
+        Cursor cur = cr.query(CalendarContract.Events.CONTENT_URI, EVENT_PROJECTION, Events.ORGANIZER + " = ?", new String[]{DataTool.MARKER_FOR_ORGANIZER},
+                null);
+
+        boolean moreItemsAvailable = cur.moveToFirst();
+
+        while (moreItemsAvailable) {
+
+            // Das Suchergebnis abrufen und ein neues Entry-Objekt erstellen
+            CustomCalendarEntry entry = new CustomCalendarEntry();
+            entry.setCalendarID(cur.getInt(EVENT_ID_INDEX));
+            entry.setDescription(cur.getString(EVENT_DESCRIPTION));
+
+            String tmpString = cur.getString(EVENT_DTSTART);
+            long tmpInt = Long.valueOf(tmpString);
+
+            entry.setStartMillis(tmpInt);
+            entry.setEndMillis(Long.valueOf(cur.getString(EVENT_DTEND)));
+            entry.setTitle(cur.getString(EVENT_TITLE));
+
+            // Prüfen, ob der Eintrag bereits vorhaden ist
+            entries.add(entry);
+
+            moreItemsAvailable = cur.moveToNext();
+
+        }
+
+        return entries;
+
+    }
+
+    /**
+     * Fügt zwei Listen zusammen 
+     * @param ListA Erste Liste als ArrayList<CustomCalendarEntry>
+     * @param ListB Zweite Liste als ArrayList<CustomCalendarEntry>
+     * @return Ergebnisliste als ArrayList<CustomCalendarEntry>
+     */
+    private ArrayList<CustomCalendarEntry> mergeEntryLists(ArrayList<CustomCalendarEntry> ListA, ArrayList<CustomCalendarEntry> ListB) {
+
+        // Inhalt von Liste A wird direkt in die Ausgabeliste geschrieben
+        ArrayList<CustomCalendarEntry> mergedList = ListA;
+
+
+        // Alle Einträge in der Liste B durchgehen und prüfen, ob diese bereits in der Ausgabeliste enthalten sind
+        for (CustomCalendarEntry entryFromListB: ListB
+             ) {
+
+            boolean allreadyExistsInMergedList = false;
+
+            for (int i = 0; i < mergedList.size(); i++) {
+                if (entryFromListB.equals(mergedList.get(i))) {
+                    allreadyExistsInMergedList = true;
+                    i = mergedList.size();
+                }
+            }
+
+            if (!allreadyExistsInMergedList) {
+                mergedList.add(entryFromListB);
+            }
+
+        }
+        
+        return mergedList;
     }
 
 
@@ -286,7 +375,8 @@ public class CalendarManager {
 
         // Es wurden keine Elemente gefunden -> Fehlermeldung ausgeben
         if (errorCallback != null) {
-            errorCallback.publishError("Es konnten keine Kalender gefunden werden.");
+            errorCallback.publishError(context.getString(R.string.error_no_calendars_found));
+            errorCallback.switchCalendarUIElements(false);
         }
         return null;
     }
@@ -315,12 +405,12 @@ public class CalendarManager {
 
                 counter++;
                 if (errorCallback != null) {
-                    errorCallback.publishProgress(String.valueOf(counter) + "/" + String.valueOf(entryIds.size()) + " gelöscht");
+                    errorCallback.publishProgress(String.valueOf(counter) + "/" + String.valueOf(entryIds.size()) + " gelöscht", counter, entryIds.size());
                 }
             }
         } else {
             if (errorCallback != null) {
-                errorCallback.publishProgress("Keine Termine zum Löschen vorhanden!");
+                errorCallback.publishProgress("Keine Termine zum Löschen vorhanden!",1,1);
             }
         }
 
@@ -375,7 +465,7 @@ public class CalendarManager {
             counter++;
 
             if (errorCallback != null) {
-                errorCallback.publishProgress(String.valueOf(counter) + "/" + String.valueOf(entries.size()) + " gelöscht");
+                errorCallback.publishProgress(String.valueOf(counter) + "/" + String.valueOf(entries.size()) + " gelöscht", counter, entries.size());
             }
         }
 

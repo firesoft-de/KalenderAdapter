@@ -9,7 +9,7 @@
 
     <string name="card_calendar">Kalenderauswahl</string>
     <string name="card_calendar_description">Verfügbare Kalender</string>
-    <string name="bt_start_download">Download starten und Einträge hinzufügen</string>
+    <string name="bt_start_download">Kalendereinträge importieren</string>
     <string name="bt_rights_managment">Zugriffsrechte erneut anfragen</string>
     <string name="bt_deleteAll">Synchronisierte Einträge löschen</string>
     <string name="bt_empty_complete_calendar">Gesamten Kalender leeren</string>
@@ -31,15 +31,20 @@
     <string name="add_reminder">Erinnerungen hinzufügen</string>
     <string name="inteligent_reminder">Erinnerungen anhand des Terminstatus setzen</string>
     <string name="settings_reset">Einstellungen zurücksetzen</string>
+    <string name="usage_informations">Bitte zuerst im nachfolgenden Auswahlfeld einen Kalender auswählen in welchen die Kalenderdaten importiert werden sollen. Anschließend die URL und die Zugangsdaten zum Server eingeben und auf "Kalendereinträge importieren" klicken.\nEs wird empfohlen über die vorinstallierte oder eine andere Kalenderanwendung einen neuen Kalender anzulegen der nur durch diese App genutzt wird. Bei gemeinsamer Nutzung mit anderen Anwendungen kann es zu Datenverlusten kommen.</string>
 
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="info_text">Um die Termine korrekt in den Kalender übernehmen zu können, benötigt diese App eine Zugriffsberechtigung auf Ihren Kalender.\nSie werden nun einen Systemdialog zur Freigabe der Berechtigung angezeigt bekommen. Falls Sie die Berechtigung verweigern, wird die App nicht wie erwartet funktionieren.</string>
     <string name="info_delete_text">Achtung!\nSie sind dabei alle Einträge des Kalenders zu löschen. Sind Sie sich sicher das Sie dies tun wollen?\nFalls nein, verwenden Sie bitte die Zurück-Funktion Ihres Telefons.</string>
+    <string name="info_import_successfull">Alle Termine erfolgreich hinzugefügt</string>
 
     <string name="info_bt_ok">Ok</string>
     <string name="info_bt_yes">Ja</string>
     <string name="info_bt_no">Nein</string>
 
     <string name="debug_delete_all_info">Ja, alle Einträge löschen</string>
+
+    <string name="error_no_calendars_found">Es konnten keine Kalender gefunden werden.</string>
+    <string name="error_addCalendarEntry">Eine Sicherheitsausnahme ist aufgetreten! (CalendarManager.addCalenderEntry (Reminders)</string>
 
 </resources>

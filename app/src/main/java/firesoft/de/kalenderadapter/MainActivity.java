@@ -40,6 +40,7 @@ import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.ScrollView;
 import android.widget.Spinner;
 import android.widget.Switch;
@@ -72,6 +73,8 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
     CalendarManager cManager;
     PreferencesManager pManager;
     MutableLiveData<String> messageFromBackground;
+    private MutableLiveData<Integer> progressValue;
+    private MutableLiveData<Integer> progressMax;
 
 
     //=======================================================
@@ -123,7 +126,23 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
         messageFromBackground.observe(this, new Observer<String>() {
             @Override
             public void onChanged(@Nullable String s) {
-                publishProgress(s);
+                publishProgress(s,-1,-1);
+            }
+        });
+
+        progressValue = new MutableLiveData<>();
+        progressValue.observe(this, new Observer<Integer>() {
+            @Override
+            public void onChanged(@Nullable Integer s) {
+                publishProgress(null,s,-1);
+            }
+        });
+
+        progressMax = new MutableLiveData<>();
+        progressMax.observe(this, new Observer<Integer>() {
+            @Override
+            public void onChanged(@Nullable Integer s) {
+                publishProgress(null,-1,s);
             }
         });
 
@@ -256,6 +275,9 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
         this.findViewById(R.id.bt_startDownload).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                // progressbar auf intermediate setzen
+                setProgressbarState(false);
+
                 startLoader();
             }
         });
@@ -571,13 +593,43 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
     }
 
     /**
-     * Zeigt dem Nutzer eine Nachricht an
-     * @param message Nachricht
+     * Zeigt dem Nutzer eine Nachricht und einen Fortschritt anan
      */
     @Override
-    public void publishProgress(String message) {
-        TextView tv = this.findViewById(R.id.tV_progress);
-        tv.setText(message);
+    public void publishProgress(String message, int current, int max ) {
+
+        if (message != null) {
+            TextView tv = this.findViewById(R.id.tV_progress);
+            tv.setText(message);
+        }
+
+        if (current > -1 || max > -1) {
+            setProgressbarState(true);
+            ProgressBar pB = this.findViewById(R.id.progressBar);
+
+            if (pB.getMax() != max && max > -1) {
+                pB.setMax(max);
+            }
+
+            if (current > -1) {
+                pB.setProgress(current);
+            }
+        }
+
+    }
+
+    /**
+     * Setzt die Progressbar auf den Anzeigestatus determintate oder indeterminate
+     * @param determinate true = determinate, false = indeterminate
+     */
+    public void setProgressbarState(boolean determinate) {
+        ProgressBar pB = this.findViewById(R.id.progressBar);
+        boolean indeterminate = !determinate;
+
+
+        if (pB.isIndeterminate() != indeterminate) {
+            pB.setIndeterminate(indeterminate);
+        }
     }
 
     /**
@@ -589,6 +641,15 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
         TextView tv = this.findViewById(R.id.tV_progress);
         tv.append(" - ");
         tv.append(message);
+    }
+
+    @Override
+    public void switchCalendarUIElements(boolean enable) {
+
+        this.findViewById(R.id.bt_startDownload).setEnabled(enable);
+        this.findViewById(R.id.bt_deleteAll).setEnabled(enable);
+        this.findViewById(R.id.bt_emptyCalendar).setEnabled(enable);
+
     }
 
     /**
@@ -666,7 +727,7 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
         parameters.add(param);
 
         // AsyncTask mit den Parametern starten
-        taskManager = new AsyncTaskManager(getSupportLoaderManager(), getApplicationContext(),this,cManager, pManager, messageFromBackground);
+        taskManager = new AsyncTaskManager(getSupportLoaderManager(), getApplicationContext(),this,cManager, pManager, messageFromBackground, progressValue,progressMax);
         taskManager.startDownload(this,parameters);
 
     }

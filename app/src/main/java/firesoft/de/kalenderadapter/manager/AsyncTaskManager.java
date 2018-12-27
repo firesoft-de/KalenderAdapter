@@ -30,6 +30,7 @@ import android.support.v4.content.Loader;
 
 import java.util.ArrayList;
 
+import firesoft.de.kalenderadapter.R;
 import firesoft.de.kalenderadapter.data.ResultWrapper;
 import firesoft.de.kalenderadapter.data.ServerParameter;
 import firesoft.de.kalenderadapter.interfaces.IErrorCallback;
@@ -48,6 +49,8 @@ public class AsyncTaskManager implements LoaderManager.LoaderCallbacks<ResultWra
     private CalendarManager calendarManager;
     private PreferencesManager pManager;
     private MutableLiveData<String> progress;
+    private MutableLiveData<Integer> progressValue;
+    private MutableLiveData<Integer> progressMax;
 
     private static final int MAIN_LOADER = 1;
 
@@ -55,13 +58,15 @@ public class AsyncTaskManager implements LoaderManager.LoaderCallbacks<ResultWra
     //====================KONSTRUKTOR========================
     //=======================================================
 
-    public AsyncTaskManager(android.support.v4.app.LoaderManager loaderManager, Context context, IErrorCallback errorCallback, CalendarManager cManager, PreferencesManager pManager, MutableLiveData<String> progress) {
+    public AsyncTaskManager(android.support.v4.app.LoaderManager loaderManager, Context context, IErrorCallback errorCallback, CalendarManager cManager, PreferencesManager pManager, MutableLiveData<String> progress, MutableLiveData<Integer> progressValue, MutableLiveData<Integer> progressMax) {
         this.loaderManager = loaderManager;
         this.context = context;
         this.errorCallback = errorCallback;
         this.calendarManager = cManager;
         this.pManager = pManager;
         this.progress = progress;
+        this.progressMax = progressMax;
+        this.progressValue = progressValue;
     }
 
     //=======================================================
@@ -89,7 +94,7 @@ public class AsyncTaskManager implements LoaderManager.LoaderCallbacks<ResultWra
     public Loader<ResultWrapper> onCreateLoader(int id, @Nullable Bundle args) {
 
         if (id == MAIN_LOADER) {
-            return new DataTool(params,context, calendarManager, progress, pManager, true);
+            return new DataTool(params,context, calendarManager, progress, progressValue, progressMax, pManager, true);
         }
 
         throw new IllegalArgumentException("Kein passender Loader verfügbar! (AsyncTaskManager.onCreateLoader))");
@@ -110,7 +115,7 @@ public class AsyncTaskManager implements LoaderManager.LoaderCallbacks<ResultWra
             pManager.save();
 
             // Erfolgsmeldung abgeben
-            errorCallback.appendProgress("Alle Termine erfolgreich hinzugefügt");
+            errorCallback.publishProgress(context.getString(R.string.info_import_successfull),-1,-1);
 
 
         }

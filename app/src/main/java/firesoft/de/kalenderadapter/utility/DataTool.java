@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Objects;
 
+import firesoft.de.kalenderadapter.R;
 import firesoft.de.kalenderadapter.data.CustomCalendarEntry;
 import firesoft.de.kalenderadapter.data.ResultWrapper;
 import firesoft.de.kalenderadapter.data.ServerParameter;
@@ -38,6 +39,7 @@ import firesoft.de.libfirenet.http.HttpWorker;
 import firesoft.de.libfirenet.method.GET;
 import firesoft.de.libfirenet.util.HttpState;
 
+
 public class DataTool extends AsyncTaskLoader<ResultWrapper> implements IErrorCallback {
 
     //=======================================================
@@ -47,6 +49,8 @@ public class DataTool extends AsyncTaskLoader<ResultWrapper> implements IErrorCa
     private ArrayList<ServerParameter> params;
     private CalendarManager cManager;
     private MutableLiveData<String> progress;
+    private MutableLiveData<Integer> progressValue;
+    private MutableLiveData<Integer> progressMax;
     private boolean managed;
     private PreferencesManager pManager;
 
@@ -57,6 +61,8 @@ public class DataTool extends AsyncTaskLoader<ResultWrapper> implements IErrorCa
     private final String reminder_two_days = String.valueOf(2*24*60); // 2 Tag * 24 Stunden * 60 Minuten
     private final String reminder_one_days = String.valueOf(24*60); // 1 Tag * 24 Stunden * 60 Minuten
     private final String early_reminder = String.valueOf(7*24*60); // 7 Tage * 24 Stunden * 60 Minuten
+
+    public static final String MARKER_FOR_ORGANIZER = "kalenderadapter@firesoft.de";
 
     //=======================================================
     //====================KONSTRUKTOR========================
@@ -70,12 +76,14 @@ public class DataTool extends AsyncTaskLoader<ResultWrapper> implements IErrorCa
      * @param progress Callback für Fortschrittsberichte an den Nutzer
      * @param managed Gibt an, ob der Loader durch einen Manager verwaltet wird. True = verwaltet, false = eigenständig (aktiviert oder deaktiviert forceLoad())
      */
-    public DataTool(ArrayList<ServerParameter> params, Context context, CalendarManager cManager, MutableLiveData<String> progress, PreferencesManager pManager, boolean managed) {
+    public DataTool(ArrayList<ServerParameter> params, Context context, CalendarManager cManager, MutableLiveData<String> progress, MutableLiveData<Integer> progressValue, MutableLiveData<Integer> progressMax, PreferencesManager pManager, boolean managed) {
         super(context);
 
         this.params = params;
         this.cManager = cManager;
         this.progress = progress;
+        this.progressMax = progressMax;
+        this.progressValue = progressValue;
         this.managed = managed;
         this.pManager = pManager;
 
@@ -83,6 +91,7 @@ public class DataTool extends AsyncTaskLoader<ResultWrapper> implements IErrorCa
 
     }
 
+    // region Public Methoden
     //=======================================================
     //==================PUBLIC METHODEN======================
     //=======================================================
@@ -160,10 +169,13 @@ public class DataTool extends AsyncTaskLoader<ResultWrapper> implements IErrorCa
         // Prüfen, ob die bestehenden Einträge überschrieben werden sollen. In diesem Fall können jetzt alle Einträge gelöscht und die neuen direkt eingefügt werden. Das ist einfacher, als bei allen zu prüfen, ob sich etwas geändert hat.
         if (pManager.isReplaceExistingActivated()) {
 
-            // Prüfen, ob bereits Einträge geladen wurden. Falls dies nicht der Fall ist, sollte dies jetzt nachgeholt werden. Es kann sonst zu Fehlern in .deleteEntries() kommen.
-            if (cManager.getEntryIds() == null ||cManager.getEntryIds().size() == 0) {
-                cManager.loadCalendarEntries();
-            }
+//            // Prüfen, ob bereits Einträge geladen wurden. Falls dies nicht der Fall ist, sollte dies jetzt nachgeholt werden. Es kann sonst zu Fehlern in .deleteEntries() kommen.
+//            if (cManager.getEntryIds() == null ||cManager.getEntryIds().size() == 0) {
+//                cManager.loadCalendarEntries();
+//            }
+
+            // Es sollte immer eine aktuelle Liste gezogen werden
+            cManager.loadCalendarEntries();
 
             // Alle bestehenden Einträge löschen
             cManager.deleteEntries();
@@ -225,7 +237,7 @@ public class DataTool extends AsyncTaskLoader<ResultWrapper> implements IErrorCa
 
             counter ++;
 
-            publishProgress("Fortschritt " + counter + "/" + events.size());
+            publishProgress("Fortschritt " + counter + "/" + events.size(), counter, events.size());
 
         }
 
@@ -240,11 +252,12 @@ public class DataTool extends AsyncTaskLoader<ResultWrapper> implements IErrorCa
         //}
     }
 
+    // endregion
 
+    // region Interne Methoden zum Bearbeiten von Kalendereinträgen
     //=======================================================
     //===========METHODEN ZUR DATENVERARBEITUNG==============
     //=======================================================
-
 
     /**
      * Parst die Antwort des Servers in eine Stringliste mit den einzelnen Events
@@ -278,6 +291,12 @@ public class DataTool extends AsyncTaskLoader<ResultWrapper> implements IErrorCa
         values.put(CalendarContract.Events.EVENT_LOCATION, entry.getLocation());
         values.put(CalendarContract.Events.CALENDAR_ID, entry.getCalendarID());
         values.put(CalendarContract.Events.EVENT_TIMEZONE, entry.getTimezone());
+
+        // Den Zeitraum des Eintrags als Beschäftigt markieren
+        values.put(CalendarContract.Events.AVAILABILITY, CalendarContract.Events.AVAILABILITY_BUSY);
+
+        // Die Spalte ORGANIZER wird als Marker verwendet. Durch diese kann die App erkennen, ob ein Eintrag von ihr angelegt wurde.
+        values.put(CalendarContract.Events.ORGANIZER, MARKER_FOR_ORGANIZER);
 
         // Prüfen, ob der Eintrag bereits hinzugefügt wurde
         if (checkIfExists) { // Wenn auf vorhandensein geprüft werden soll. Ansonsten wird übersprungen
@@ -315,56 +334,83 @@ public class DataTool extends AsyncTaskLoader<ResultWrapper> implements IErrorCa
         // Basierend auf https://www.quora.com/How-do-I-programmatically-set-a-reminder-message-for-a-particular-date-in-Android
         if (setReminder && uri != null) {
 
-            // Erinnerung erstellen und die ID des zugehörigen Events eintragen
-            ArrayList<ContentValues> reminders = new ArrayList<>();
-             // Erinnerungsart einfügen. Es wird nur DEFAULT und ALARM unterstützt.
-
-            // Welche Art von Erinnerung soll hinzugefügt werden? Standardmäßig oder intelligent?
-            if (useInteligentReminder) {
-                ContentValues reminder;
-
-                switch (entry.getEntryState()) {
-                    case OPEN:
-                        // Erinnerung eine Woche zwei Tage und einen Tag vorher
-                        reminder = createNewReminder(eventID);
-                        reminder.put(CalendarContract.Reminders.MINUTES,early_reminder);
-                        reminders.add(reminder);
-                        // Kein break, da die nachfolgenden Einträge auch benötigt werden!
-
-                    case CONFIRMED:
-                        // Erinnerung zwei und einen Tage vorher reicht aus
-                        reminder = createNewReminder(eventID);
-                        reminder.put(CalendarContract.Reminders.MINUTES,reminder_two_days);
-                        reminders.add(reminder);
-
-                        reminder = createNewReminder(eventID);
-                        reminder.put(CalendarContract.Reminders.MINUTES,reminder_one_days);
-                        reminders.add(reminder);
-                        break;
-                }
+            int attachResponse = attachReminders(entry, cr, eventID, useInteligentReminder);
+            if (attachResponse < 0) {
+                values.put(CalendarContract.Events.HAS_ALARM, false);
             }
             else {
-                // Einfache Erinnerung zwei Tage vorher hinzufügen
-                ContentValues reminder = createNewReminder(eventID);
-                reminder.put(CalendarContract.Reminders.MINUTES,reminder_two_days);
-                reminders.add(reminder);
-            }
-
-            // Alle Erinnerungen hinzufügen
-            for (ContentValues reminder: reminders
-                 ) {
-                try {
-                    cr.insert(CalendarContract.Reminders.CONTENT_URI, reminder);
-                } catch (SecurityException e) {
-                    e.printStackTrace();
-                    publishError("Eine Sicherheitsausnahme ist aufgetreten! (CalendarManager.addCalenderEntry (Reminders)");
-                    return -1;
-                }
+                values.put(CalendarContract.Events.HAS_ALARM, true);
             }
 
         }
 
         return eventID;
+
+    }
+
+    // endregion
+
+
+    // region Hilfsmethoden für Terminerinnerungen
+
+    /**
+     * Fügt einem Kalendereintrag Erinnerungen hinzu. Dabei wird die Auswahl des Nutzers berücksichtigt.
+     * @param entry Eintrag der hinzugefügt wird
+     * @param cr ContentResolver der zum hinzufügen des Eintrags verwendet wird
+     * @param eventID ID des zu bearbeitenden Kalendereintrags
+     * @param useInteligentReminder Gibt an, ob die Erinnerungen in Abhängigkeit des (Rückmelde-)Status gesetzt werden sollen
+     * @return -1 falls es beim Einfügen des Eintrags zu einem Fehler gekommen ist, >= 0 falls erfolgreich
+     */
+    private int attachReminders(CustomCalendarEntry entry, ContentResolver cr, int eventID, boolean useInteligentReminder) {
+
+        // Erinnerung erstellen und die ID des zugehörigen Events eintragen
+        ArrayList<ContentValues> reminders = new ArrayList<>();
+        // Erinnerungsart einfügen. Es wird nur DEFAULT und ALARM unterstützt.
+
+        // Welche Art von Erinnerung soll hinzugefügt werden? Standardmäßig oder intelligent?
+        if (useInteligentReminder) {
+            ContentValues reminder;
+
+            switch (entry.getEntryState()) {
+                case OPEN:
+                    // Erinnerung eine Woche zwei Tage und einen Tag vorher
+                    reminder = createNewReminder(eventID);
+                    reminder.put(CalendarContract.Reminders.MINUTES,early_reminder);
+                    reminders.add(reminder);
+                    // Kein break, da die nachfolgenden Einträge auch benötigt werden!
+
+                case CONFIRMED:
+                    // Erinnerung zwei und einen Tage vorher reicht aus
+                    reminder = createNewReminder(eventID);
+                    reminder.put(CalendarContract.Reminders.MINUTES,reminder_two_days);
+                    reminders.add(reminder);
+
+                    reminder = createNewReminder(eventID);
+                    reminder.put(CalendarContract.Reminders.MINUTES,reminder_one_days);
+                    reminders.add(reminder);
+                    break;
+            }
+        }
+        else {
+            // Einfache Erinnerung zwei Tage vorher hinzufügen
+            ContentValues reminder = createNewReminder(eventID);
+            reminder.put(CalendarContract.Reminders.MINUTES,reminder_two_days);
+            reminders.add(reminder);
+        }
+
+        // Alle Erinnerungen hinzufügen
+        for (ContentValues reminder: reminders
+                ) {
+            try {
+                cr.insert(CalendarContract.Reminders.CONTENT_URI, reminder);
+            } catch (SecurityException e) {
+                e.printStackTrace();
+                publishError(getContext().getString(R.string.error_addCalendarEntry));
+                return -1;
+            }
+        }
+
+        return 1;
 
     }
 
@@ -377,6 +423,11 @@ public class DataTool extends AsyncTaskLoader<ResultWrapper> implements IErrorCa
         reminder.put(CalendarContract.Reminders.METHOD, CalendarContract.Reminders.METHOD_DEFAULT);
         return reminder;
     }
+
+    // endregion
+
+
+    // region IErrorCallback-Methoden
 
     /**
      * Ermöglicht es threadsichere Meldungen an den Nutzer auszugeben
@@ -392,12 +443,21 @@ public class DataTool extends AsyncTaskLoader<ResultWrapper> implements IErrorCa
      * @param message Nachricht die angezeigt werden soll
      */
     @Override
-    public void publishProgress(String message) {
+    public void publishProgress(String message, int progressVal, int progressMx) {
         progress.postValue(message);
+        progressMax.postValue(progressMx);
+        progressValue.postValue(progressVal);
     }
 
     @Override
     public void appendProgress(String message) {
         progress.postValue(progress.getValue() + " - " + message);
     }
+
+    @Override
+    public void switchCalendarUIElements(boolean enable) {
+        // Hier wird nichts gemacht
+    }
+
+    // endregion
 }

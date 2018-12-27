@@ -23,7 +23,7 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 
 /**
- * Manager Klasse mit der die gespeicherten Einstellungen zentrak verwaltet und bereitgestellt werden
+ * Manager Klasse mit der die gespeicherten Einstellungen zentral verwaltet und bereitgestellt werden
  */
 public class PreferencesManager {
 
