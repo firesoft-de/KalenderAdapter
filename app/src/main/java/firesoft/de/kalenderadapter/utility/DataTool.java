@@ -39,10 +39,6 @@ import firesoft.de.libfirenet.http.HttpWorker;
 import firesoft.de.libfirenet.method.GET;
 import firesoft.de.libfirenet.util.HttpState;
 
-import firesoft.de.kalenderadapter.data.CustomCalendarEntry.EntryState.*;
-
-import static firesoft.de.kalenderadapter.data.CustomCalendarEntry.EntryState.CONFIRMED;
-import static firesoft.de.kalenderadapter.data.CustomCalendarEntry.EntryState.OPEN;
 
 public class DataTool extends AsyncTaskLoader<ResultWrapper> implements IErrorCallback {
 
@@ -65,6 +61,8 @@ public class DataTool extends AsyncTaskLoader<ResultWrapper> implements IErrorCa
     private final String reminder_two_days = String.valueOf(2*24*60); // 2 Tag * 24 Stunden * 60 Minuten
     private final String reminder_one_days = String.valueOf(24*60); // 1 Tag * 24 Stunden * 60 Minuten
     private final String early_reminder = String.valueOf(7*24*60); // 7 Tage * 24 Stunden * 60 Minuten
+
+    public static final String MARKER_FOR_ORGANIZER = "kalenderadapter@firesoft.de";
 
     //=======================================================
     //====================KONSTRUKTOR========================
@@ -171,10 +169,13 @@ public class DataTool extends AsyncTaskLoader<ResultWrapper> implements IErrorCa
         // Prüfen, ob die bestehenden Einträge überschrieben werden sollen. In diesem Fall können jetzt alle Einträge gelöscht und die neuen direkt eingefügt werden. Das ist einfacher, als bei allen zu prüfen, ob sich etwas geändert hat.
         if (pManager.isReplaceExistingActivated()) {
 
-            // Prüfen, ob bereits Einträge geladen wurden. Falls dies nicht der Fall ist, sollte dies jetzt nachgeholt werden. Es kann sonst zu Fehlern in .deleteEntries() kommen.
-            if (cManager.getEntryIds() == null ||cManager.getEntryIds().size() == 0) {
-                cManager.loadCalendarEntries();
-            }
+//            // Prüfen, ob bereits Einträge geladen wurden. Falls dies nicht der Fall ist, sollte dies jetzt nachgeholt werden. Es kann sonst zu Fehlern in .deleteEntries() kommen.
+//            if (cManager.getEntryIds() == null ||cManager.getEntryIds().size() == 0) {
+//                cManager.loadCalendarEntries();
+//            }
+
+            // Es sollte immer eine aktuelle Liste gezogen werden
+            cManager.loadCalendarEntries();
 
             // Alle bestehenden Einträge löschen
             cManager.deleteEntries();
@@ -293,6 +294,9 @@ public class DataTool extends AsyncTaskLoader<ResultWrapper> implements IErrorCa
 
         // Den Zeitraum des Eintrags als Beschäftigt markieren
         values.put(CalendarContract.Events.AVAILABILITY, CalendarContract.Events.AVAILABILITY_BUSY);
+
+        // Die Spalte ORGANIZER wird als Marker verwendet. Durch diese kann die App erkennen, ob ein Eintrag von ihr angelegt wurde.
+        values.put(CalendarContract.Events.ORGANIZER, MARKER_FOR_ORGANIZER);
 
         // Prüfen, ob der Eintrag bereits hinzugefügt wurde
         if (checkIfExists) { // Wenn auf vorhandensein geprüft werden soll. Ansonsten wird übersprungen
