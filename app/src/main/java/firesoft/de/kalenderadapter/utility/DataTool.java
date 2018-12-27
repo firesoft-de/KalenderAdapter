@@ -291,6 +291,9 @@ public class DataTool extends AsyncTaskLoader<ResultWrapper> implements IErrorCa
         values.put(CalendarContract.Events.CALENDAR_ID, entry.getCalendarID());
         values.put(CalendarContract.Events.EVENT_TIMEZONE, entry.getTimezone());
 
+        // Den Zeitraum des Eintrags als Beschäftigt markieren
+        values.put(CalendarContract.Events.AVAILABILITY, CalendarContract.Events.AVAILABILITY_BUSY);
+
         // Prüfen, ob der Eintrag bereits hinzugefügt wurde
         if (checkIfExists) { // Wenn auf vorhandensein geprüft werden soll. Ansonsten wird übersprungen
             switch (cManager.checkEntryExists(entry)) {
