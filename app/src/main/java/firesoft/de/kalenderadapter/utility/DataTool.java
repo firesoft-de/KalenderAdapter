@@ -39,6 +39,11 @@ import firesoft.de.libfirenet.http.HttpWorker;
 import firesoft.de.libfirenet.method.GET;
 import firesoft.de.libfirenet.util.HttpState;
 
+import firesoft.de.kalenderadapter.data.CustomCalendarEntry.EntryState.*;
+
+import static firesoft.de.kalenderadapter.data.CustomCalendarEntry.EntryState.CONFIRMED;
+import static firesoft.de.kalenderadapter.data.CustomCalendarEntry.EntryState.OPEN;
+
 public class DataTool extends AsyncTaskLoader<ResultWrapper> implements IErrorCallback {
 
     //=======================================================
@@ -320,56 +325,75 @@ public class DataTool extends AsyncTaskLoader<ResultWrapper> implements IErrorCa
         // Basierend auf https://www.quora.com/How-do-I-programmatically-set-a-reminder-message-for-a-particular-date-in-Android
         if (setReminder && uri != null) {
 
-            // Erinnerung erstellen und die ID des zugehörigen Events eintragen
-            ArrayList<ContentValues> reminders = new ArrayList<>();
-             // Erinnerungsart einfügen. Es wird nur DEFAULT und ALARM unterstützt.
-
-            // Welche Art von Erinnerung soll hinzugefügt werden? Standardmäßig oder intelligent?
-            if (useInteligentReminder) {
-                ContentValues reminder;
-
-                switch (entry.getEntryState()) {
-                    case OPEN:
-                        // Erinnerung eine Woche zwei Tage und einen Tag vorher
-                        reminder = createNewReminder(eventID);
-                        reminder.put(CalendarContract.Reminders.MINUTES,early_reminder);
-                        reminders.add(reminder);
-                        // Kein break, da die nachfolgenden Einträge auch benötigt werden!
-
-                    case CONFIRMED:
-                        // Erinnerung zwei und einen Tage vorher reicht aus
-                        reminder = createNewReminder(eventID);
-                        reminder.put(CalendarContract.Reminders.MINUTES,reminder_two_days);
-                        reminders.add(reminder);
-
-                        reminder = createNewReminder(eventID);
-                        reminder.put(CalendarContract.Reminders.MINUTES,reminder_one_days);
-                        reminders.add(reminder);
-                        break;
-                }
-            }
-            else {
-                // Einfache Erinnerung zwei Tage vorher hinzufügen
-                ContentValues reminder = createNewReminder(eventID);
-                reminder.put(CalendarContract.Reminders.MINUTES,reminder_two_days);
-                reminders.add(reminder);
-            }
-
-            // Alle Erinnerungen hinzufügen
-            for (ContentValues reminder: reminders
-                 ) {
-                try {
-                    cr.insert(CalendarContract.Reminders.CONTENT_URI, reminder);
-                } catch (SecurityException e) {
-                    e.printStackTrace();
-                    publishError(getContext().getString(R.string.error_addCalendarEntry));
-                    return -1;
-                }
+            int attachResponse = attachReminders(entry, cr, eventID, useInteligentReminder);
+            if (attachResponse == -1) {
+                return -1;
             }
 
         }
 
         return eventID;
+
+    }
+
+    // region Hilfsmethoden für Terminerinnerungen
+
+    /**
+     * Fügt einem Kalendereintrag Erinnerungen hinzu. Dabei wird die Auswahl des Nutzers berücksichtigt.
+     * @param entry Eintrag der hinzugefügt wird
+     * @param cr ContentResolver der zum hinzufügen des Eintrags verwendet wird
+     * @param eventID ID des zu bearbeitenden Kalendereintrags
+     * @param useInteligentReminder Gibt an, ob die Erinnerungen in Abhängigkeit des (Rückmelde-)Status gesetzt werden sollen
+     * @return -1 falls es beim Einfügen des Eintrags zu einem Fehler gekommen ist
+     */
+    private int attachReminders(CustomCalendarEntry entry, ContentResolver cr, int eventID, boolean useInteligentReminder) {
+
+        // Erinnerung erstellen und die ID des zugehörigen Events eintragen
+        ArrayList<ContentValues> reminders = new ArrayList<>();
+        // Erinnerungsart einfügen. Es wird nur DEFAULT und ALARM unterstützt.
+
+        // Welche Art von Erinnerung soll hinzugefügt werden? Standardmäßig oder intelligent?
+        if (useInteligentReminder) {
+            ContentValues reminder;
+
+            switch (entry.getEntryState()) {
+                case OPEN:
+                    // Erinnerung eine Woche zwei Tage und einen Tag vorher
+                    reminder = createNewReminder(eventID);
+                    reminder.put(CalendarContract.Reminders.MINUTES,early_reminder);
+                    reminders.add(reminder);
+                    // Kein break, da die nachfolgenden Einträge auch benötigt werden!
+
+                case CONFIRMED:
+                    // Erinnerung zwei und einen Tage vorher reicht aus
+                    reminder = createNewReminder(eventID);
+                    reminder.put(CalendarContract.Reminders.MINUTES,reminder_two_days);
+                    reminders.add(reminder);
+
+                    reminder = createNewReminder(eventID);
+                    reminder.put(CalendarContract.Reminders.MINUTES,reminder_one_days);
+                    reminders.add(reminder);
+                    break;
+            }
+        }
+        else {
+            // Einfache Erinnerung zwei Tage vorher hinzufügen
+            ContentValues reminder = createNewReminder(eventID);
+            reminder.put(CalendarContract.Reminders.MINUTES,reminder_two_days);
+            reminders.add(reminder);
+        }
+
+        // Alle Erinnerungen hinzufügen
+        for (ContentValues reminder: reminders
+                ) {
+            try {
+                cr.insert(CalendarContract.Reminders.CONTENT_URI, reminder);
+            } catch (SecurityException e) {
+                e.printStackTrace();
+                publishError(getContext().getString(R.string.error_addCalendarEntry));
+                return -1;
+            }
+        }
 
     }
 
@@ -382,6 +406,11 @@ public class DataTool extends AsyncTaskLoader<ResultWrapper> implements IErrorCa
         reminder.put(CalendarContract.Reminders.METHOD, CalendarContract.Reminders.METHOD_DEFAULT);
         return reminder;
     }
+
+    // endregion
+
+
+    // region IErrorCallback-Methoden
 
     /**
      * Ermöglicht es threadsichere Meldungen an den Nutzer auszugeben
@@ -412,4 +441,6 @@ public class DataTool extends AsyncTaskLoader<ResultWrapper> implements IErrorCa
     public void switchCalendarUIElements(boolean enable) {
         // Hier wird nichts gemacht
     }
+
+    // endregion
 }
