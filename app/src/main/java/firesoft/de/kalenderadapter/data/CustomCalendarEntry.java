@@ -103,8 +103,10 @@ public class CustomCalendarEntry {
      */
     public boolean equals(CustomCalendarEntry candidate) {
 
-        boolean checkresult_1 = this.title.equals(candidate.title);
-        //boolean checkresult_2 = this.description.equals(candidate.description);
+        // Titel können sich auch ändern. Deswegen entfernt
+        //boolean checkresult_1 = this.title.equals(candidate.title);
+        boolean checkresult_1 = true;
+        //boolean checkresult_2 = this.description.equals(candidate.description); // Beschreibungen können sich ändern. Deswegen entfernt
         boolean checkresult_2 = true;
         boolean checkresult_3 = (this.startMillis == candidate.startMillis);
         boolean checkresult_4 = (this.endMillis == candidate.endMillis);
