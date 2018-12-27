@@ -93,6 +93,7 @@ public class DataTool extends AsyncTaskLoader<ResultWrapper> implements IErrorCa
 
     }
 
+    // region Public Methoden
     //=======================================================
     //==================PUBLIC METHODEN======================
     //=======================================================
@@ -250,11 +251,12 @@ public class DataTool extends AsyncTaskLoader<ResultWrapper> implements IErrorCa
         //}
     }
 
+    // endregion
 
+    // region Interne Methoden zum Bearbeiten von Kalendereinträgen
     //=======================================================
     //===========METHODEN ZUR DATENVERARBEITUNG==============
     //=======================================================
-
 
     /**
      * Parst die Antwort des Servers in eine Stringliste mit den einzelnen Events
@@ -326,7 +328,7 @@ public class DataTool extends AsyncTaskLoader<ResultWrapper> implements IErrorCa
         if (setReminder && uri != null) {
 
             int attachResponse = attachReminders(entry, cr, eventID, useInteligentReminder);
-            if (attachResponse == -1) {
+            if (attachResponse < 0) {
                 return -1;
             }
 
@@ -336,6 +338,9 @@ public class DataTool extends AsyncTaskLoader<ResultWrapper> implements IErrorCa
 
     }
 
+    // endregion
+
+
     // region Hilfsmethoden für Terminerinnerungen
 
     /**
@@ -344,7 +349,7 @@ public class DataTool extends AsyncTaskLoader<ResultWrapper> implements IErrorCa
      * @param cr ContentResolver der zum hinzufügen des Eintrags verwendet wird
      * @param eventID ID des zu bearbeitenden Kalendereintrags
      * @param useInteligentReminder Gibt an, ob die Erinnerungen in Abhängigkeit des (Rückmelde-)Status gesetzt werden sollen
-     * @return -1 falls es beim Einfügen des Eintrags zu einem Fehler gekommen ist
+     * @return -1 falls es beim Einfügen des Eintrags zu einem Fehler gekommen ist, >= 0 falls erfolgreich
      */
     private int attachReminders(CustomCalendarEntry entry, ContentResolver cr, int eventID, boolean useInteligentReminder) {
 
@@ -394,6 +399,8 @@ public class DataTool extends AsyncTaskLoader<ResultWrapper> implements IErrorCa
                 return -1;
             }
         }
+
+        return 1;
 
     }
 
