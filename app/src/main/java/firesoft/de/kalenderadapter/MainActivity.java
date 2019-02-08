@@ -52,6 +52,8 @@ import org.w3c.dom.Text;
 
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.concurrent.TimeUnit;
 import java.util.function.ToDoubleBiFunction;
 
@@ -364,7 +366,7 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
                     long timeMilliSeconds;
 
                     try {
-                        timeMilliSeconds= StringToMillis(etServiceSyncFrom.getText().toString());
+                        timeMilliSeconds= StartToMillis(etServiceSyncFrom.getText().toString());
                     }
                     catch (Exception e) {
                         publishError("Ungültiger Eingabewert! Erwartet wird: HH:mm (HH <=23, mm<= 59)");
@@ -375,12 +377,12 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
                     if (pManager.getSyncFrom() != timeMilliSeconds) {
                         // Daten wurden geändert
 
-                        // Hintergrundservice stoppen
-                        ServiceUtil.stopService(getApplicationContext());
-
                         // Neue Daten in den PreferencesManager schreiben
                         pManager.setSyncFrom(timeMilliSeconds);
                         pManager.save();
+
+                        // Hintergrundservice stoppen
+                        ServiceUtil.stopService(getApplicationContext());
 
                         // Service neustarten
                         ServiceUtil.startService(getApplicationContext(), pManager.getSyncFrom(),pManager.getSyncInterval());
@@ -403,7 +405,7 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
                     long timeMilliSeconds;
 
                     try {
-                        timeMilliSeconds= StringToMillis(etServiceSyncInterval.getText().toString());
+                        timeMilliSeconds= IntervallToMillis(etServiceSyncInterval.getText().toString());
                     }
                     catch (Exception e) {
                         publishError("Ungültiger Eingabewert! Erwartet wird: HH:mm (HH <=23, mm<= 59)");
@@ -414,12 +416,12 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
                     if (pManager.getSyncInterval() != timeMilliSeconds) {
                         // Daten wurden geändert
 
-                        // Hintergrundservice stoppen
-                        ServiceUtil.stopService(getApplicationContext());
-
                         // Neue Daten in den PreferencesManager schreiben
                         pManager.setSyncInterval(timeMilliSeconds);
                         pManager.save();
+
+                        // Hintergrundservice stoppen
+                        ServiceUtil.stopService(getApplicationContext());
 
                         // Service neustarten
                         ServiceUtil.startService(getApplicationContext(), pManager.getSyncFrom(),pManager.getSyncInterval());
@@ -539,10 +541,10 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
         setServiceSwitch(ServiceUtil.checkServiceIsRunning(this,BackgroundService.class));
 
         EditText etSyncFrom = this.findViewById(R.id.service_sync_from);
-        etSyncFrom.setText(MillisToString(pManager.getSyncFrom()));
+        etSyncFrom.setText(MillisToString(pManager.getSyncFrom(),true));
 
         EditText etSyncInterval = this.findViewById(R.id.service_sync_interval);
-        etSyncInterval.setText(MillisToString(pManager.getSyncInterval()));
+        etSyncInterval.setText(MillisToString(pManager.getSyncInterval(),false));
 
         // Einstellungen für die Erinnerungen abrufen
         ((CheckBox) this.findViewById(R.id.cB_set_reminder)).setChecked(pManager.isReminderActivated());
@@ -735,7 +737,9 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
     /**
      * Hilfsmethode die einen eingebenen String des Schemas StundenStunden:MinutenMinuten in Millisekunden umwandelt
      */
-    private long StringToMillis(String input) throws ParseException {
+    private long StartToMillis(String input) throws ParseException {
+
+        Calendar calendar = Calendar.getInstance();
 
         if (!input.contains(":")) {
             throw new ParseException("",0);
@@ -752,39 +756,68 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
             throw new ParseException("",1);
         }
 
-        return (hours * 60 + minutes) * 60 * 1000;
+        calendar.set(Calendar.HOUR_OF_DAY, hours);
+        calendar.set(Calendar.MINUTE, minutes);
+        return (calendar.getTimeInMillis())/1000;
+    }
+
+    /**
+     * Hilfsmethode die einen eingebenen String des Schemas StundenStunden:MinutenMinuten in Millisekunden umwandelt
+     */
+    private long IntervallToMillis(String input) throws ParseException {
+
+        Calendar calendar = Calendar.getInstance();
+
+        if (!input.contains(":")) {
+            throw new ParseException("",0);
+        }
+
+        int hours = Integer.valueOf(input.split(":")[0]);
+        int minutes = Integer.valueOf(input.split(":")[1]);
+
+        if (hours == 0 && minutes == 0) {
+            throw new ParseException("",1);
+        }
+
+        if (hours > 24 || minutes > 60) {
+            throw new ParseException("",1);
+        }
+
+        calendar.setTimeInMillis(0);
+        calendar.set(Calendar.HOUR_OF_DAY, hours);
+        calendar.set(Calendar.MINUTE, minutes);
+        long offset = calendar.getTimeZone().getRawOffset();
+
+        return (calendar.getTimeInMillis()+offset)/1000;
+
     }
 
     /**
      * Hilfsmethode die Millisekunden in einen eingebenen String des Schemas StundenStunden:MinutenMinuten umwandelt
      */
-    private String MillisToString(long input) {
+    private String MillisToString(long input, boolean start) {
 
-        long minutes = TimeUnit.MILLISECONDS.toMinutes(input);
-        long hours = TimeUnit.MILLISECONDS.toHours(input);
+        Calendar calendar = Calendar.getInstance();
 
-        if ((minutes % 60) == 0) { // Wert geht genau auf (kein Rest)
-            if (hours < 10) {
-                return "0" + String.valueOf(hours) + ":00";
-            }
-            else {
-                return String.valueOf(hours) + ":00";
-            }
+        calendar.setTimeInMillis(input*1000);
+
+        Calendar cal2 = Calendar.getInstance();
+        calendar.setTimeZone(cal2.getTimeZone());
+
+        int minute = calendar.get(Calendar.MINUTE);
+        int hour = calendar.get(Calendar.HOUR_OF_DAY);
+
+        if (minute < 10 && hour < 10) {
+            return "0" + hour + ":0" + minute;
         }
-        else {
-            if (hours < 10 && (minutes - (hours * 60)) < 10) {
-                return "0" + String.valueOf(hours) + ":0" + String.valueOf(minutes - (hours * 60));
-            }
-            else if (hours < 10 && (minutes - (hours * 60)) > 10){
-                return "0" + String.valueOf(hours) + ":" + String.valueOf(minutes - (hours * 60));
-            }
-            else if (hours > 10 && (minutes - (hours * 60)) < 10) {
-                return String.valueOf(hours) + ":0" + String.valueOf(minutes - (hours * 60));
-            }
-            else {
-                return String.valueOf(hours) + ":" + String.valueOf(minutes - (hours * 60));
-            }
+        else if (minute < 10) {
+            return "" + hour + ":0" + minute;
         }
+        else if (hour < 10) {
+            return "0" + hour + ":" + minute;
+        }
+
+        return calendar.get(Calendar.HOUR_OF_DAY) + ":" + calendar.get(Calendar.MINUTE);
 
     }
 

@@ -66,27 +66,14 @@ public class ServiceUtil extends BroadcastReceiver {
         Intent serviceIntent = new Intent(context, BackgroundService.class);
         PendingIntent startServiceIntent = PendingIntent.getService(context,0,serviceIntent,0);
 
-        // setRepeating benötigt den Startzeitpunkt als UNIX-Zeit
-        Calendar calendar = Calendar.getInstance();
-
-        calendar.set(Calendar.HOUR_OF_DAY, 0);
-        calendar.set(Calendar.MINUTE, 0);
-        calendar.set(Calendar.SECOND, 0);
-
-        // Einen Tag in der Zukunft beginnen, damit der Service auf jeden Fall gestartet wird.
-        // Eventuell wird der Service nicht gestartet, wenn das Startdatum in der Vergangenheit liegt. Dies kann passieren, wenn der Nutzer eine Uhrzeit eingibt, die am aktuellen Tag bereits vergangen ist.
-        // calendar.add(Calendar.DAY_OF_MONTH,1);
-
-        long s = calendar.getTimeInMillis() + start;
-
         if (BuildConfig.DEBUG) {
-            Log.d("STARTING TIME", "Starting Timestamp: " + String.valueOf(s));
-            Log.d("INTERVAL TIME", "Interval: " + String.valueOf(interval));
+            Log.d("LOG_SERVICE", "Starting Timestamp: " + String.valueOf(start));
+            Log.d("LOG_SERVICE", "Interval: " + String.valueOf(interval));
         }
 
         //AlarmManager aktivieren
         if (alarmManager != null) {
-            alarmManager.setRepeating(AlarmManager.RTC_WAKEUP,s,interval,startServiceIntent);
+            alarmManager.setRepeating(AlarmManager.RTC_WAKEUP,start*1000,interval*1000,startServiceIntent);
         }
 
     }
