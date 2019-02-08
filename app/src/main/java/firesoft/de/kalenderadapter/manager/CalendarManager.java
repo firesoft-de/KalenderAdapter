@@ -71,6 +71,7 @@ public class CalendarManager {
         this.context = context;
         cals = new ArrayList<>();
         this.errorCallback = errorCallback;
+        entryIds = new ArrayList<>();
     }
 
     //=======================================================
