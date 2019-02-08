@@ -573,14 +573,16 @@ public class CalendarManager {
     public void loadCalendarEntries() {
         crowd = getExistingEntries();
 
-        // entryids einfügen
-        for (CustomCalendarEntry entry: crowd
-             ) {
-            if (!entryIds.contains(entry.getEntryID())) {
-                entryIds.add(entry.getEntryID());
+        if (crowd != null) {
+
+            // entryids einfügen
+            for (CustomCalendarEntry entry : crowd
+                    ) {
+                if (!entryIds.contains(entry.getEntryID())) {
+                    entryIds.add(entry.getEntryID());
+                }
             }
         }
-
     }
 
     //=======================================================
