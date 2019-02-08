@@ -199,7 +199,7 @@ public class CalendarManager {
         ContentResolver cr = context.getContentResolver();
 
         if (entryIds.size() == 0) {
-            return null;
+            return getExistingEntriesByMarker();
         }
 
         for (Integer id : entryIds
