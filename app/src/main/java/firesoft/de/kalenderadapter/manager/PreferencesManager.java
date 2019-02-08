@@ -58,7 +58,7 @@ public class PreferencesManager {
     /**
      * Enthält die ID'S der erzeugten Kalendereinträge
      */
-    private String entryIds;
+//    private String entryIds;
 
     /**
      * Enthält das Kennwort für den Datenabruf
@@ -153,6 +153,11 @@ public class PreferencesManager {
 //                loadvxyz();
 //                break;
 
+            case 14:
+                // Version 0.4
+                loadv3();
+                break;
+
             case 6:
                 // Version 0.4
                 loadv3();
@@ -178,7 +183,7 @@ public class PreferencesManager {
 
         editor.putString(URL,url);
         editor.putString(USER,user);
-        editor.putString(ENTRYIDS,entryIds);
+        //editor.putString(ENTRYIDS,entryIds);
         editor.putString(PASSWORD,password);
         editor.putBoolean(LOG,logEnabled);
         editor.putInt(ACTIVE_CALENDAR, activeCalendarId);
@@ -210,7 +215,7 @@ public class PreferencesManager {
         user = "";
         password = "";
         activeCalendarId = 0;
-        entryIds = "";
+        //entryIds = "";
         logEnabled = false;
         sync_from = default_sync_start; // Standard 03:00 Uhr
         sync_from = AlarmManager.INTERVAL_DAY; // Standard 24 Stunden
@@ -223,13 +228,31 @@ public class PreferencesManager {
     //=======================================================
 
     /**
+     * Lädt die Einstellungen der Appversion 0.6 und aller kompatiblen Versionen
+     */
+    private void loadv4() {
+        url = preferences.getString(URL, "");
+        logEnabled = preferences.getBoolean(LOG,false);
+        user = preferences.getString(USER,"");
+        //entryIds = preferences.getString(ENTRYIDS,"");
+        password = preferences.getString(PASSWORD,"");
+        activeCalendarId = preferences.getInt(ACTIVE_CALENDAR,0);
+        sync_from = preferences.getLong(SYNC_FROM,default_sync_start ); // Standard 03:00 Uhr
+        sync_interval = preferences.getLong(SYNC_INTERVAL, AlarmManager.INTERVAL_DAY); // Standard 24 Stunden
+        sync_disabled = preferences.getBoolean(SYNC_DISABLED, true);
+        set_reminder = preferences.getBoolean(SET_REMINDER, true);
+        set_inteligent_reminder = preferences.getBoolean(SET_INTELIGENT_REMINDER, true);
+        replace_existing = preferences.getBoolean(REPLACE_EXISTING, true);
+    }
+
+    /**
      * Lädt die Einstellungen der Appversion 0.3.1 und aller kompatiblen Versionen
      */
     private void loadv3() {
         url = preferences.getString(URL, "");
         logEnabled = preferences.getBoolean(LOG,false);
         user = preferences.getString(USER,"");
-        entryIds = preferences.getString(ENTRYIDS,"");
+        //entryIds = preferences.getString(ENTRYIDS,"");
         password = preferences.getString(PASSWORD,"");
         activeCalendarId = preferences.getInt(ACTIVE_CALENDAR,0);
         sync_from = preferences.getLong(SYNC_FROM,default_sync_start ); // Standard 03:00 Uhr
@@ -247,7 +270,7 @@ public class PreferencesManager {
         url = preferences.getString(URL, "");
         logEnabled = preferences.getBoolean(LOG,false);
         user = preferences.getString(USER,"");
-        entryIds = preferences.getString(ENTRYIDS,"");
+        //entryIds = preferences.getString(ENTRYIDS,"");
         password = preferences.getString(PASSWORD,"");
         activeCalendarId = preferences.getInt(ACTIVE_CALENDAR,0);
         sync_from = preferences.getLong(SYNC_FROM,default_sync_start ); // Standard 03:00 Uhr
@@ -262,7 +285,7 @@ public class PreferencesManager {
         url = preferences.getString(URL, "");
         logEnabled = preferences.getBoolean(LOG,false);
         user = preferences.getString(USER,"");
-        entryIds = preferences.getString(ENTRYIDS,"");
+        //entryIds = preferences.getString(ENTRYIDS,"");
         password = preferences.getString(PASSWORD,"");
         activeCalendarId = preferences.getInt(ACTIVE_CALENDAR,0);
     }
@@ -301,14 +324,14 @@ public class PreferencesManager {
         this.user = user;
     }
 
-    public String getEntryIds() {
+/*    public String getEntryIds() {
         return entryIds;
-    }
+    }*/
 
-    public void setEntryIds(String ids) {
+/*    public void setEntryIds(String ids) {
         this.entryIds = "";
         this.entryIds = ids;
-    }
+    }*/
 
     public String getPassword() {
         return password;

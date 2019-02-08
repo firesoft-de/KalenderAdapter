@@ -162,7 +162,7 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
             pManager.load();
 
             // Entry-IDS laden
-            cManager.setEntryIdsFromString(pManager.getEntryIds());
+            //cManager.setEntryIdsFromString(pManager.getEntryIds());
 
         } catch (PackageManager.NameNotFoundException e) {
             e.printStackTrace();
@@ -286,7 +286,7 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
             @Override
             public void onClick(View view) {
                 cManager.deleteEntries();
-                pManager.setEntryIds("");
+//                pManager.setEntryIds("");
             }
         });
 
@@ -313,7 +313,7 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
                         informationDialog.dismiss();
 
                         cManager.clearCalendar();
-                        pManager.setEntryIds("");
+//                        pManager.setEntryIds("");
                     }
                 });
 

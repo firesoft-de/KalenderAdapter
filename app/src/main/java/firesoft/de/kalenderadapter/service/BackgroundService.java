@@ -68,7 +68,7 @@ public class BackgroundService extends Service implements Loader.OnLoadCompleteL
         // CalendarManager starten
         cManager = new CalendarManager(getApplicationContext(),null);
         cManager.setActiveCalendar(pManager.getActiveCalendarId());             // Aktiven Kalender laden
-        cManager.setEntryIdsFromString(pManager.getEntryIds());                 // Die von der App gesetzten Einträge laden
+//        cManager.setEntryIdsFromString(pManager.getEntryIds());                 // Die von der App gesetzten Einträge laden
         cManager.loadCalendarEntries();                                         // Die Kalender laden
 
         // Prüfen, ob alle benötigten Daten vorliegen
@@ -119,9 +119,9 @@ public class BackgroundService extends Service implements Loader.OnLoadCompleteL
         }
 
         // Kein Fehler ist aufgetreten. Die IDs werden in den Preferences Manager geschrieben und gespeichert.
-        cManager.setEntryIds(data.getIds());
-        pManager.setEntryIds(cManager.getEntryIdsAsString());
-        pManager.save();
+//        cManager.setEntryIds(data.getIds());
+//        pManager.setEntryIds(cManager.getEntryIdsAsString());
+//        pManager.save();
 
         // Nichts tun und sich freuen das alles geklappt hat.
     }

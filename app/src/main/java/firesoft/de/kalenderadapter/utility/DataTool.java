@@ -179,7 +179,7 @@ public class DataTool extends AsyncTaskLoader<ResultWrapper> implements IErrorCa
 
             // Alle bestehenden Einträge löschen
             cManager.deleteEntries();
-            pManager.setEntryIds("");
+            //pManager.setEntryIds("");
             equalityCheckNeeded = false;
         }
         else {
@@ -289,7 +289,7 @@ public class DataTool extends AsyncTaskLoader<ResultWrapper> implements IErrorCa
         values.put(CalendarContract.Events.TITLE, entry.getTitle());
         values.put(CalendarContract.Events.DESCRIPTION, entry.getDescription());
         values.put(CalendarContract.Events.EVENT_LOCATION, entry.getLocation());
-        values.put(CalendarContract.Events.CALENDAR_ID, entry.getCalendarID());
+        values.put(CalendarContract.Events.CALENDAR_ID, entry.getEntryID());
         values.put(CalendarContract.Events.EVENT_TIMEZONE, entry.getTimezone());
 
         // Den Zeitraum des Eintrags als Beschäftigt markieren
