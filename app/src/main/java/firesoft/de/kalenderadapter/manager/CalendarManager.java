@@ -286,8 +286,6 @@ public class CalendarManager {
         // Inhalt von Liste A wird direkt in die Ausgabeliste geschrieben
         ArrayList<CustomCalendarEntry> mergedList = ListA;
 
-        //TODO: Binärsuche ist hier sehr sinnvoll
-
         // Alle Einträge in der Liste B durchgehen und prüfen, ob diese bereits in der Ausgabeliste enthalten sind
         for (CustomCalendarEntry entryFromListB: ListB
              ) {
