@@ -52,12 +52,17 @@ public class DateAndTimeConversion {
         String[] split = matchedString.split(":");
 
         // Endergebnis berechnen
-        return (Integer.getInteger(split[0]) * 60 * 60 + Integer.getInteger(split[1]) * 60) * 1000;
+        long hours = Long.parseLong(split[0]) * 60 * 60;
+        long minutes = Long.parseLong(split[1]) * 60;
+
+        long sum = (hours + minutes) * 1000;
+
+        return sum;
     }
 
 
     /**
-     * Wandelt eine Zeitangabe in Millisekunden in einen String vom Format HH:mm um.
+     * Wandelt eine Zeitangabe in Millisekunden in einen String vom Format HH:mm um. Es werden keine Zeiten größer als 24 Stunden unterstützt
      * @param input Zeitpunkt in Millisekunden
      * @return String im Format HH:mm
      * @throws ParseException Wird geworfen falls das Format der long-Wert negativ ist die Konvertierung fehlgeschlagen ist.
@@ -73,27 +78,45 @@ public class DateAndTimeConversion {
         checkCalendar.setTimeInMillis(input);
         checkCalendar.setTimeZone(TimeZone.getTimeZone("GMT"));
 
-        int a = checkCalendar.get(HOUR);
+        int a = checkCalendar.get(Calendar.HOUR_OF_DAY);
         int b = checkCalendar.get(Calendar.MINUTE);
 
         return String.format(Locale.GERMAN, "%1$tH:%1$tM", checkCalendar);
-
     }
 
     /**
      * Wandelt eine Zeitangabe in Millisekunden in einen String vom Format HH:mm um.
-     * @param hour Zeitangabe Stundenteil
-     * @param minute Zeitangabe Minutenteil
+     * @param hour Zeitangabe Stundenteil. >= 0
+     * @param minute Zeitangabe Minutenteil. >= 0 && <= 60
      * @return Zeit in Millisekunden umgerechnet. Format long
      * @throws ParseException Wird geworfen falls das Format der long-Wert negativ ist die Konvertierung fehlgeschlagen ist.
      */
     public static long convertHourAndMinuteToMillis(int hour, int minute) throws ParseException {
 
-        if (hour < 0 || minute < 0 || hour > 24 || minute > 60) {
+        if (hour < 0 || minute < 0 || minute > 60) {
             throw new ParseException("input smaller than zero or bigger than allowed!",0);
         }
 
         return (hour * 60 * 60 + minute * 60) * 1000;
+    }
+
+
+    /**
+     * Konvertiert eine Zeitangabe in Millisekunden seit Epoch in eine Uhrzeit. Gibt dann nur den Stundenanteil dieser Uhrzeit aus.
+     * @param input Zeitpunkt als Millisekunden seit Epoch
+     * @return Stunden einer Uhrzeit 00 - 23
+     */
+    public static int getHoursOfMillis(long input) throws ParseException{
+        return Integer.valueOf(convertMillisToString(input).split(":")[0]);
+    }
+
+    /**
+     * Konvertiert eine Zeitangabe in Millisekunden seit Epoch in eine Uhrzeit. Gibt dann nur den Minutenanteil dieser Uhrzeit aus.
+     * @param input Zeitpunkt als Millisekunden seit Epoch
+     * @return Minuten einer Uhrzeit 00 - 59
+     */
+    public static int getMinutesOfMillis(long input) throws ParseException {
+        return Integer.valueOf(convertMillisToString(input).split(":")[1]);
     }
 
     /**

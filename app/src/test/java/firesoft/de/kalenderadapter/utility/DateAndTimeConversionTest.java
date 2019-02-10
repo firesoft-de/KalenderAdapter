@@ -45,6 +45,18 @@ public class DateAndTimeConversionTest {
     }
 
     @Test(expected = ParseException.class)
+    public void convertStringToMillisShouldFailWhenMalformed() throws ParseException {
+        DateAndTimeConversion.convertStringToMillis("AA.K");
+    }
+
+    @Test
+    public void convertStringToMillisShouldSuccedWhenWellFormed() throws ParseException {
+        long result = DateAndTimeConversion.convertStringToMillis("01:16");
+        assertEquals(4560000,result);
+    }
+
+
+    @Test(expected = ParseException.class)
     public void attachEpochShouldFailWithNegativInput() throws ParseException {
         DateAndTimeConversion.attachEpoch(-10);
     }
@@ -78,6 +90,44 @@ public class DateAndTimeConversionTest {
         DateAndTimeConversion.convertMillisToString(-120);
     }
 
+    @Test
+    public void getHoursOfMillisShouldProvideValidResults() throws ParseException{
+        int hours = DateAndTimeConversion.getHoursOfMillis(86340000);
+        assertEquals(23,hours);
+    }
 
+    @Test
+    public void getMinutesOfMillisShouldProvideValidResults() throws ParseException{
+        int hours = DateAndTimeConversion.getMinutesOfMillis(86340000);
+        assertEquals(59,hours);
+    }
+
+    @Test(expected = ParseException.class)
+    public void convertHourAndMinuteToMillisShouldThrowExceptionWhenInvalidFormat1() throws ParseException {
+        DateAndTimeConversion.convertHourAndMinuteToMillis(40,100);
+    }
+
+    @Test(expected = ParseException.class)
+    public void convertHourAndMinuteToMillisShouldThrowExceptionWhenInvalidFormat2() throws ParseException {
+        DateAndTimeConversion.convertHourAndMinuteToMillis(-10,10);
+    }
+
+    @Test
+    public void convertHourAndMinuteToMillisShouldProvideValidResults1() throws ParseException {
+        long result = DateAndTimeConversion.convertHourAndMinuteToMillis(0,0);
+        assertEquals(0,result);
+    }
+
+    @Test
+    public void convertHourAndMinuteToMillisShouldProvideValidResultsWithHoursBiggerThan24Hours() throws ParseException {
+        long result = DateAndTimeConversion.convertHourAndMinuteToMillis(40,0);
+        assertEquals(144000000,result);
+    }
+
+    @Test
+    public void convertHourAndMinuteToMillisShouldProvideValidResults2() throws ParseException {
+        long result = DateAndTimeConversion.convertHourAndMinuteToMillis(0,59);
+        assertEquals(3540000,result);
+    }
 
 }
