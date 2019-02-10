@@ -23,6 +23,8 @@ import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static java.util.Calendar.HOUR;
+
 /**
  * Diese Klasse stellt Methoden bereit um Zeitangaben wie bspw. HH:MM in Millisekunden umzurechnen. Es stehen Methoden für absolute Zeiten seit Epoch und relative Zeiten zur Verfügung.
  */
@@ -71,13 +73,28 @@ public class DateAndTimeConversion {
         checkCalendar.setTimeInMillis(input);
         checkCalendar.setTimeZone(TimeZone.getTimeZone("GMT"));
 
-        int a = checkCalendar.get(Calendar.HOUR);
+        int a = checkCalendar.get(HOUR);
         int b = checkCalendar.get(Calendar.MINUTE);
 
         return String.format(Locale.GERMAN, "%1$tH:%1$tM", checkCalendar);
 
     }
 
+    /**
+     * Wandelt eine Zeitangabe in Millisekunden in einen String vom Format HH:mm um.
+     * @param hour Zeitangabe Stundenteil
+     * @param minute Zeitangabe Minutenteil
+     * @return Zeit in Millisekunden umgerechnet. Format long
+     * @throws ParseException Wird geworfen falls das Format der long-Wert negativ ist die Konvertierung fehlgeschlagen ist.
+     */
+    public static long convertHourAndMinuteToMillis(int hour, int minute) throws ParseException {
+
+        if (hour < 0 || minute < 0 || hour > 24 || minute > 60) {
+            throw new ParseException("input smaller than zero or bigger than allowed!",0);
+        }
+
+        return (hour * 60 * 60 + minute * 60) * 1000;
+    }
 
     /**
      * Fügt die Zeit in Millisekunden seit dem Epoch zur Eingabe hinzu. Kann verwendet werden, um den Startzeitpunkt des Service zu erzeugen. Es wird berücksichtigt, ob der eingegebene Zeitpunkt am heutigen Tag bereits in der Vergangenheit liegt. In diesem Fall wird ein Tag hinzugefügt (Zeitpunkt liegt dann nicht mehr in der Vergangenheit).
@@ -99,7 +116,7 @@ public class DateAndTimeConversion {
 
         // Vergangenheitsprüfung durchführen
         // Stunden prüfen
-        if (checkCalendar.get(Calendar.HOUR) < conversionCalendar.get(Calendar.HOUR)) {
+        if (checkCalendar.get(HOUR) < conversionCalendar.get(HOUR)) {
             // Eingabe liegt in der Vergangenheit -> +1 Tag
             conversionCalendar.add(Calendar.DAY_OF_MONTH,1);
         }
@@ -110,7 +127,7 @@ public class DateAndTimeConversion {
         }
 
         // Uhrzeit auf 00:00:00.00 zurückdrehen
-        conversionCalendar.set(Calendar.HOUR,0);
+        conversionCalendar.set(HOUR,0);
         conversionCalendar.set(Calendar.MINUTE,0);
         conversionCalendar.set(Calendar.SECOND,0);
         conversionCalendar.set(Calendar.MILLISECOND,0);

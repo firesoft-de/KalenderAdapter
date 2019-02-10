@@ -15,6 +15,7 @@ package firesoft.de.kalenderadapter;
 
 import android.Manifest;
 import android.app.Dialog;
+import android.app.TimePickerDialog;
 import android.arch.lifecycle.MutableLiveData;
 import android.arch.lifecycle.Observer;
 import android.content.pm.PackageInfo;
@@ -25,6 +26,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.DialogFragment;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.CardView;
@@ -41,6 +43,7 @@ import android.widget.ProgressBar;
 import android.widget.Spinner;
 import android.widget.Switch;
 import android.widget.TextView;
+import android.widget.TimePicker;
 
 import com.github.zagum.switchicon.SwitchIconView;
 
@@ -722,6 +725,116 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
         });
 
         errorDialog.show();
+    }
+
+    /**
+     * Zeigt einen Auswahldialog für Zeiten an.
+     */
+    public void showStartTimePickerDialog() {
+
+        // Create a new OnTimeSetListener instance. This listener will be invoked when user click ok button in TimePickerDialog.
+        TimePickerDialog.OnTimeSetListener onTimeSetListener = new TimePickerDialog.OnTimeSetListener() {
+            @Override
+            public void onTimeSet(TimePicker timePicker, int hour, int minute) {
+
+                // Eingabe in Millisekunden umwandeln
+                long timeMilliSeconds = 0;
+
+                try {
+                    timeMilliSeconds= DateAndTimeConversion.convertHourAndMinuteToMillis(hour,minute);
+                }
+                catch (Exception e) {
+                    displayTimeErrorDialog();
+                    //publishError("Ungültiger Eingabewert! Erwartet wird: HH:mm (HH <=23, mm<= 59)");
+                    return;
+                }
+
+
+                // Prüfe, ob sich die Daten geändert haben
+                if (pManager.getSyncFrom() != timeMilliSeconds) {
+                    // Daten wurden geändert
+
+                    // Neue Daten in den PreferencesManager schreiben
+                    pManager.setSyncFrom(timeMilliSeconds);
+                    pManager.save();
+
+                    // Hintergrundservice stoppen
+                    ServiceUtil.stopService(getApplicationContext());
+
+                    // Service neustarten
+                    ServiceUtil.startService(getApplicationContext(), pManager.getSyncFrom(),pManager.getSyncInterval());
+
+                    setServiceSwitch(true);
+                }
+
+                try {
+                    pManager.setSyncFrom(DateAndTimeConversion.convertHourAndMinuteToMillis(hour,minute));
+                } catch (ParseException e) {
+                    displayTimeErrorDialog();
+                    return;
+                }
+
+            }
+        };
+
+        //TODO: Minuten und Stunden abrufen aus Speicher
+
+        TimePickerDialog timePickerDialog = new TimePickerDialog(MainActivity.this, onTimeSetListener, hour, minute, true);
+
+        timePickerDialog.setTitle("Bitte wählen Sie eine Startzeit aus!");
+
+        timePickerDialog.show();
+    }
+
+    /**
+     * Zeigt einen Auswahldialog für Zeiten an.
+     */
+    public void showIntervalTimePickerDialog() {
+
+        // Create a new OnTimeSetListener instance. This listener will be invoked when user click ok button in TimePickerDialog.
+        TimePickerDialog.OnTimeSetListener onTimeSetListener = new TimePickerDialog.OnTimeSetListener() {
+            @Override
+            public void onTimeSet(TimePicker timePicker, int hour, int minute) {
+
+                // Eingabe in Millisekunden umwandeln
+                long timeMilliSeconds = 0;
+
+                try {
+                    timeMilliSeconds= DateAndTimeConversion.convertHourAndMinuteToMillis(hour,minute);
+                }
+                catch (Exception e) {
+                    displayTimeErrorDialog();
+                    //publishError("Ungültiger Eingabewert! Erwartet wird: HH:mm (HH <=23, mm<= 59)");
+                    return;
+                }
+
+
+                // Prüfe, ob sich die Daten geändert haben
+                if (pManager.getSyncInterval() != timeMilliSeconds) {
+                    // Daten wurden geändert
+
+                    // Neue Daten in den PreferencesManager schreiben
+                    pManager.setSyncInterval(timeMilliSeconds);
+                    pManager.save();
+
+                    // Hintergrundservice stoppen
+                    ServiceUtil.stopService(getApplicationContext());
+
+                    // Service neustarten
+                    ServiceUtil.startService(getApplicationContext(), pManager.getSyncFrom(),pManager.getSyncInterval());
+
+                    setServiceSwitch(true);
+                }
+            }
+        };
+
+        //TODO: Minuten und Stunden abrufen aus Speicher
+
+        TimePickerDialog timePickerDialog = new TimePickerDialog(MainActivity.this, onTimeSetListener, hour, minute, true);
+
+        timePickerDialog.setTitle("Bitte wählen Sie ein Intervall aus!");
+
+        timePickerDialog.show();
     }
 
     /**
