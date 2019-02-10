@@ -116,7 +116,7 @@
                                 <PersistentState>
                                   <option name="values">
                                     <map>
-                                      <entry key="url" value="jar:file:/K:/Entwicklung/Android%20Studio/plugins/android/lib/android.jar!/images/material_design_icons/image/ic_timer_black_24dp.xml" />
+                                      <entry key="url" value="jar:file:/K:/Entwicklung/Android%20Studio/plugins/android/lib/android.jar!/images/material_design_icons/alert/ic_error_outline_black_24dp.xml" />
                                     </map>
                                   </option>
                                 </PersistentState>
@@ -127,7 +127,8 @@
                         <option name="values">
                           <map>
                             <entry key="autoMirrored" value="true" />
-                            <entry key="outputName" value="ic_timer" />
+                            <entry key="color" value="ffffff" />
+                            <entry key="outputName" value="ic_error" />
                             <entry key="sourceFile" value="D:\Development\Android\KalenderAdapter\marketing\logo_default_svg.svg" />
                           </map>
                         </option>

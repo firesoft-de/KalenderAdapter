@@ -329,6 +329,7 @@
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@+id/service_sync_interval" />
 
+
                 <EditText
                     android:id="@+id/service_sync_interval"
                     style="SettingsInputFields"

@@ -19,7 +19,6 @@ import android.arch.lifecycle.MutableLiveData;
 import android.arch.lifecycle.Observer;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
-import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -27,7 +26,6 @@ import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
-import android.support.v4.content.res.ResourcesCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.CardView;
 import android.view.View;
@@ -39,23 +37,15 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
-import android.widget.ImageView;
 import android.widget.ProgressBar;
-import android.widget.ScrollView;
 import android.widget.Spinner;
 import android.widget.Switch;
 import android.widget.TextView;
 
 import com.github.zagum.switchicon.SwitchIconView;
 
-import org.w3c.dom.Text;
-
 import java.text.ParseException;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.concurrent.TimeUnit;
-import java.util.function.ToDoubleBiFunction;
 
 import firesoft.de.kalenderadapter.data.ServerParameter;
 import firesoft.de.kalenderadapter.interfaces.IErrorCallback;
@@ -64,6 +54,7 @@ import firesoft.de.kalenderadapter.manager.CalendarManager;
 import firesoft.de.kalenderadapter.manager.PreferencesManager;
 import firesoft.de.kalenderadapter.service.BackgroundService;
 import firesoft.de.kalenderadapter.service.ServiceUtil;
+import firesoft.de.kalenderadapter.utility.DateAndTimeConversion;
 
 public class MainActivity extends AppCompatActivity implements IErrorCallback {
 
@@ -363,10 +354,11 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
                 // Prüfen, ob das View den Focus hat oder nicht
                 if (!hasFocus) {
                     // Eingabe in Millisekunden umwandeln
-                    long timeMilliSeconds;
+                    long timeMilliSeconds = 0;
 
                     try {
-                        timeMilliSeconds= StartToMillis(etServiceSyncFrom.getText().toString());
+                        // Startzeit in Millisekunden konvertieren
+                        timeMilliSeconds = DateAndTimeConversion.convertStringToMillis(etServiceSyncFrom.getText().toString());
                     }
                     catch (Exception e) {
                         publishError("Ungültiger Eingabewert! Erwartet wird: HH:mm (HH <=23, mm<= 59)");
@@ -402,10 +394,10 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
                 // Prüfen, ob das View den Focus hat oder nicht
                 if (!hasFocus) {
                     // Eingabe in Millisekunden umwandeln
-                    long timeMilliSeconds;
+                    long timeMilliSeconds = 0;
 
                     try {
-                        timeMilliSeconds= IntervallToMillis(etServiceSyncInterval.getText().toString());
+                        timeMilliSeconds= DateAndTimeConversion.convertStringToMillis(etServiceSyncInterval.getText().toString());
                     }
                     catch (Exception e) {
                         publishError("Ungültiger Eingabewert! Erwartet wird: HH:mm (HH <=23, mm<= 59)");
@@ -541,10 +533,20 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
         setServiceSwitch(ServiceUtil.checkServiceIsRunning(this,BackgroundService.class));
 
         EditText etSyncFrom = this.findViewById(R.id.service_sync_from);
-        etSyncFrom.setText(MillisToString(pManager.getSyncFrom(),true));
+        try {
+            etSyncFrom.setText(DateAndTimeConversion.convertMillisToString(pManager.getSyncFrom()));
+        } catch (ParseException e) {
+            displayTimeErrorDialog();
+            return;
+        }
 
         EditText etSyncInterval = this.findViewById(R.id.service_sync_interval);
-        etSyncInterval.setText(MillisToString(pManager.getSyncInterval(),false));
+        try {
+            etSyncInterval.setText(DateAndTimeConversion.convertMillisToString(pManager.getSyncInterval()));
+        } catch (ParseException e) {
+            displayTimeErrorDialog();
+            return;
+        }
 
         // Einstellungen für die Erinnerungen abrufen
         ((CheckBox) this.findViewById(R.id.cB_set_reminder)).setChecked(pManager.isReminderActivated());
@@ -700,6 +702,29 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
     }
 
     /**
+     * Zeigt den Dialog der bei fehlerhafter Eingabe der Zeiten angezeigt werden soll.
+     */
+    private void displayTimeErrorDialog() {
+
+        final MainActivity activity = this;
+        final Dialog errorDialog = new Dialog(MainActivity.this);
+
+        errorDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        errorDialog.setCancelable(false);
+        errorDialog.setContentView(R.layout.layout_information_malformed_time);
+
+        Button dialogButton = (Button) errorDialog.findViewById(R.id.info_button);
+        dialogButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                errorDialog.dismiss();
+            }
+        });
+
+        errorDialog.show();
+    }
+
+    /**
      * Startet den AsyncTaskLoader (Hintergrundthread) für den Datendownload
      */
     private void startLoader() {
@@ -731,93 +756,6 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
         // AsyncTask mit den Parametern starten
         taskManager = new AsyncTaskManager(getSupportLoaderManager(), getApplicationContext(),this,cManager, pManager, messageFromBackground, progressValue,progressMax);
         taskManager.startDownload(this,parameters);
-
-    }
-
-    /**
-     * Hilfsmethode die einen eingebenen String des Schemas StundenStunden:MinutenMinuten in Millisekunden umwandelt
-     */
-    private long StartToMillis(String input) throws ParseException {
-
-        Calendar calendar = Calendar.getInstance();
-
-        if (!input.contains(":")) {
-            throw new ParseException("",0);
-        }
-
-        int hours = Integer.valueOf(input.split(":")[0]);
-        int minutes = Integer.valueOf(input.split(":")[1]);
-
-        if (hours == 0 && minutes == 0) {
-            throw new ParseException("",1);
-        }
-
-        if (hours > 24 || minutes > 60) {
-            throw new ParseException("",1);
-        }
-
-        calendar.set(Calendar.HOUR_OF_DAY, hours);
-        calendar.set(Calendar.MINUTE, minutes);
-        return (calendar.getTimeInMillis())/1000;
-    }
-
-    /**
-     * Hilfsmethode die einen eingebenen String des Schemas StundenStunden:MinutenMinuten in Millisekunden umwandelt
-     */
-    private long IntervallToMillis(String input) throws ParseException {
-
-        Calendar calendar = Calendar.getInstance();
-
-        if (!input.contains(":")) {
-            throw new ParseException("",0);
-        }
-
-        int hours = Integer.valueOf(input.split(":")[0]);
-        int minutes = Integer.valueOf(input.split(":")[1]);
-
-        if (hours == 0 && minutes == 0) {
-            throw new ParseException("",1);
-        }
-
-        if (hours > 24 || minutes > 60) {
-            throw new ParseException("",1);
-        }
-
-        calendar.setTimeInMillis(0);
-        calendar.set(Calendar.HOUR_OF_DAY, hours);
-        calendar.set(Calendar.MINUTE, minutes);
-        long offset = calendar.getTimeZone().getRawOffset();
-
-        return (calendar.getTimeInMillis()+offset)/1000;
-
-    }
-
-    /**
-     * Hilfsmethode die Millisekunden in einen eingebenen String des Schemas StundenStunden:MinutenMinuten umwandelt
-     */
-    private String MillisToString(long input, boolean start) {
-
-        Calendar calendar = Calendar.getInstance();
-
-        calendar.setTimeInMillis(input*1000);
-
-        Calendar cal2 = Calendar.getInstance();
-        calendar.setTimeZone(cal2.getTimeZone());
-
-        int minute = calendar.get(Calendar.MINUTE);
-        int hour = calendar.get(Calendar.HOUR_OF_DAY);
-
-        if (minute < 10 && hour < 10) {
-            return "0" + hour + ":0" + minute;
-        }
-        else if (minute < 10) {
-            return "" + hour + ":0" + minute;
-        }
-        else if (hour < 10) {
-            return "0" + hour + ":" + minute;
-        }
-
-        return calendar.get(Calendar.HOUR_OF_DAY) + ":" + calendar.get(Calendar.MINUTE);
 
     }
 
