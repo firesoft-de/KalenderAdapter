@@ -133,14 +133,17 @@ public class DateAndTimeConversion {
 
         // Kalender erzeugen. Dieser wird verwendet um zu überprüfen ob der eingegebene Zeitpunkt am heutigen Tag bereits vergangen ist (Vergangenheitsprüfung).
         Calendar checkCalendar = Calendar.getInstance();
-        checkCalendar.setTimeInMillis(input);
+        checkCalendar.set(HOUR,0);
+        checkCalendar.set(Calendar.MINUTE,0);
+        checkCalendar.set(Calendar.SECOND,0);
+        checkCalendar.set(Calendar.MILLISECOND,(int) input);
 
         Calendar conversionCalendar = Calendar.getInstance();
 
         // Vergangenheitsprüfung durchführen
         // Stunden prüfen
 
-        if (checkCalendar.before(conversionCalendar)) {//((checkCalendar.get(HOUR) * 60 + checkCalendar.get(Calendar.MINUTE) + 1.0 / 60) < conversionCalendar.get(HOUR) * 60 + conversionCalendar.get(Calendar.MINUTE)) {
+        if ((checkCalendar.get(HOUR) * 60 + checkCalendar.get(Calendar.MINUTE) + 1.0 / 60) < conversionCalendar.get(HOUR) * 60 + conversionCalendar.get(Calendar.MINUTE)) {
             // Eingabe liegt in der Vergangenheit -> +1 Tag
             conversionCalendar.add(Calendar.DAY_OF_MONTH,1);
         }
