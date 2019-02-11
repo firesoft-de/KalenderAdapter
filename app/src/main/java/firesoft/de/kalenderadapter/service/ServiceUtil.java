@@ -68,6 +68,7 @@ public class ServiceUtil extends BroadcastReceiver {
         Intent serviceIntent = new Intent(context, BackgroundService.class);
         PendingIntent startServiceIntent = PendingIntent.getService(context,0,serviceIntent,0);
 
+        // Epoch hinzufügen
         start = DateAndTimeConversion.attachEpoch(start);
 
         if (BuildConfig.DEBUG) {

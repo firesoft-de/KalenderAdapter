@@ -140,7 +140,7 @@ public class PreferencesManager {
         // Preference Objekt erstellen
         preferences = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
 
-        int version = preferences.getInt(URL, 14);
+        int version = preferences.getInt(VERSION, 14);
 
         switch (version) {
 

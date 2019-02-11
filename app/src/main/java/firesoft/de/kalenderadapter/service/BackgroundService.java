@@ -59,11 +59,7 @@ public class BackgroundService extends Service implements Loader.OnLoadCompleteL
 
         // PreferencesManager starten
         pManager = new PreferencesManager(getApplicationContext());
-        try {
-            pManager.load();
-        } catch (PackageManager.NameNotFoundException e) {
-            e.printStackTrace();
-        }
+        pManager.load();
 
         // CalendarManager starten
         cManager = new CalendarManager(getApplicationContext(),null);

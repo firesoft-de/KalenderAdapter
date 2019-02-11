@@ -18,10 +18,12 @@ import android.app.Dialog;
 import android.app.TimePickerDialog;
 import android.arch.lifecycle.MutableLiveData;
 import android.arch.lifecycle.Observer;
+import android.content.DialogInterface;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.os.Message;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
@@ -153,16 +155,7 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
 
 
         // Daten des PreferencesManager und des CalendarManager laden
-        try {
-            pManager.load();
-
-            // Entry-IDS laden
-            //cManager.setEntryIdsFromString(pManager.getEntryIds());
-
-        } catch (PackageManager.NameNotFoundException e) {
-            e.printStackTrace();
-            displayMessage("Fehler beim Laden der Einstellungen! " + e.getMessage(), Snackbar.LENGTH_LONG);
-        }
+        pManager.load();
 
         // Preference Einstellungen in die UI schreiben
         fillFromPreferences();
