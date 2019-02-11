@@ -23,10 +23,12 @@ import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
 
+import java.text.ParseException;
 import java.util.Calendar;
 
 import firesoft.de.kalenderadapter.BuildConfig;
 import firesoft.de.kalenderadapter.MainActivity;
+import firesoft.de.kalenderadapter.utility.DateAndTimeConversion;
 
 import static android.content.Context.ALARM_SERVICE;
 
@@ -56,15 +58,17 @@ public class ServiceUtil extends BroadcastReceiver {
     /**
      *
      * @param context Context des Aufrufs
-     * @param start Startzeit in Millisekunden (gezählt von 00:00)
-     * @param interval Ausführungsintervall
+     * @param start Startzeit in Millisekunden (gezählt von Epoch)
+     * @param interval Ausführungsintervall in Millisekunden
      */
-    public static void startService(Context context, long start, long interval) {
+    public static void startService(Context context, long start, long interval) throws ParseException{
 
         AlarmManager alarmManager = (AlarmManager) context.getSystemService(ALARM_SERVICE);
 
         Intent serviceIntent = new Intent(context, BackgroundService.class);
         PendingIntent startServiceIntent = PendingIntent.getService(context,0,serviceIntent,0);
+
+        start = DateAndTimeConversion.attachEpoch(start);
 
         if (BuildConfig.DEBUG) {
             Log.d("LOG_SERVICE", "Starting Timestamp: " + String.valueOf(start));
@@ -73,7 +77,7 @@ public class ServiceUtil extends BroadcastReceiver {
 
         //AlarmManager aktivieren
         if (alarmManager != null) {
-            alarmManager.setRepeating(AlarmManager.RTC_WAKEUP,start*1000,interval*1000,startServiceIntent);
+            alarmManager.setRepeating(AlarmManager.RTC_WAKEUP,start,interval,startServiceIntent);
         }
 
     }
