@@ -24,6 +24,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static java.util.Calendar.HOUR;
+import static java.util.Calendar.HOUR_OF_DAY;
 
 /**
  * Diese Klasse stellt Methoden bereit um Zeitangaben wie bspw. HH:MM in Millisekunden umzurechnen. Es stehen Methoden für absolute Zeiten seit Epoch und relative Zeiten zur Verfügung.
@@ -133,23 +134,23 @@ public class DateAndTimeConversion {
 
         // Kalender erzeugen. Dieser wird verwendet um zu überprüfen ob der eingegebene Zeitpunkt am heutigen Tag bereits vergangen ist (Vergangenheitsprüfung).
         Calendar checkCalendar = Calendar.getInstance();
-        checkCalendar.set(HOUR,0);
+        checkCalendar.set(Calendar.HOUR_OF_DAY,0);
         checkCalendar.set(Calendar.MINUTE,0);
         checkCalendar.set(Calendar.SECOND,0);
-        checkCalendar.set(Calendar.MILLISECOND,(int) input);
+        checkCalendar.set(Calendar.MILLISECOND,0);
+        checkCalendar.add(Calendar.MILLISECOND,(int) input);
 
         Calendar conversionCalendar = Calendar.getInstance();
 
         // Vergangenheitsprüfung durchführen
         // Stunden prüfen
-
-        if ((checkCalendar.get(HOUR) * 60 + checkCalendar.get(Calendar.MINUTE) + 1.0 / 60) < conversionCalendar.get(HOUR) * 60 + conversionCalendar.get(Calendar.MINUTE)) {
+        if ((checkCalendar.get(Calendar.HOUR_OF_DAY) * 60 + checkCalendar.get(Calendar.MINUTE) + 1.0 / 60) < conversionCalendar.get(Calendar.HOUR_OF_DAY) * 60 + conversionCalendar.get(Calendar.MINUTE)) {
             // Eingabe liegt in der Vergangenheit -> +1 Tag
             conversionCalendar.add(Calendar.DAY_OF_MONTH,1);
         }
 
         // Uhrzeit auf 00:00:00.00 zurückdrehen
-        conversionCalendar.set(HOUR,0);
+        conversionCalendar.set(Calendar.HOUR_OF_DAY,0);
         conversionCalendar.set(Calendar.MINUTE,0);
         conversionCalendar.set(Calendar.SECOND,0);
         conversionCalendar.set(Calendar.MILLISECOND,0);

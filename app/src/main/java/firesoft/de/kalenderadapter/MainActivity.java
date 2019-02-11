@@ -18,16 +18,15 @@ import android.app.Dialog;
 import android.app.TimePickerDialog;
 import android.arch.lifecycle.MutableLiveData;
 import android.arch.lifecycle.Observer;
-import android.content.DialogInterface;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
-import android.os.Message;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.DialogFragment;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.CardView;
@@ -52,6 +51,7 @@ import java.text.ParseException;
 import java.util.ArrayList;
 
 import firesoft.de.kalenderadapter.data.ServerParameter;
+import firesoft.de.kalenderadapter.fragments.TimePickerFragment;
 import firesoft.de.kalenderadapter.interfaces.IErrorCallback;
 import firesoft.de.kalenderadapter.manager.AsyncTaskManager;
 import firesoft.de.kalenderadapter.manager.CalendarManager;
@@ -328,6 +328,8 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
                 pManager.setSyncDisabled(!checked); // Ist hier etwas unglücklich gelöst. Der PreferncesManager speichert, ob der Nutzer den Service deaktiviert hat (true = deaktiviert). Der Button gibt aber an, ob der Service aktiv ist (true = aktiv)
                 pManager.save();
 
+                //TODO: Rausnehmen oder anders lösen -> Führt wahrscheinlich zu doppeltem ausführen des Servicestart
+
                 // Service je nach Nutzerauswahl starten oder stoppen
                 if (!checked) {
                     ServiceUtil.stopService(getApplicationContext());
@@ -347,26 +349,20 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
         });
 
         // Synchronisationszeitpunkt
-        final EditText etServiceSyncFrom = this.findViewById(R.id.service_sync_from);
-        etServiceSyncFrom.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+        final Button etServiceSyncFrom = this.findViewById(R.id.service_sync_from);
+        etServiceSyncFrom.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onFocusChange(View view, boolean hasFocus) {
-                // Prüfen, ob das View den Focus hat oder nicht
-                if (hasFocus) {
-                    showStartTimePickerDialog();
-                }
+            public void onClick(View v) {
+                showStartTimePickerDialog();
             }
         });
 
         // Synchronisationsintervall
-        final EditText etServiceSyncInterval = this.findViewById(R.id.service_sync_interval);
-        etServiceSyncInterval.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+        final Button etServiceSyncInterval = this.findViewById(R.id.service_sync_interval);
+        etServiceSyncInterval.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onFocusChange(View view, boolean hasFocus) {
-                // Prüfen, ob das View den Focus hat oder nicht
-                if (hasFocus) {
-                    showIntervalTimePickerDialog();
-                }
+            public void onClick(View v) {
+                showIntervalTimePickerDialog();
             }
         });
 
@@ -478,7 +474,7 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
         // Switch so einstellen, dass der aktuelle Zustand des Service angezeigt wird
         setServiceSwitch(ServiceUtil.checkServiceIsRunning(this,BackgroundService.class));
 
-        EditText etSyncFrom = this.findViewById(R.id.service_sync_from);
+        Button etSyncFrom = this.findViewById(R.id.service_sync_from);
         try {
             etSyncFrom.setText(DateAndTimeConversion.convertMillisToString(pManager.getSyncFrom()));
         } catch (ParseException e) {
@@ -486,7 +482,7 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
             return;
         }
 
-        EditText etSyncInterval = this.findViewById(R.id.service_sync_interval);
+        Button etSyncInterval = this.findViewById(R.id.service_sync_interval);
         try {
             etSyncInterval.setText(DateAndTimeConversion.convertMillisToString(pManager.getSyncInterval()));
         } catch (ParseException e) {
@@ -675,137 +671,152 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
      */
     public void showStartTimePickerDialog() {
 
-        // Create a new OnTimeSetListener instance. This listener will be invoked when user click ok button in TimePickerDialog.
-        TimePickerDialog.OnTimeSetListener onTimeSetListener = new TimePickerDialog.OnTimeSetListener() {
-            @Override
-            public void onTimeSet(TimePicker timePicker, int hour, int minute) {
+        DialogFragment newFragment = new TimePickerFragment();
+        Bundle b = new Bundle();
 
-                // Eingabe in Millisekunden umwandeln
-                long timeMilliSeconds = 0;
-
-                try {
-                    timeMilliSeconds= DateAndTimeConversion.convertHourAndMinuteToMillis(hour,minute);
-                }
-                catch (Exception e) {
-                    displayTimeErrorDialog();
-                    //publishError("Ungültiger Eingabewert! Erwartet wird: HH:mm (HH <=23, mm<= 59)");
-                    return;
-                }
-
-
-                // Prüfe, ob sich die Daten geändert haben
-                if (pManager.getSyncFrom() != timeMilliSeconds) {
-                    // Daten wurden geändert
-
-                    // Neue Daten in den PreferencesManager schreiben
-                    pManager.setSyncFrom(timeMilliSeconds);
-                    pManager.save();
-
-                    // Hintergrundservice stoppen
-                    ServiceUtil.stopService(getApplicationContext());
-
-                    // Service neustarten
-                    try {
-                        ServiceUtil.startService(getApplicationContext(), pManager.getSyncFrom(),pManager.getSyncInterval());
-                    } catch (ParseException e) {
-                        publishError(getString(R.string.error_service_times_unchangeable));
-                        e.printStackTrace();
-                    }
-
-                    setServiceSwitch(true);
-                }
-
-                try {
-                    pManager.setSyncFrom(DateAndTimeConversion.convertHourAndMinuteToMillis(hour,minute));
-                } catch (ParseException e) {
-                    displayTimeErrorDialog();
-                    return;
-                }
-
-            }
-        };
-
-        //TODO: Minuten und Stunden abrufen aus Speicher
-
-        int hour = 0;
-        int minute = 0;
         try {
-            hour = DateAndTimeConversion.getHoursOfMillis(pManager.getSyncFrom());
-            minute = DateAndTimeConversion.getMinutesOfMillis(pManager.getSyncFrom());
+            b.putInt("hour",DateAndTimeConversion.getHoursOfMillis(pManager.getSyncFrom()));
+            b.putInt("minute",DateAndTimeConversion.getMinutesOfMillis(pManager.getSyncFrom()));
         } catch (ParseException e) {
             publishError("Es ist ein Fehler beim Laden der Startzeit für den Hintergrundservice aus dem Speicher aufgetreten!");
             e.printStackTrace();
+            return;
         }
 
-        TimePickerDialog timePickerDialog = new TimePickerDialog(MainActivity.this, onTimeSetListener, hour, minute, true);
+        b.putByte("mode",(byte) 2);
 
-        timePickerDialog.setTitle("Bitte wählen Sie eine Startzeit aus!");
+        newFragment.setArguments(b);
+        newFragment.show(getSupportFragmentManager(), "start");
 
-        timePickerDialog.show();
-    }
+        }
 
     /**
      * Zeigt einen Auswahldialog für Zeiten an.
      */
     public void showIntervalTimePickerDialog() {
 
-        // Create a new OnTimeSetListener instance. This listener will be invoked when user click ok button in TimePickerDialog.
-        TimePickerDialog.OnTimeSetListener onTimeSetListener = new TimePickerDialog.OnTimeSetListener() {
-            @Override
-            public void onTimeSet(TimePicker timePicker, int hour, int minute) {
+        DialogFragment newFragment = new TimePickerFragment();
+        Bundle b = new Bundle();
 
-                // Eingabe in Millisekunden umwandeln
-                long timeMilliSeconds = 0;
-
-                try {
-                    timeMilliSeconds= DateAndTimeConversion.convertHourAndMinuteToMillis(hour,minute);
-                }
-                catch (Exception e) {
-                    displayTimeErrorDialog();
-                    //publishError("Ungültiger Eingabewert! Erwartet wird: HH:mm (HH <=23, mm<= 59)");
-                    return;
-                }
-
-
-                // Prüfe, ob sich die Daten geändert haben
-                if (pManager.getSyncInterval() != timeMilliSeconds) {
-                    // Daten wurden geändert
-
-                    // Neue Daten in den PreferencesManager schreiben
-                    pManager.setSyncInterval(timeMilliSeconds);
-                    pManager.save();
-
-                    // Hintergrundservice stoppen
-                    ServiceUtil.stopService(getApplicationContext());
-
-                    // Service neustarten
-                    try {
-                        ServiceUtil.startService(getApplicationContext(), pManager.getSyncFrom(),pManager.getSyncInterval());
-                    } catch (ParseException e) {
-                        publishError(getString(R.string.error_service_times_unchangeable));
-                        e.printStackTrace();
-                    }
-
-                    setServiceSwitch(true);
-                }
-            }
-        };
-
-        int hour = 0;
-        int minute = 0;
         try {
-            hour = DateAndTimeConversion.getHoursOfMillis(pManager.getSyncInterval());
-            minute = DateAndTimeConversion.getMinutesOfMillis(pManager.getSyncInterval());
+            b.putInt("hour",DateAndTimeConversion.getHoursOfMillis(pManager.getSyncInterval()));
+            b.putInt("minute",DateAndTimeConversion.getMinutesOfMillis(pManager.getSyncInterval()));
         } catch (ParseException e) {
             publishError("Es ist ein Fehler beim Laden der Startzeit für den Hintergrundservice aus dem Speicher aufgetreten!");
             e.printStackTrace();
+            return;
         }
 
-        TimePickerDialog timePickerDialog = new TimePickerDialog(MainActivity.this, onTimeSetListener, hour, minute, true);
+        b.putByte("mode",(byte) 1);
 
-        timePickerDialog.setTitle("Bitte wählen Sie ein Intervall aus!");
+        newFragment.setArguments(b);
+        newFragment.show(getSupportFragmentManager(), "interval");
+    }
 
-        timePickerDialog.show();
+    /**
+     * Callbackmethode für die Time Picker
+     */
+    public void onTimeSet(byte mode, int hourOfDay, int minute) {
+
+        switch (mode){
+
+            case (byte) 1:
+                changeInterval(hourOfDay,minute);
+                break;
+
+            case (byte)2:
+                changeStart(hourOfDay,minute);
+                break;
+
+        }
+    }
+
+    /**
+     * Übernimmt Änderungen des Intervalls in den Langzeitspeicher und startet den Hintergrundservice neu
+     */
+    private void changeInterval(int hourOfDay, int minute) {
+
+        // Eingabe in Millisekunden umwandeln
+        long timeMilliSeconds = 0;
+
+        try {
+            timeMilliSeconds= DateAndTimeConversion.convertHourAndMinuteToMillis(hourOfDay,minute);
+            ((Button) this.findViewById(R.id.service_sync_interval)).setText(DateAndTimeConversion.convertMillisToString(timeMilliSeconds));
+        }
+        catch (Exception e) {
+            displayTimeErrorDialog();
+            //publishError("Ungültiger Eingabewert! Erwartet wird: HH:mm (HH <=23, mm<= 59)");
+            return;
+        }
+
+
+        // Prüfe, ob sich die Daten geändert haben
+        if (pManager.getSyncInterval() != timeMilliSeconds) {
+            // Daten wurden geändert
+
+            // Neue Daten in den PreferencesManager schreiben
+            pManager.setSyncInterval(timeMilliSeconds);
+            pManager.save();
+
+            restartService();
+        }
+
+        restartService();
+
+    }
+
+    /**
+     * Übernimmt Änderungen des Intervalls in den Langzeitspeicher und startet den Hintergrundservice neu
+     */
+    private void changeStart(int hourOfDay, int minute) {
+
+        // Eingabe in Millisekunden umwandeln
+        long timeMilliSeconds = 0;
+
+        try {
+            timeMilliSeconds= DateAndTimeConversion.convertHourAndMinuteToMillis(hourOfDay,minute);
+            ((Button) this.findViewById(R.id.service_sync_from)).setText(DateAndTimeConversion.convertMillisToString(timeMilliSeconds));
+        }
+        catch (Exception e) {
+            displayTimeErrorDialog();
+            //publishError("Ungültiger Eingabewert! Erwartet wird: HH:mm (HH <=23, mm<= 59)");
+            return;
+        }
+
+
+        // Prüfe, ob sich die Daten geändert haben
+        if (pManager.getSyncFrom() != timeMilliSeconds) {
+            // Daten wurden geändert
+
+            // Neue Daten in den PreferencesManager schreiben
+            pManager.setSyncFrom(timeMilliSeconds);
+            pManager.save();
+
+            restartService();
+        }
+
+        restartService();
+
+    }
+
+    /**
+     * Startet den Hintergrundservice neu.
+     */
+    private void restartService() {
+
+        // Hintergrundservice stoppen
+        ServiceUtil.stopService(getApplicationContext());
+
+        // Service neustarten
+        try {
+            ServiceUtil.startService(getApplicationContext(), pManager.getSyncFrom(),pManager.getSyncInterval());
+        } catch (ParseException e) {
+            publishError(getString(R.string.error_service_times_unchangeable));
+            e.printStackTrace();
+        }
+
+        change_service_indicator();
+
     }
 
     /**
@@ -856,7 +867,10 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
 
         boolean res = ServiceUtil.checkServiceIsRunning(getApplicationContext(),BackgroundService.class);
         SwitchIconView siv = ((SwitchIconView) this.findViewById(R.id.switch_icon_view));
-        siv.switchState();
+
+        if (siv.isIconEnabled() != res) {
+            siv.switchState();
+        }
 
         // Felder ein- bzw. ausschalten
         this.findViewById(R.id.service_sync_interval).setEnabled(res);
@@ -897,6 +911,5 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
         }
 
     }
-
 }
 

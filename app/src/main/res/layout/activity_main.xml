@@ -291,7 +291,7 @@
                     android:textColor="@color/text_white"
                     android:textSize="@dimen/text_size_highlight"
                     app:layout_constraintTop_toTopOf="parent"
-                    android:text="@string/card_settings"
+                    android:text="@string/card_settings_extended"
                     tools:text="Platzhalter" />
 
                 <Switch
@@ -330,28 +330,25 @@
                     app:layout_constraintTop_toBottomOf="@+id/service_sync_interval" />
 
 
-                <EditText
+                <Button
                     android:id="@+id/service_sync_interval"
                     style="SettingsInputFields"
-                    android:layout_width="0dp"
+                    android:layout_width="100dp"
                     android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginTop="16dp"
                     android:layout_marginEnd="16dp"
-                    android:layout_marginTop="8dp"
                     android:ems="10"
-                    android:inputType="time"
-                    app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="@+id/service_sync_interval_description"
                     app:layout_constraintTop_toTopOf="@+id/service_sync_interval_description" />
 
-                <EditText
+                <Button
                     android:id="@+id/service_sync_from"
-                    android:layout_width="0dp"
+                    android:layout_width="100dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginEnd="16dp"
-                    android:layout_marginTop="8dp"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginTop="16dp"
                     android:ems="10"
-                    android:inputType="time"
-                    app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="@+id/service_sync_from_description"
                     app:layout_constraintTop_toTopOf="@+id/service_sync_from_description" />
 
