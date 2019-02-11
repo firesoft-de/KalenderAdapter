@@ -156,8 +156,8 @@ public class DateAndTimeConversion {
         conversionCalendar.set(Calendar.MILLISECOND,0);
 
         // Eingabe hinzufügen
-        conversionCalendar.setTimeInMillis(conversionCalendar.getTimeInMillis() + input);
+        long output = conversionCalendar.getTimeInMillis() + input;
 
-        return conversionCalendar.getTimeInMillis();
+        return output;
     }
 }
