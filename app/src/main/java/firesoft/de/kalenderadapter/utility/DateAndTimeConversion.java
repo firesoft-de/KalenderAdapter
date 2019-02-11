@@ -128,7 +128,7 @@ public class DateAndTimeConversion {
     public static long attachEpoch(long input) throws ParseException{
 
         if (input < 0) {
-            throw new ParseException("input smaller then zero",0);
+            throw new ParseException("input smaller than zero",0);
         }
 
         // Kalender erzeugen. Dieser wird verwendet um zu überprüfen ob der eingegebene Zeitpunkt am heutigen Tag bereits vergangen ist (Vergangenheitsprüfung).
@@ -139,12 +139,8 @@ public class DateAndTimeConversion {
 
         // Vergangenheitsprüfung durchführen
         // Stunden prüfen
-        if (checkCalendar.get(HOUR) < conversionCalendar.get(HOUR)) {
-            // Eingabe liegt in der Vergangenheit -> +1 Tag
-            conversionCalendar.add(Calendar.DAY_OF_MONTH,1);
-        }
-        // Minuten prüfen
-        else if (checkCalendar.get(Calendar.MINUTE) < conversionCalendar.get(Calendar.MINUTE)) {
+
+        if (checkCalendar.before(conversionCalendar)) {//((checkCalendar.get(HOUR) * 60 + checkCalendar.get(Calendar.MINUTE) + 1.0 / 60) < conversionCalendar.get(HOUR) * 60 + conversionCalendar.get(Calendar.MINUTE)) {
             // Eingabe liegt in der Vergangenheit -> +1 Tag
             conversionCalendar.add(Calendar.DAY_OF_MONTH,1);
         }

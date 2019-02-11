@@ -28,6 +28,40 @@ import static org.junit.Assert.*;
 public class DateAndTimeConversionTest {
 
     @Test
+    public void attachEpochShouldAlwaysBeInTheFutureWithSmallDifferences() {
+
+        Calendar cal = Calendar.getInstance();
+        long calculatedStartTime = (cal.get(Calendar.MINUTE) * 60 + cal.get(Calendar.SECOND) + cal.get(Calendar.HOUR_OF_DAY) * 60 * 60) * 1000 + cal.get(Calendar.MILLISECOND) ;
+        try {
+            // 10 Millisekunden nach Mitternacht
+            calculatedStartTime = DateAndTimeConversion.attachEpoch(calculatedStartTime);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+
+        boolean check = calculatedStartTime > cal.getTimeInMillis();
+
+        assertTrue(check);
+    }
+
+    @Test
+    public void attachEpochShouldAlwaysBeInTheFutureEvenWithInputOneHourAhead() {
+
+        Calendar cal = Calendar.getInstance();
+        long calculatedStartTime = (cal.get(Calendar.MINUTE) * 60 + cal.get(Calendar.SECOND) + cal.get(Calendar.HOUR_OF_DAY) * 60 * 60 + 3600) * 1000 + cal.get(Calendar.MILLISECOND) ;
+        try {
+            // 10 Millisekunden nach Mitternacht
+            calculatedStartTime = DateAndTimeConversion.attachEpoch(calculatedStartTime);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+
+        boolean check = calculatedStartTime > cal.getTimeInMillis();
+
+        assertTrue(check);
+    }
+
+    @Test
     public void attachEpochShouldAlwaysBeInTheFuture() {
         long calculatedStartTime = 0;
         try {
