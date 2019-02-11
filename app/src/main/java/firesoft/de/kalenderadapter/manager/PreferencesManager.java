@@ -71,7 +71,7 @@ public class PreferencesManager {
     private int activeCalendarId;
 
     /**
-     * Enthält den Zeitpunkt von dem an Synchronisiert werden soll als Millisekunden beginnend um 00:00 Uhr
+     * Enthält den Zeitpunkt von dem an synchronisiert werden soll. Die Angabe bezieht sich auf den Tag des Epoch. Zum Starten des Service muss dynamisch das aktuelle Datum hinzugerechnet werden.
      */
     private long sync_from;
 
@@ -117,6 +117,7 @@ public class PreferencesManager {
     private static final String SET_REMINDER = "set_reminder";
     private static final String SET_INTELIGENT_REMINDER = "set_inteligent_reminder";
     private static final String REPLACE_EXISTING = "replace_existing";
+    private static final String VERSION = "version";
 
     private static final long default_sync_start = 10800000;
 
@@ -134,17 +135,14 @@ public class PreferencesManager {
      * Lädt die Einstellungen aus der Preference Datei
      * @throws PackageManager.NameNotFoundException Falls die eingegebene Version nicht gefunden wird, wird ein Fehler geworfen.
      */
-    public void load() throws PackageManager.NameNotFoundException{
+    public void load() {
 
         // Preference Objekt erstellen
         preferences = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
 
-        // Aktuelle Versionsnummer abrufen
-        PackageInfo packageInfo;
+        int version = preferences.getInt(URL, 14);
 
-        packageInfo = context.getPackageManager().getPackageInfo(context.getPackageName(),0);
-
-        switch (packageInfo.versionCode) {
+        switch (version) {
 
             default:
 
@@ -152,6 +150,11 @@ public class PreferencesManager {
 //                // Version xyz
 //                loadvxyz();
 //                break;
+
+            case 15:
+                // Version 0.6
+                loadv4();
+                break;
 
             case 14:
                 // Version 0.4
@@ -183,7 +186,6 @@ public class PreferencesManager {
 
         editor.putString(URL,url);
         editor.putString(USER,user);
-        //editor.putString(ENTRYIDS,entryIds);
         editor.putString(PASSWORD,password);
         editor.putBoolean(LOG,logEnabled);
         editor.putInt(ACTIVE_CALENDAR, activeCalendarId);
@@ -193,6 +195,16 @@ public class PreferencesManager {
         editor.putBoolean(SET_REMINDER,set_reminder);
         editor.putBoolean(SET_INTELIGENT_REMINDER,set_inteligent_reminder);
         editor.putBoolean(REPLACE_EXISTING,replace_existing);
+
+        // Aktuelle Versionsnummer abrufen
+        PackageInfo packageInfo = null;
+        try {
+            packageInfo = context.getPackageManager().getPackageInfo(context.getPackageName(),0);
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+            return;
+        }
+        editor.putInt(VERSION,packageInfo.versionCode);
 
         editor.apply();
     }
@@ -234,7 +246,6 @@ public class PreferencesManager {
         url = preferences.getString(URL, "");
         logEnabled = preferences.getBoolean(LOG,false);
         user = preferences.getString(USER,"");
-        //entryIds = preferences.getString(ENTRYIDS,"");
         password = preferences.getString(PASSWORD,"");
         activeCalendarId = preferences.getInt(ACTIVE_CALENDAR,0);
         sync_from = preferences.getLong(SYNC_FROM,default_sync_start ); // Standard 03:00 Uhr
