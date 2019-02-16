@@ -28,18 +28,34 @@ import static org.junit.Assert.*;
 public class DateAndTimeConversionTest {
 
     @Test
+    public void conversionAndAttachShouldWorkTogether() throws ParseException {
+
+        Calendar cal = Calendar.getInstance();
+
+        long converted = DateAndTimeConversion.convertHourAndMinuteToMillis(19,35);
+        long attached = DateAndTimeConversion.attachEpoch(converted);
+
+        long curTime = cal.getTimeInMillis();
+
+        boolean check  = curTime <= attached;
+
+        assertTrue(check);
+    }
+
+    @Test
     public void attachEpochShouldAlwaysBeInTheFutureWithSmallDifferences() {
 
         Calendar cal = Calendar.getInstance();
-        long calculatedStartTime = (cal.get(Calendar.MINUTE) * 60 + cal.get(Calendar.SECOND) + cal.get(Calendar.HOUR_OF_DAY) * 60 * 60) * 1000 + cal.get(Calendar.MILLISECOND) ;
+        long calculatedStartTimeBefore = (cal.get(Calendar.MINUTE) * 60 + cal.get(Calendar.SECOND) + cal.get(Calendar.HOUR_OF_DAY) * 60 * 60) * 1000 + cal.get(Calendar.MILLISECOND) + 1000 ;
+        long calculatedStartTimeAfter = 0;
         try {
-            // 10 Millisekunden nach Mitternacht
-            calculatedStartTime = DateAndTimeConversion.attachEpoch(calculatedStartTime);
+            calculatedStartTimeAfter = DateAndTimeConversion.attachEpoch(calculatedStartTimeBefore);
         } catch (ParseException e) {
             e.printStackTrace();
         }
 
-        boolean check = calculatedStartTime > cal.getTimeInMillis();
+        long curTime = cal.getTimeInMillis();
+        boolean check = calculatedStartTimeAfter >= curTime;
 
         assertTrue(check);
     }
@@ -48,17 +64,28 @@ public class DateAndTimeConversionTest {
     public void attachEpochShouldAlwaysBeInTheFutureEvenWithInputOneHourAhead() {
 
         Calendar cal = Calendar.getInstance();
-        long calculatedStartTime = (cal.get(Calendar.MINUTE) * 60 + cal.get(Calendar.SECOND) + cal.get(Calendar.HOUR_OF_DAY) * 60 * 60 + 3600) * 1000 + cal.get(Calendar.MILLISECOND) ;
+
+        // Eine Stunde in der Zukunft
+        long calculatedStartTimeBefore = (cal.get(Calendar.MINUTE) * 60 + cal.get(Calendar.SECOND) + cal.get(Calendar.HOUR_OF_DAY) * 60 * 60 + 3600) * 1000 + cal.get(Calendar.MILLISECOND) ;
+        long calculatedStartTimeAfter = 0 ;
+
         try {
-            // 10 Millisekunden nach Mitternacht
-            calculatedStartTime = DateAndTimeConversion.attachEpoch(calculatedStartTime);
+            calculatedStartTimeAfter = DateAndTimeConversion.attachEpoch(calculatedStartTimeBefore);
         } catch (ParseException e) {
             e.printStackTrace();
         }
 
-        boolean check = calculatedStartTime > cal.getTimeInMillis();
+        long curTime = cal.getTimeInMillis();
 
-        assertTrue(check);
+        // Bedingung: Nicht einen ganzen Tag in der Zukunft
+        boolean check = calculatedStartTimeAfter > curTime;
+
+        // Bedingung: nicht mehr als zwei Stunden in der Zukunft
+        long twoHoursAhead = curTime + 2 * 60 * 60 * 1000 ;
+        boolean check2 = calculatedStartTimeAfter < twoHoursAhead;
+
+
+        assertTrue(check && check2);
     }
 
     @Test
@@ -72,8 +99,9 @@ public class DateAndTimeConversionTest {
         }
 
         Calendar checkCalendar = Calendar.getInstance();
+        long curTime = checkCalendar.getTimeInMillis();
 
-        boolean check = calculatedStartTime > checkCalendar.getTimeInMillis();
+        boolean check = calculatedStartTime > curTime;
 
         assertTrue(check);
     }

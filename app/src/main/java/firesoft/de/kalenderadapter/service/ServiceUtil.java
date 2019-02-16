@@ -69,16 +69,16 @@ public class ServiceUtil extends BroadcastReceiver {
         PendingIntent startServiceIntent = PendingIntent.getService(context,0,serviceIntent,0);
 
         // Epoch hinzufügen
-        start = DateAndTimeConversion.attachEpoch(start);
+        long attachedStart = DateAndTimeConversion.attachEpoch(start);
 
         if (BuildConfig.DEBUG) {
-            Log.d("LOG_SERVICE", "Starting Timestamp: " + String.valueOf(start));
+            Log.d("LOG_SERVICE", "Starting Timestamp: " + String.valueOf(attachedStart));
             Log.d("LOG_SERVICE", "Interval: " + String.valueOf(interval));
         }
 
         //AlarmManager aktivieren
         if (alarmManager != null) {
-            alarmManager.setRepeating(AlarmManager.RTC_WAKEUP,start,interval,startServiceIntent);
+            alarmManager.setRepeating(AlarmManager.RTC_WAKEUP,attachedStart,interval,startServiceIntent);
         }
 
     }
@@ -86,7 +86,6 @@ public class ServiceUtil extends BroadcastReceiver {
     public static void stopService(Context context) {
 
         // https://stackoverflow.com/questions/47545634/how-to-stop-service-using-alarmmanager
-
         Intent serviceIntent = new Intent(context, BackgroundService.class);
         PendingIntent pendingIntent = PendingIntent.getService(context, 0, serviceIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 

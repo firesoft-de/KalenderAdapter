@@ -133,30 +133,25 @@ public class DateAndTimeConversion {
         }
 
         // Kalender erzeugen. Dieser wird verwendet um zu überprüfen ob der eingegebene Zeitpunkt am heutigen Tag bereits vergangen ist (Vergangenheitsprüfung).
-        Calendar checkCalendar = Calendar.getInstance();
-        checkCalendar.set(Calendar.HOUR_OF_DAY,0);
-        checkCalendar.set(Calendar.MINUTE,0);
-        checkCalendar.set(Calendar.SECOND,0);
-        checkCalendar.set(Calendar.MILLISECOND,0);
-        checkCalendar.add(Calendar.MILLISECOND,(int) input);
-
         Calendar conversionCalendar = Calendar.getInstance();
-
-        // Vergangenheitsprüfung durchführen
-        // Stunden prüfen
-        if ((checkCalendar.get(Calendar.HOUR_OF_DAY) * 60 + checkCalendar.get(Calendar.MINUTE) + 1.0 / 60) < conversionCalendar.get(Calendar.HOUR_OF_DAY) * 60 + conversionCalendar.get(Calendar.MINUTE)) {
-            // Eingabe liegt in der Vergangenheit -> +1 Tag
-            conversionCalendar.add(Calendar.DAY_OF_MONTH,1);
-        }
-
-        // Uhrzeit auf 00:00:00.00 zurückdrehen
         conversionCalendar.set(Calendar.HOUR_OF_DAY,0);
         conversionCalendar.set(Calendar.MINUTE,0);
         conversionCalendar.set(Calendar.SECOND,0);
         conversionCalendar.set(Calendar.MILLISECOND,0);
+        conversionCalendar.add(Calendar.MILLISECOND,(int) input);
+        Calendar checkCalendar = Calendar.getInstance();
+
+        // Vergangenheitsprüfung durchführen
+        // Stunden und Minuten prüfen
+        if ((checkCalendar.get(Calendar.HOUR_OF_DAY) * 60 + checkCalendar.get(Calendar.MINUTE) ) > conversionCalendar.get(Calendar.HOUR_OF_DAY) * 60 + conversionCalendar.get(Calendar.MINUTE)) {
+            // Eingabe liegt in der Vergangenheit -> +1 Tag
+            conversionCalendar.add(Calendar.DAY_OF_MONTH,1);
+        }
+
+        conversionCalendar.set(Calendar.MILLISECOND,0);
 
         // Eingabe hinzufügen
-        long output = conversionCalendar.getTimeInMillis() + input;
+        long output = conversionCalendar.getTimeInMillis();
 
         return output;
     }
