@@ -143,7 +143,7 @@ public class DateAndTimeConversion {
 
         // Vergangenheitsprüfung durchführen
         // Stunden und Minuten prüfen
-        if ((checkCalendar.get(Calendar.HOUR_OF_DAY) * 60 + checkCalendar.get(Calendar.MINUTE) ) > conversionCalendar.get(Calendar.HOUR_OF_DAY) * 60 + conversionCalendar.get(Calendar.MINUTE)) {
+        if ((checkCalendar.get(Calendar.HOUR_OF_DAY) * 60 + checkCalendar.get(Calendar.MINUTE) + 1.0 / 60) > conversionCalendar.get(Calendar.HOUR_OF_DAY) * 60 + conversionCalendar.get(Calendar.MINUTE)) {
             // Eingabe liegt in der Vergangenheit -> +1 Tag
             conversionCalendar.add(Calendar.DAY_OF_MONTH,1);
         }
@@ -151,8 +151,7 @@ public class DateAndTimeConversion {
         conversionCalendar.set(Calendar.MILLISECOND,0);
 
         // Eingabe hinzufügen
-        long output = conversionCalendar.getTimeInMillis();
 
-        return output;
+        return conversionCalendar.getTimeInMillis();
     }
 }
