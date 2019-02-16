@@ -35,6 +35,10 @@ import firesoft.de.kalenderadapter.data.CustomCalendarEntry;
 import firesoft.de.kalenderadapter.interfaces.IErrorCallback;
 import firesoft.de.kalenderadapter.utility.DataTool;
 
+import static firesoft.de.kalenderadapter.data.CustomCalendarEntry.TimeComparison.HIGHER;
+import static firesoft.de.kalenderadapter.data.CustomCalendarEntry.TimeComparison.LOWER;
+import static firesoft.de.kalenderadapter.manager.CalendarManager.Equality.EQUAL;
+
 public class CalendarManager {
 
     //=======================================================
@@ -67,6 +71,7 @@ public class CalendarManager {
         this.context = context;
         cals = new ArrayList<>();
         this.errorCallback = errorCallback;
+        entryIds = new ArrayList<>();
     }
 
     //=======================================================
@@ -194,7 +199,7 @@ public class CalendarManager {
         ContentResolver cr = context.getContentResolver();
 
         if (entryIds.size() == 0) {
-            return null;
+            return getExistingEntriesByMarker();
         }
 
         for (Integer id : entryIds
@@ -208,7 +213,7 @@ public class CalendarManager {
 
                 // Das erste Suchergebnis abrufen und ein neues Entry-Objekt erstellen
                 CustomCalendarEntry entry = new CustomCalendarEntry();
-                entry.setCalendarID(cur.getInt(EVENT_ID_INDEX));
+                entry.setEntryID(cur.getInt(EVENT_ID_INDEX));
                 entry.setDescription(cur.getString(EVENT_DESCRIPTION));
 
                 String tmpString = cur.getString(EVENT_DTSTART);
@@ -225,7 +230,7 @@ public class CalendarManager {
             }
         }
 
-        entries = mergeEntryLists(entries, getExistingEntriesByMarker());
+        entries = mergeEntryLists(getExistingEntriesByMarker(), entries);
 
         return entries;
     }
@@ -249,7 +254,7 @@ public class CalendarManager {
 
             // Das Suchergebnis abrufen und ein neues Entry-Objekt erstellen
             CustomCalendarEntry entry = new CustomCalendarEntry();
-            entry.setCalendarID(cur.getInt(EVENT_ID_INDEX));
+            entry.setEntryID(cur.getInt(EVENT_ID_INDEX));
             entry.setDescription(cur.getString(EVENT_DESCRIPTION));
 
             String tmpString = cur.getString(EVENT_DTSTART);
@@ -281,12 +286,14 @@ public class CalendarManager {
         // Inhalt von Liste A wird direkt in die Ausgabeliste geschrieben
         ArrayList<CustomCalendarEntry> mergedList = ListA;
 
-
         // Alle Einträge in der Liste B durchgehen und prüfen, ob diese bereits in der Ausgabeliste enthalten sind
         for (CustomCalendarEntry entryFromListB: ListB
              ) {
 
-            boolean allreadyExistsInMergedList = false;
+            // Binärsuche nach einem gleichen Eintrag durchführen
+            binarySearch(mergedList,0,mergedList.size() - 1,entryFromListB);
+
+            /*boolean allreadyExistsInMergedList = false;
 
             for (int i = 0; i < mergedList.size(); i++) {
                 if (entryFromListB.equals(mergedList.get(i))) {
@@ -297,11 +304,70 @@ public class CalendarManager {
 
             if (!allreadyExistsInMergedList) {
                 mergedList.add(entryFromListB);
-            }
+            }*/
 
         }
         
         return mergedList;
+    }
+
+    /**
+     * Führt eine Binärsuche nach einem CustomCalendarEntry anhand der Startzeiten in einer ArrayList aus
+     */
+    private void binarySearch(ArrayList<CustomCalendarEntry> list, int start, int end, CustomCalendarEntry candidate) {
+
+        // Abkürzung: Wenn die Startzeit des Kandidaten kleiner oder größer als der erste bzw. letzt Wert der List ist, kann dieser direkt hinzugefügt werden.
+        if (list.get(0).compareStartTime(candidate) == LOWER) {
+            list.add(0,candidate);
+            return;
+        }
+        else if (list.get(list.size()-1).compareStartTime(candidate) == HIGHER) {
+            list.add(candidate);
+            return;
+        }
+
+
+        int pos = start + (end - start) / 2;
+        boolean lastStep = false;
+
+        // Prüfen, ob der aktuelle Wert direkt zwischen den beiden vorherigen liegt
+        if (pos == start) {
+            //Marker setzen. Dieser gibt an die nachfolgende Überprüfung den Hinweis ggf. jetzt einen Wert in die Liste einzufügen.
+            lastStep = true;
+        }
+
+
+        switch (list.get(pos).compareStartTime(candidate)) {
+
+            case HIGHER:
+                if (lastStep) {
+                    list.add(pos,candidate);
+                }
+                else {
+                    binarySearch(list, pos + 1, end, candidate);
+                }
+                break;
+
+            case EQUAL:
+                // Beide Einträge vergleichen und nur ggf. hinzufügen.
+                if (!list.get(pos).equals(candidate)) {
+                    // Sind nicht gleich -> Hinzufügen
+                    list.add(pos,candidate);
+                }
+                break;
+
+            case LOWER:
+                if (lastStep) {
+                    list.add(pos - 1,candidate);
+                }
+                else {
+                    binarySearch(list, start, pos - 1, candidate);
+                }
+                break;
+
+        }
+
+
     }
 
 
@@ -490,7 +556,7 @@ public class CalendarManager {
                 ) {
 
             if (competitor.equals(candidate)) {
-                return Equality.EQUAL;
+                return EQUAL;
             }
 
         }
@@ -504,6 +570,17 @@ public class CalendarManager {
      */
     public void loadCalendarEntries() {
         crowd = getExistingEntries();
+
+        if (crowd != null) {
+
+            // entryids einfügen
+            for (CustomCalendarEntry entry : crowd
+                    ) {
+                if (!entryIds.contains(entry.getEntryID())) {
+                    entryIds.add(entry.getEntryID());
+                }
+            }
+        }
     }
 
     //=======================================================
@@ -514,7 +591,7 @@ public class CalendarManager {
         return activeCalendar;
     }
 
-    public ArrayList<Integer> getEntryIds() {
+/*    public ArrayList<Integer> getEntryIds() {
         return entryIds;
     }
 
@@ -549,7 +626,7 @@ public class CalendarManager {
                 entryIds.add(id);
             }
         }
-    }
+    }*/
 
     /**
      * Bietet die Möglichkeit das Callback Interface zu erneuern. Wird bspw. bei der Übergabe eines Objektes an einen anderen Thread benötigt, da der neue Thread sein eigenes Callback Interface eintragen muss.

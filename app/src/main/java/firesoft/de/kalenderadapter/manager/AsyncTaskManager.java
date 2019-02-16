@@ -110,9 +110,9 @@ public class AsyncTaskManager implements LoaderManager.LoaderCallbacks<ResultWra
         }
         else {
 
-            calendarManager.setEntryIds(data.getIds());
-            pManager.setEntryIds(calendarManager.getEntryIdsAsString());
-            pManager.save();
+//            calendarManager.setEntryIds(data.getIds());
+//            pManager.setEntryIds(calendarManager.getEntryIdsAsString());
+//            pManager.save();
 
             // Erfolgsmeldung abgeben
             errorCallback.publishProgress(context.getString(R.string.info_import_successfull),-1,-1);

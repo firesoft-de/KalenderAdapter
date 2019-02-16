@@ -38,6 +38,8 @@
     <string name="info_delete_text">Achtung!\nSie sind dabei alle Einträge des Kalenders zu löschen. Sind Sie sich sicher das Sie dies tun wollen?\nFalls nein, verwenden Sie bitte die Zurück-Funktion Ihres Telefons.</string>
     <string name="info_import_successfull">Alle Termine erfolgreich hinzugefügt</string>
 
+    <string name="error_time_text">Die eingegebene Zeit ist fehlerhaft formatiert. Es wird eine Eingabe in Form von HH:MM erwartet. Dabei steht HH für die Stunden und MM für die Minuten.</string>
+
     <string name="info_bt_ok">Ok</string>
     <string name="info_bt_yes">Ja</string>
     <string name="info_bt_no">Nein</string>
@@ -46,5 +48,6 @@
 
     <string name="error_no_calendars_found">Es konnten keine Kalender gefunden werden.</string>
     <string name="error_addCalendarEntry">Eine Sicherheitsausnahme ist aufgetreten! (CalendarManager.addCalenderEntry (Reminders)</string>
+    <string name="error_service_times_unchangeable">Änderung konnte nicht übernommen werden! Hintergrundservice läuft nicht!</string>
 
 </resources>

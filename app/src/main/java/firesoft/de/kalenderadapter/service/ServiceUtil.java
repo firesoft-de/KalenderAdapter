@@ -23,10 +23,12 @@ import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
 
+import java.text.ParseException;
 import java.util.Calendar;
 
 import firesoft.de.kalenderadapter.BuildConfig;
 import firesoft.de.kalenderadapter.MainActivity;
+import firesoft.de.kalenderadapter.utility.DateAndTimeConversion;
 
 import static android.content.Context.ALARM_SERVICE;
 
@@ -56,37 +58,27 @@ public class ServiceUtil extends BroadcastReceiver {
     /**
      *
      * @param context Context des Aufrufs
-     * @param start Startzeit in Millisekunden (gezählt von 00:00)
-     * @param interval Ausführungsintervall
+     * @param start Startzeit in Millisekunden (gezählt von Epoch)
+     * @param interval Ausführungsintervall in Millisekunden
      */
-    public static void startService(Context context, long start, long interval) {
+    public static void startService(Context context, long start, long interval) throws ParseException{
 
         AlarmManager alarmManager = (AlarmManager) context.getSystemService(ALARM_SERVICE);
 
         Intent serviceIntent = new Intent(context, BackgroundService.class);
         PendingIntent startServiceIntent = PendingIntent.getService(context,0,serviceIntent,0);
 
-        // setRepeating benötigt den Startzeitpunkt als UNIX-Zeit
-        Calendar calendar = Calendar.getInstance();
-
-        calendar.set(Calendar.HOUR_OF_DAY, 0);
-        calendar.set(Calendar.MINUTE, 0);
-        calendar.set(Calendar.SECOND, 0);
-
-        // Einen Tag in der Zukunft beginnen, damit der Service auf jeden Fall gestartet wird.
-        // Eventuell wird der Service nicht gestartet, wenn das Startdatum in der Vergangenheit liegt. Dies kann passieren, wenn der Nutzer eine Uhrzeit eingibt, die am aktuellen Tag bereits vergangen ist.
-        // calendar.add(Calendar.DAY_OF_MONTH,1);
-
-        long s = calendar.getTimeInMillis() + start;
+        // Epoch hinzufügen
+        long attachedStart = DateAndTimeConversion.attachEpoch(start);
 
         if (BuildConfig.DEBUG) {
-            Log.d("STARTING TIME", "Starting Timestamp: " + String.valueOf(s));
-            Log.d("INTERVAL TIME", "Interval: " + String.valueOf(interval));
+            Log.d("LOG_SERVICE", "Starting Timestamp: " + String.valueOf(attachedStart));
+            Log.d("LOG_SERVICE", "Interval: " + String.valueOf(interval));
         }
 
         //AlarmManager aktivieren
         if (alarmManager != null) {
-            alarmManager.setRepeating(AlarmManager.RTC_WAKEUP,s,interval,startServiceIntent);
+            alarmManager.setRepeating(AlarmManager.RTC_WAKEUP,attachedStart,interval,startServiceIntent);
         }
 
     }
@@ -94,7 +86,6 @@ public class ServiceUtil extends BroadcastReceiver {
     public static void stopService(Context context) {
 
         // https://stackoverflow.com/questions/47545634/how-to-stop-service-using-alarmmanager
-
         Intent serviceIntent = new Intent(context, BackgroundService.class);
         PendingIntent pendingIntent = PendingIntent.getService(context, 0, serviceIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 

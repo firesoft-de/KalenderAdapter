@@ -34,6 +34,7 @@ import firesoft.de.kalenderadapter.data.ServerParameter;
 import firesoft.de.kalenderadapter.interfaces.IErrorCallback;
 import firesoft.de.kalenderadapter.manager.CalendarManager;
 import firesoft.de.kalenderadapter.manager.PreferencesManager;
+import firesoft.de.libfirenet.authentication.*;
 import firesoft.de.libfirenet.authentication.Digest;
 import firesoft.de.libfirenet.http.HttpWorker;
 import firesoft.de.libfirenet.method.GET;
@@ -149,7 +150,7 @@ public class DataTool extends AsyncTaskLoader<ResultWrapper> implements IErrorCa
 
         // Serverantwort abrufen
         assert worker != null;
-        serverResponse = worker.getResponse();
+        serverResponse = worker.getResponse(true);
 
         if (serverResponse == null || serverResponse.equals("")) {
             // Laut Status stimmt irgendwas nicht. -> Fehlermeldung werfen
@@ -179,7 +180,7 @@ public class DataTool extends AsyncTaskLoader<ResultWrapper> implements IErrorCa
 
             // Alle bestehenden Einträge löschen
             cManager.deleteEntries();
-            pManager.setEntryIds("");
+            //pManager.setEntryIds("");
             equalityCheckNeeded = false;
         }
         else {
@@ -289,7 +290,7 @@ public class DataTool extends AsyncTaskLoader<ResultWrapper> implements IErrorCa
         values.put(CalendarContract.Events.TITLE, entry.getTitle());
         values.put(CalendarContract.Events.DESCRIPTION, entry.getDescription());
         values.put(CalendarContract.Events.EVENT_LOCATION, entry.getLocation());
-        values.put(CalendarContract.Events.CALENDAR_ID, entry.getCalendarID());
+        values.put(CalendarContract.Events.CALENDAR_ID, entry.getEntryID());
         values.put(CalendarContract.Events.EVENT_TIMEZONE, entry.getTimezone());
 
         // Den Zeitraum des Eintrags als Beschäftigt markieren

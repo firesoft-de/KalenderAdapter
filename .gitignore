@@ -10,3 +10,4 @@
 .externalNativeBuild
 *.properties
 *.apk
+/.idea

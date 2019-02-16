@@ -19,15 +19,14 @@ import android.arch.lifecycle.MutableLiveData;
 import android.arch.lifecycle.Observer;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
-import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.DialogFragment;
 import android.support.v4.content.ContextCompat;
-import android.support.v4.content.res.ResourcesCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.CardView;
 import android.view.View;
@@ -39,29 +38,25 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
-import android.widget.ImageView;
 import android.widget.ProgressBar;
-import android.widget.ScrollView;
 import android.widget.Spinner;
 import android.widget.Switch;
 import android.widget.TextView;
 
 import com.github.zagum.switchicon.SwitchIconView;
 
-import org.w3c.dom.Text;
-
 import java.text.ParseException;
 import java.util.ArrayList;
-import java.util.concurrent.TimeUnit;
-import java.util.function.ToDoubleBiFunction;
 
 import firesoft.de.kalenderadapter.data.ServerParameter;
+import firesoft.de.kalenderadapter.fragments.TimePickerFragment;
 import firesoft.de.kalenderadapter.interfaces.IErrorCallback;
 import firesoft.de.kalenderadapter.manager.AsyncTaskManager;
 import firesoft.de.kalenderadapter.manager.CalendarManager;
 import firesoft.de.kalenderadapter.manager.PreferencesManager;
 import firesoft.de.kalenderadapter.service.BackgroundService;
 import firesoft.de.kalenderadapter.service.ServiceUtil;
+import firesoft.de.kalenderadapter.utility.DateAndTimeConversion;
 
 public class MainActivity extends AppCompatActivity implements IErrorCallback {
 
@@ -75,6 +70,8 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
     MutableLiveData<String> messageFromBackground;
     private MutableLiveData<Integer> progressValue;
     private MutableLiveData<Integer> progressMax;
+
+    private boolean blockServiceStart;
 
 
     //=======================================================
@@ -109,7 +106,6 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
 
         // UI Listener erstellen
         generateUIListener();
-
 
         // Debug Optionen ein/ausschalten
         if (BuildConfig.DEBUG) {
@@ -158,16 +154,7 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
 
 
         // Daten des PreferencesManager und des CalendarManager laden
-        try {
-            pManager.load();
-
-            // Entry-IDS laden
-            cManager.setEntryIdsFromString(pManager.getEntryIds());
-
-        } catch (PackageManager.NameNotFoundException e) {
-            e.printStackTrace();
-            displayMessage("Fehler beim Laden der Einstellungen! " + e.getMessage(), Snackbar.LENGTH_LONG);
-        }
+        pManager.load();
 
         // Preference Einstellungen in die UI schreiben
         fillFromPreferences();
@@ -182,6 +169,9 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
             ((SwitchIconView) this.findViewById(R.id.switch_icon_view)).setIconEnabled(false);
         }
         else {
+            // Start des Service im setOnCheckedChangeListener des CheckButtons abwehren
+            blockServiceStart = true;
+
             setServiceSwitch(true);
             ((SwitchIconView) this.findViewById(R.id.switch_icon_view)).setIconEnabled(true);
         }
@@ -286,7 +276,7 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
             @Override
             public void onClick(View view) {
                 cManager.deleteEntries();
-                pManager.setEntryIds("");
+//                pManager.setEntryIds("");
             }
         });
 
@@ -313,7 +303,7 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
                         informationDialog.dismiss();
 
                         cManager.clearCalendar();
-                        pManager.setEntryIds("");
+//                        pManager.setEntryIds("");
                     }
                 });
 
@@ -340,93 +330,48 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
                 pManager.setSyncDisabled(!checked); // Ist hier etwas unglücklich gelöst. Der PreferncesManager speichert, ob der Nutzer den Service deaktiviert hat (true = deaktiviert). Der Button gibt aber an, ob der Service aktiv ist (true = aktiv)
                 pManager.save();
 
+                if (blockServiceStart) {
+
+                    blockServiceStart = false;
+                    return;
+
+                }
+
+                //TODO: Rausnehmen oder anders lösen -> Führt wahrscheinlich zu doppeltem ausführen des Servicestart
+
                 // Service je nach Nutzerauswahl starten oder stoppen
                 if (!checked) {
                     ServiceUtil.stopService(getApplicationContext());
                 }
                 else {
-                    ServiceUtil.startService(getApplicationContext(),pManager.getSyncFrom(),pManager.getSyncInterval());
+                    try {
+                        ServiceUtil.startService(getApplicationContext(),pManager.getSyncFrom(),pManager.getSyncInterval());
+                    } catch (ParseException e) {
+                        publishError(getString(R.string.error_service_times_unchangeable));
+                        e.printStackTrace();
+                    }
                 }
 
-                change_service_indivator();
+                change_service_indicator();
 
             }
         });
 
         // Synchronisationszeitpunkt
-        final EditText etServiceSyncFrom = this.findViewById(R.id.service_sync_from);
-        etServiceSyncFrom.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+        final Button etServiceSyncFrom = this.findViewById(R.id.service_sync_from);
+        etServiceSyncFrom.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onFocusChange(View view, boolean hasFocus) {
-                // Prüfen, ob das View den Focus hat oder nicht
-                if (!hasFocus) {
-                    // Eingabe in Millisekunden umwandeln
-                    long timeMilliSeconds;
-
-                    try {
-                        timeMilliSeconds= StringToMillis(etServiceSyncFrom.getText().toString());
-                    }
-                    catch (Exception e) {
-                        publishError("Ungültiger Eingabewert! Erwartet wird: HH:mm (HH <=23, mm<= 59)");
-                        return;
-                    }
-
-                    // Prüfe, ob sich die Daten geändert haben
-                    if (pManager.getSyncFrom() != timeMilliSeconds) {
-                        // Daten wurden geändert
-
-                        // Hintergrundservice stoppen
-                        ServiceUtil.stopService(getApplicationContext());
-
-                        // Neue Daten in den PreferencesManager schreiben
-                        pManager.setSyncFrom(timeMilliSeconds);
-                        pManager.save();
-
-                        // Service neustarten
-                        ServiceUtil.startService(getApplicationContext(), pManager.getSyncFrom(),pManager.getSyncInterval());
-
-                        setServiceSwitch(true);
-
-                    }
-                }
+            public void onClick(View v) {
+                showStartTimePickerDialog();
             }
         });
 
         // Synchronisationsintervall
-        final EditText etServiceSyncInterval = this.findViewById(R.id.service_sync_interval);
-        etServiceSyncInterval.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+        final Button etServiceSyncInterval = this.findViewById(R.id.service_sync_interval);
+        etServiceSyncInterval.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onFocusChange(View view, boolean hasFocus) {
-                // Prüfen, ob das View den Focus hat oder nicht
-                if (!hasFocus) {
-                    // Eingabe in Millisekunden umwandeln
-                    long timeMilliSeconds;
-
-                    try {
-                        timeMilliSeconds= StringToMillis(etServiceSyncInterval.getText().toString());
-                    }
-                    catch (Exception e) {
-                        publishError("Ungültiger Eingabewert! Erwartet wird: HH:mm (HH <=23, mm<= 59)");
-                        return;
-                    }
-
-                    // Prüfe, ob sich die Daten geändert haben
-                    if (pManager.getSyncInterval() != timeMilliSeconds) {
-                        // Daten wurden geändert
-
-                        // Hintergrundservice stoppen
-                        ServiceUtil.stopService(getApplicationContext());
-
-                        // Neue Daten in den PreferencesManager schreiben
-                        pManager.setSyncInterval(timeMilliSeconds);
-                        pManager.save();
-
-                        // Service neustarten
-                        ServiceUtil.startService(getApplicationContext(), pManager.getSyncFrom(),pManager.getSyncInterval());
-
-                        setServiceSwitch(true);
-                    }
-                }
+            public void onClick(View v) {
+                showIntervalTimePickerDialog();
             }
         });
 
@@ -538,11 +483,21 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
         // Switch so einstellen, dass der aktuelle Zustand des Service angezeigt wird
         setServiceSwitch(ServiceUtil.checkServiceIsRunning(this,BackgroundService.class));
 
-        EditText etSyncFrom = this.findViewById(R.id.service_sync_from);
-        etSyncFrom.setText(MillisToString(pManager.getSyncFrom()));
+        Button etSyncFrom = this.findViewById(R.id.service_sync_from);
+        try {
+            etSyncFrom.setText(DateAndTimeConversion.convertMillisToString(pManager.getSyncFrom()));
+        } catch (ParseException e) {
+            displayTimeErrorDialog();
+            return;
+        }
 
-        EditText etSyncInterval = this.findViewById(R.id.service_sync_interval);
-        etSyncInterval.setText(MillisToString(pManager.getSyncInterval()));
+        Button etSyncInterval = this.findViewById(R.id.service_sync_interval);
+        try {
+            etSyncInterval.setText(DateAndTimeConversion.convertMillisToString(pManager.getSyncInterval()));
+        } catch (ParseException e) {
+            displayTimeErrorDialog();
+            return;
+        }
 
         // Einstellungen für die Erinnerungen abrufen
         ((CheckBox) this.findViewById(R.id.cB_set_reminder)).setChecked(pManager.isReminderActivated());
@@ -698,6 +653,178 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
     }
 
     /**
+     * Zeigt den Dialog der bei fehlerhafter Eingabe der Zeiten angezeigt werden soll.
+     */
+    private void displayTimeErrorDialog() {
+
+        final MainActivity activity = this;
+        final Dialog errorDialog = new Dialog(MainActivity.this);
+
+        errorDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        errorDialog.setCancelable(false);
+        errorDialog.setContentView(R.layout.layout_information_malformed_time);
+
+        Button dialogButton = (Button) errorDialog.findViewById(R.id.info_button);
+        dialogButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                errorDialog.dismiss();
+            }
+        });
+
+        errorDialog.show();
+    }
+
+    /**
+     * Zeigt einen Auswahldialog für Zeiten an.
+     */
+    public void showStartTimePickerDialog() {
+
+        DialogFragment newFragment = new TimePickerFragment();
+        Bundle b = new Bundle();
+
+        try {
+            b.putInt("hour",DateAndTimeConversion.getHoursOfMillis(pManager.getSyncFrom()));
+            b.putInt("minute",DateAndTimeConversion.getMinutesOfMillis(pManager.getSyncFrom()));
+        } catch (ParseException e) {
+            publishError("Es ist ein Fehler beim Laden der Startzeit für den Hintergrundservice aus dem Speicher aufgetreten!");
+            e.printStackTrace();
+            return;
+        }
+
+        b.putByte("mode",(byte) 2);
+
+        newFragment.setArguments(b);
+        newFragment.show(getSupportFragmentManager(), "start");
+
+        }
+
+    /**
+     * Zeigt einen Auswahldialog für Zeiten an.
+     */
+    public void showIntervalTimePickerDialog() {
+
+        DialogFragment newFragment = new TimePickerFragment();
+        Bundle b = new Bundle();
+
+        try {
+            b.putInt("hour",DateAndTimeConversion.getHoursOfMillis(pManager.getSyncInterval()));
+            b.putInt("minute",DateAndTimeConversion.getMinutesOfMillis(pManager.getSyncInterval()));
+        } catch (ParseException e) {
+            publishError("Es ist ein Fehler beim Laden der Startzeit für den Hintergrundservice aus dem Speicher aufgetreten!");
+            e.printStackTrace();
+            return;
+        }
+
+        b.putByte("mode",(byte) 1);
+
+        newFragment.setArguments(b);
+        newFragment.show(getSupportFragmentManager(), "interval");
+    }
+
+    /**
+     * Callbackmethode für die Time Picker
+     */
+    public void onTimeSet(byte mode, int hourOfDay, int minute) {
+
+        switch (mode){
+
+            case (byte) 1:
+                changeInterval(hourOfDay,minute);
+                break;
+
+            case (byte)2:
+                changeStart(hourOfDay,minute);
+                break;
+
+        }
+    }
+
+    /**
+     * Übernimmt Änderungen des Intervalls in den Langzeitspeicher und startet den Hintergrundservice neu
+     */
+    private void changeInterval(int hourOfDay, int minute) {
+
+        // Eingabe in Millisekunden umwandeln
+        long timeMilliSeconds = 0;
+
+        try {
+            timeMilliSeconds= DateAndTimeConversion.convertHourAndMinuteToMillis(hourOfDay,minute);
+            ((Button) this.findViewById(R.id.service_sync_interval)).setText(DateAndTimeConversion.convertMillisToString(timeMilliSeconds));
+        }
+        catch (Exception e) {
+            displayTimeErrorDialog();
+            //publishError("Ungültiger Eingabewert! Erwartet wird: HH:mm (HH <=23, mm<= 59)");
+            return;
+        }
+
+
+        // Prüfe, ob sich die Daten geändert haben
+        if (pManager.getSyncInterval() != timeMilliSeconds) {
+            // Daten wurden geändert
+
+            // Neue Daten in den PreferencesManager schreiben
+            pManager.setSyncInterval(timeMilliSeconds);
+            pManager.save();
+
+            restartService();
+        }
+
+    }
+
+    /**
+     * Übernimmt Änderungen des Intervalls in den Langzeitspeicher und startet den Hintergrundservice neu
+     */
+    private void changeStart(int hourOfDay, int minute) {
+
+        // Eingabe in Millisekunden umwandeln
+        long timeMilliSeconds = 0;
+
+        try {
+            timeMilliSeconds= DateAndTimeConversion.convertHourAndMinuteToMillis(hourOfDay,minute);
+            ((Button) this.findViewById(R.id.service_sync_from)).setText(DateAndTimeConversion.convertMillisToString(timeMilliSeconds));
+        }
+        catch (Exception e) {
+            displayTimeErrorDialog();
+            //publishError("Ungültiger Eingabewert! Erwartet wird: HH:mm (HH <=23, mm<= 59)");
+            return;
+        }
+
+
+        // Prüfe, ob sich die Daten geändert haben
+        if (pManager.getSyncFrom() != timeMilliSeconds) {
+            // Daten wurden geändert
+
+            // Neue Daten in den PreferencesManager schreiben
+            pManager.setSyncFrom(timeMilliSeconds);
+            pManager.save();
+
+            restartService();
+        }
+
+    }
+
+    /**
+     * Startet den Hintergrundservice neu.
+     */
+    private void restartService() {
+
+        // Hintergrundservice stoppen
+        ServiceUtil.stopService(getApplicationContext());
+
+        // Service neustarten
+        try {
+            ServiceUtil.startService(getApplicationContext(), pManager.getSyncFrom(),pManager.getSyncInterval());
+        } catch (ParseException e) {
+            publishError(getString(R.string.error_service_times_unchangeable));
+            e.printStackTrace();
+        }
+
+        change_service_indicator();
+
+    }
+
+    /**
      * Startet den AsyncTaskLoader (Hintergrundthread) für den Datendownload
      */
     private void startLoader() {
@@ -732,62 +859,6 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
 
     }
 
-    /**
-     * Hilfsmethode die einen eingebenen String des Schemas StundenStunden:MinutenMinuten in Millisekunden umwandelt
-     */
-    private long StringToMillis(String input) throws ParseException {
-
-        if (!input.contains(":")) {
-            throw new ParseException("",0);
-        }
-
-        int hours = Integer.valueOf(input.split(":")[0]);
-        int minutes = Integer.valueOf(input.split(":")[1]);
-
-        if (hours == 0 && minutes == 0) {
-            throw new ParseException("",1);
-        }
-
-        if (hours > 24 || minutes > 60) {
-            throw new ParseException("",1);
-        }
-
-        return (hours * 60 + minutes) * 60 * 1000;
-    }
-
-    /**
-     * Hilfsmethode die Millisekunden in einen eingebenen String des Schemas StundenStunden:MinutenMinuten umwandelt
-     */
-    private String MillisToString(long input) {
-
-        long minutes = TimeUnit.MILLISECONDS.toMinutes(input);
-        long hours = TimeUnit.MILLISECONDS.toHours(input);
-
-        if ((minutes % 60) == 0) { // Wert geht genau auf (kein Rest)
-            if (hours < 10) {
-                return "0" + String.valueOf(hours) + ":00";
-            }
-            else {
-                return String.valueOf(hours) + ":00";
-            }
-        }
-        else {
-            if (hours < 10 && (minutes - (hours * 60)) < 10) {
-                return "0" + String.valueOf(hours) + ":0" + String.valueOf(minutes - (hours * 60));
-            }
-            else if (hours < 10 && (minutes - (hours * 60)) > 10){
-                return "0" + String.valueOf(hours) + ":" + String.valueOf(minutes - (hours * 60));
-            }
-            else if (hours > 10 && (minutes - (hours * 60)) < 10) {
-                return String.valueOf(hours) + ":0" + String.valueOf(minutes - (hours * 60));
-            }
-            else {
-                return String.valueOf(hours) + ":" + String.valueOf(minutes - (hours * 60));
-            }
-        }
-
-    }
-
     private void setServiceSwitch(boolean checked) {
         ((Switch) this.findViewById(R.id.switch_service)).setChecked(checked);
         this.findViewById(R.id.service_sync_interval).setEnabled(checked);
@@ -797,11 +868,14 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
     /**
      * Ändert den Anzeigestatus und zwei Einstellungselemente auf Basis des Hintergrundstatus
      */
-    private void change_service_indivator() {
+    private void change_service_indicator() {
 
         boolean res = ServiceUtil.checkServiceIsRunning(getApplicationContext(),BackgroundService.class);
         SwitchIconView siv = ((SwitchIconView) this.findViewById(R.id.switch_icon_view));
-        siv.switchState();
+
+        if (siv.isIconEnabled() != res) {
+            siv.switchState();
+        }
 
         // Felder ein- bzw. ausschalten
         this.findViewById(R.id.service_sync_interval).setEnabled(res);
@@ -842,6 +916,5 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
         }
 
     }
-
 }
 

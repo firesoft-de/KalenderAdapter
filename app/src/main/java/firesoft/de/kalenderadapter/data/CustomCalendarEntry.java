@@ -20,7 +20,6 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
-import java.util.TimeZone;
 
 public class CustomCalendarEntry {
 
@@ -36,7 +35,7 @@ public class CustomCalendarEntry {
 
     private String description;
 
-    private int calendarID;
+    private int entryID;
 
     private EntryState entryState;
 
@@ -47,12 +46,25 @@ public class CustomCalendarEntry {
     private String timezone;
 
     //=======================================================
+    //======================ENUM's==========================
+    //=======================================================
+
+    /**
+     * Stellt eine Möglichkeit zum Vergleich von zwei Zeiten zur Verfügung. Der genannte Wert bezieht sich immer auf den Kandidaten. Bspw.: LOWER -> Die Zeit des Kandidaten ist niedriger als die eigene (Objekt welche den Vergleich durchführt.)
+     */
+    public enum TimeComparison {
+        LOWER,
+        EQUAL,
+        HIGHER
+    }
+
+    //=======================================================
     //=====================KONSTRUKTOR=======================
     //=======================================================
 
     /**
      * Erzeugt eine neue Instanz
-     * @param calendarID ID des Kalenders in den der Eintrag geschrieben werden soll
+     * @param entryID ID des Eintrags
      * @param title Titel des Events
      * @param startTime Anfangszeit
      * @param endTime Endzeit
@@ -62,12 +74,12 @@ public class CustomCalendarEntry {
      * @param category Kategorie
      * @throws ParseException Sollte es beim umwandeln der Start- und Endzeit in Unix-Zeit zu einem Fehler kommen, wird eine ParseException geworfen.
      */
-    public CustomCalendarEntry(int calendarID, String title, String startTime, String endTime, String description, EntryState entryState, String location, String category, String timezone) throws ParseException{
+    public CustomCalendarEntry(int entryID, String title, String startTime, String endTime, String description, EntryState entryState, String location, String category, String timezone) throws ParseException{
 
         Calendar calendar;
         Date date;
 
-        this.calendarID = calendarID;
+        this.entryID = entryID;
         this.title = title;
         this.description = description;
         this.entryState = entryState;
@@ -103,15 +115,30 @@ public class CustomCalendarEntry {
      */
     public boolean equals(CustomCalendarEntry candidate) {
 
-        // Titel können sich auch ändern. Deswegen entfernt
-        //boolean checkresult_1 = this.title.equals(candidate.title);
-        boolean checkresult_1 = true;
-        //boolean checkresult_2 = this.description.equals(candidate.description); // Beschreibungen können sich ändern. Deswegen entfernt
-        boolean checkresult_2 = true;
+        boolean checkresult_1 = (this.title.equals(candidate.title));
+        boolean checkresult_2 = (this.title.equals(candidate.title));
         boolean checkresult_3 = (this.startMillis == candidate.startMillis);
         boolean checkresult_4 = (this.endMillis == candidate.endMillis);
 
         return (checkresult_1 && checkresult_2 && checkresult_3 && checkresult_4);
+    }
+
+    /**
+     * Vergleicht die eigene Startzeit mit der des Kandidaten
+     * @param candidate Kandidat der die zu vergleichende Startzeit enthält
+     * @return Der genannte Wert bezieht sich immer auf den Kandidaten. Bspw.: LOWER -> Die Zeit des Kandidaten ist niedriger als die eigene (Objekt welche den Vergleich durchführt.)
+     */
+    public TimeComparison compareStartTime(CustomCalendarEntry candidate) {
+
+        if (startMillis < candidate.startMillis) {
+            return TimeComparison.HIGHER;
+        }
+        else if (startMillis > candidate.startMillis) {
+            return TimeComparison.LOWER;
+        }
+        else {
+            return TimeComparison.EQUAL;
+        }
     }
 
     //=======================================================
@@ -310,12 +337,12 @@ public class CustomCalendarEntry {
         this.description = description;
     }
 
-    public int getCalendarID() {
-        return calendarID;
+    public int getEntryID() {
+        return entryID;
     }
 
-    public void setCalendarID(int calendarID) {
-        this.calendarID = calendarID;
+    public void setEntryID(int entryID) {
+        this.entryID = entryID;
     }
 
     public EntryState getEntryState() {
