@@ -15,7 +15,6 @@ package firesoft.de.kalenderadapter;
 
 import android.Manifest;
 import android.app.Dialog;
-import android.app.TimePickerDialog;
 import android.arch.lifecycle.MutableLiveData;
 import android.arch.lifecycle.Observer;
 import android.content.pm.PackageInfo;
@@ -43,7 +42,6 @@ import android.widget.ProgressBar;
 import android.widget.Spinner;
 import android.widget.Switch;
 import android.widget.TextView;
-import android.widget.TimePicker;
 
 import com.github.zagum.switchicon.SwitchIconView;
 
@@ -72,6 +70,8 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
     MutableLiveData<String> messageFromBackground;
     private MutableLiveData<Integer> progressValue;
     private MutableLiveData<Integer> progressMax;
+
+    private boolean blockServiceStart;
 
 
     //=======================================================
@@ -106,7 +106,6 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
 
         // UI Listener erstellen
         generateUIListener();
-
 
         // Debug Optionen ein/ausschalten
         if (BuildConfig.DEBUG) {
@@ -170,6 +169,9 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
             ((SwitchIconView) this.findViewById(R.id.switch_icon_view)).setIconEnabled(false);
         }
         else {
+            // Start des Service im setOnCheckedChangeListener des CheckButtons abwehren
+            blockServiceStart = true;
+
             setServiceSwitch(true);
             ((SwitchIconView) this.findViewById(R.id.switch_icon_view)).setIconEnabled(true);
         }
@@ -327,6 +329,13 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
                 pManager.setSyncDisabled(!checked); // Ist hier etwas unglücklich gelöst. Der PreferncesManager speichert, ob der Nutzer den Service deaktiviert hat (true = deaktiviert). Der Button gibt aber an, ob der Service aktiv ist (true = aktiv)
                 pManager.save();
+
+                if (blockServiceStart) {
+
+                    blockServiceStart = false;
+                    return;
+
+                }
 
                 //TODO: Rausnehmen oder anders lösen -> Führt wahrscheinlich zu doppeltem ausführen des Servicestart
 
@@ -761,8 +770,6 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
             restartService();
         }
 
-        restartService();
-
     }
 
     /**
@@ -794,8 +801,6 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
 
             restartService();
         }
-
-        restartService();
 
     }
 
