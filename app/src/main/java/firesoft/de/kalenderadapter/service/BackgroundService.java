@@ -51,7 +51,6 @@ public class BackgroundService extends Service implements Loader.OnLoadCompleteL
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        AsyncTaskManager taskManager;
 
         if (BuildConfig.DEBUG) {
             Log.d("LOG_SERVICE", "Service run!");
