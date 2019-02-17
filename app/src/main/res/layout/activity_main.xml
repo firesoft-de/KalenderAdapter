@@ -52,8 +52,6 @@
                     android:id="@+id/bt_check_service_alive"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginEnd="8dp"
-                    android:layout_marginTop="8dp"
                     android:text="Check service alive"
                     app:layout_constraintEnd_toEndOf="@+id/bt_startDownload"
                     app:layout_constraintStart_toStartOf="@+id/bt_startDownload"
