@@ -497,7 +497,7 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
             return;
         }
 
-        // Einstellungen für die Erinnerungen abrufen
+        // Einstellungen abrufen
         ((CheckBox) this.findViewById(R.id.cB_set_reminder)).setChecked(pManager.isReminderActivated());
         ((CheckBox) this.findViewById(R.id.cB_inteligent_reminder)).setChecked(pManager.isInteligentReminderActivated());
 
