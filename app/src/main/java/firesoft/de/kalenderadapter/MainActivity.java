@@ -275,8 +275,7 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
         this.findViewById(R.id.bt_emptyCalendar).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                cManager.deleteEntries();
-//                pManager.setEntryIds("");
+                startDeleteLoader();
             }
         });
 
@@ -291,7 +290,6 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
                 informationDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
                 informationDialog.setCancelable(true);
                 informationDialog.setContentView(R.layout.layout_information_dialog);
-
 
                 ((TextView) informationDialog.findViewById(R.id.info_button)).setText(R.string.info_delete_text);
 
@@ -856,6 +854,19 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
         // AsyncTask mit den Parametern starten
         taskManager = new AsyncTaskManager(getSupportLoaderManager(), getApplicationContext(),this,cManager, pManager, messageFromBackground, progressValue,progressMax);
         taskManager.startDownload(this,parameters);
+
+    }
+
+    /**
+     * Startet den AsyncTaskLoader der für das Löschen von Einträgen zuständig ist
+     */
+    private void startDeleteLoader() {
+
+        if (taskManager == null) {
+            taskManager = new AsyncTaskManager(getSupportLoaderManager(), getApplicationContext(),this,cManager, pManager, messageFromBackground, progressValue,progressMax);
+        }
+
+        taskManager.startDelete(this);
 
     }
 

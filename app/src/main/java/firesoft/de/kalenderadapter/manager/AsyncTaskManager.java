@@ -35,6 +35,7 @@ import firesoft.de.kalenderadapter.data.ResultWrapper;
 import firesoft.de.kalenderadapter.data.ServerParameter;
 import firesoft.de.kalenderadapter.interfaces.IErrorCallback;
 import firesoft.de.kalenderadapter.utility.DataTool;
+import firesoft.de.kalenderadapter.utility.DeleteTaskLoader;
 
 public class AsyncTaskManager implements LoaderManager.LoaderCallbacks<ResultWrapper> {
 
@@ -53,6 +54,7 @@ public class AsyncTaskManager implements LoaderManager.LoaderCallbacks<ResultWra
     private MutableLiveData<Integer> progressMax;
 
     private static final int MAIN_LOADER = 1;
+    private static final int DELETE_LOADER = 2;
 
     //=======================================================
     //====================KONSTRUKTOR========================
@@ -85,16 +87,40 @@ public class AsyncTaskManager implements LoaderManager.LoaderCallbacks<ResultWra
 
         this.params = params;
 
-        initateLoader();
+        initateLoader(MAIN_LOADER);
 
     }
+
+    /**
+     * Beginnt mit dem Löschen der Einträge
+     */
+    public void startDelete(Activity activity) {
+        // Überprüfen, ob die Berechtigung zum Kalenderzugriff vorliegt
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.WRITE_CALENDAR) != PackageManager.PERMISSION_GRANTED ||
+                ContextCompat.checkSelfPermission(context, Manifest.permission.READ_CALENDAR) != PackageManager.PERMISSION_GRANTED  ) {
+            // Keine Erlaubnis vorhanden.
+
+            // Nutzer nach der Erlaubnis fragen
+            ActivityCompat.requestPermissions(activity, new String[]{Manifest.permission.WRITE_CALENDAR, Manifest.permission.READ_CALENDAR}, 1);
+        }
+
+        initateLoader(DELETE_LOADER);
+
+    }
+
 
     @NonNull
     @Override
     public Loader<ResultWrapper> onCreateLoader(int id, @Nullable Bundle args) {
 
-        if (id == MAIN_LOADER) {
-            return new DataTool(params,context, calendarManager, progress, progressValue, progressMax, pManager, true);
+        switch (id) {
+
+            case MAIN_LOADER:
+                return new DataTool(params,context, calendarManager, progress, progressValue, progressMax, pManager, true);
+
+            case DELETE_LOADER:
+                return new DeleteTaskLoader(context,calendarManager,progress,progressValue,progressMax);
+
         }
 
         throw new IllegalArgumentException("Kein passender Loader verfügbar! (AsyncTaskManager.onCreateLoader))");
@@ -115,7 +141,7 @@ public class AsyncTaskManager implements LoaderManager.LoaderCallbacks<ResultWra
 //            pManager.save();
 
             // Erfolgsmeldung abgeben
-            errorCallback.publishProgress(context.getString(R.string.info_import_successfull),-1,-1);
+            errorCallback.publishProgress(data.getResult(),-1,-1);
 
 
         }
@@ -133,13 +159,13 @@ public class AsyncTaskManager implements LoaderManager.LoaderCallbacks<ResultWra
     /**
      * Die Methode startet die Loader. Durch die Methode werden bereits aktive Loader berücksichtigt und ggf. neugestartet.
      */
-    private void initateLoader() {
+    private void initateLoader(int id) {
 
         //Loader anwerfen
-        if (loaderManager.getLoader(MAIN_LOADER) == null) {
-            loaderManager.initLoader(MAIN_LOADER, null, this);
+        if (loaderManager.getLoader(id) == null) {
+            loaderManager.initLoader(id, null, this);
         } else {
-            loaderManager.restartLoader(MAIN_LOADER, null, this);
+            loaderManager.restartLoader(id, null, this);
         }
 
     }

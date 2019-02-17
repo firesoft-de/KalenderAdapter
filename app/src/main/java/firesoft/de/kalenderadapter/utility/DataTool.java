@@ -34,7 +34,6 @@ import firesoft.de.kalenderadapter.data.ServerParameter;
 import firesoft.de.kalenderadapter.interfaces.IErrorCallback;
 import firesoft.de.kalenderadapter.manager.CalendarManager;
 import firesoft.de.kalenderadapter.manager.PreferencesManager;
-import firesoft.de.libfirenet.authentication.*;
 import firesoft.de.libfirenet.authentication.Digest;
 import firesoft.de.libfirenet.http.HttpWorker;
 import firesoft.de.libfirenet.method.GET;
@@ -170,17 +169,11 @@ public class DataTool extends AsyncTaskLoader<ResultWrapper> implements IErrorCa
         // Prüfen, ob die bestehenden Einträge überschrieben werden sollen. In diesem Fall können jetzt alle Einträge gelöscht und die neuen direkt eingefügt werden. Das ist einfacher, als bei allen zu prüfen, ob sich etwas geändert hat.
         if (pManager.isReplaceExistingActivated()) {
 
-//            // Prüfen, ob bereits Einträge geladen wurden. Falls dies nicht der Fall ist, sollte dies jetzt nachgeholt werden. Es kann sonst zu Fehlern in .deleteEntries() kommen.
-//            if (cManager.getEntryIds() == null ||cManager.getEntryIds().size() == 0) {
-//                cManager.loadCalendarEntries();
-//            }
-
             // Es sollte immer eine aktuelle Liste gezogen werden
             cManager.loadCalendarEntries();
 
             // Alle bestehenden Einträge löschen
             cManager.deleteEntries();
-            //pManager.setEntryIds("");
             equalityCheckNeeded = false;
         }
         else {
@@ -243,7 +236,7 @@ public class DataTool extends AsyncTaskLoader<ResultWrapper> implements IErrorCa
         }
 
         // Liste mit den Event-IDs zurückgeben
-        return new ResultWrapper(eventIds);
+        return new ResultWrapper(eventIds,getContext().getString(R.string.info_import_successfull));
     }
 
     @Override

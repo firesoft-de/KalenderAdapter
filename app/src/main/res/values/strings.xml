@@ -49,5 +49,6 @@
     <string name="error_no_calendars_found">Es konnten keine Kalender gefunden werden.</string>
     <string name="error_addCalendarEntry">Eine Sicherheitsausnahme ist aufgetreten! (CalendarManager.addCalenderEntry (Reminders)</string>
     <string name="error_service_times_unchangeable">Änderung konnte nicht übernommen werden! Hintergrundservice läuft nicht!</string>
+    <string name="info_extinction_successfull">Alle Einträge erfolgreich gelöscht!</string>
 
 </resources>
