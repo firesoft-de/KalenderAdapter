@@ -206,7 +206,7 @@ public class CalendarManager {
                 ) {
 
             // Cursor für den Datenabruf erstellen. Es wird anhand der ID (welche in dem Array mitgeliefert wird) nach einem Event gesucht
-            Cursor cur = cr.query(CalendarContract.Events.CONTENT_URI, EVENT_PROJECTION, Events._ID + " = ?", new String[]{Integer.toString(id)},
+            Cursor cur = cr.query(CalendarContract.Events.CONTENT_URI, EVENT_PROJECTION, "(" + Events._ID + " = ?) AND (" + Events.CALENDAR_ID + " = " + activeCalendar.getId() + ")", new String[]{Integer.toString(id)},
                     null);
 
             if (cur != null && cur.moveToFirst()) {
