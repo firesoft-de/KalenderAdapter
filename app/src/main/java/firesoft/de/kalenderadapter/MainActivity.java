@@ -586,6 +586,31 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
     }
 
     /**
+     * Versetzt die Fortschrittsanzeige wieder in den Ausgangszustand (Progress = 0 + determinate und Statustext = "")
+     */
+    public void resetProgressbar() {
+        ProgressBar pB = this.findViewById(R.id.progressBar);
+        TextView tv = this.findViewById(R.id.tV_progress);
+
+        tv.setText("");
+        pB.setProgress(0);
+        pB.setIndeterminate(false);
+        pB.getProgressDrawable().setColorFilter(getResources().getColor(R.color.colorPrimary), android.graphics.PorterDuff.Mode.SRC_IN);
+    }
+
+    /**
+     * Versetzt die Progressbar in die Fehlerdarstellung (rot, determinate und Progress = 100
+     */
+    public void switchProgressbarErrorState() {
+        ProgressBar pB = this.findViewById(R.id.progressBar);
+
+        pB.setIndeterminate(false);
+        pB.setProgress(100);
+        pB.getProgressDrawable().setColorFilter(getResources().getColor(R.color.error), android.graphics.PorterDuff.Mode.SRC_IN);
+
+    }
+
+    /**
      * Hängt eine Nachricht an die zuletzt angezeigte Nachricht an
      * @param message Anzuhängende Nachricht. Es wird automatisch der folgende Trenner eingefügt: " - "
      */
@@ -827,13 +852,18 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
      */
     private void startLoader() {
 
+        // Fortschrittsanzeige zurücksetzen
+        resetProgressbar();
+
         EditText user = this.findViewById(R.id.eT_user);
         EditText password = this.findViewById(R.id.et_pw);
         EditText url = this.findViewById(R.id.eT_url);
 
         // Daten aus den TextViews abfragen
         if (user.getText().toString().equals("") || password.getText().toString().equals("") || url.getText().toString().equals("")) {
-            displayMessage("Bitte fülle alle Felder aus!", Snackbar.LENGTH_LONG);
+            //displayMessage(getResources().getString(R.string.error_fields_not_filled), Snackbar.LENGTH_LONG);
+            publishProgress(getResources().getString(R.string.error_fields_not_filled),0,1);
+            switchProgressbarErrorState();
             return;
         }
 
@@ -861,6 +891,9 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
      * Startet den AsyncTaskLoader der für das Löschen von Einträgen zuständig ist
      */
     private void startDeleteLoader() {
+
+        // Fortschrittsanzeige zurücksetzen
+        resetProgressbar();
 
         if (taskManager == null) {
             taskManager = new AsyncTaskManager(getSupportLoaderManager(), getApplicationContext(),this,cManager, pManager, messageFromBackground, progressValue,progressMax);
