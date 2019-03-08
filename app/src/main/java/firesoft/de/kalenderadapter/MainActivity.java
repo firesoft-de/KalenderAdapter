@@ -163,7 +163,7 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
         setVersion();
 
         // Prüfen, ob der Hintergrundservice läuft oder nicht
-        if (!ServiceUtil.checkServiceIsRunning(this, BackgroundService.class)) {
+        if (!ServiceUtil.isServiceRunning(this)) {
             // UI Switch setzen
             setServiceSwitch(false);
             ((SwitchIconView) this.findViewById(R.id.switch_icon_view)).setIconEnabled(false);
@@ -386,7 +386,7 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
         btCheckServiceAlive.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                boolean res = ServiceUtil.checkServiceIsRunning(getApplicationContext(),BackgroundService.class);
+                boolean res = ServiceUtil.isServiceRunning(getApplicationContext());
                 publishError("Status: " + String.valueOf(res));
             }
         });
@@ -479,7 +479,7 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
         }
 
         // Switch so einstellen, dass der aktuelle Zustand des Service angezeigt wird
-        setServiceSwitch(ServiceUtil.checkServiceIsRunning(this,BackgroundService.class));
+        setServiceSwitch(ServiceUtil.isServiceRunning(this));
 
         Button etSyncFrom = this.findViewById(R.id.service_sync_from);
         try {
@@ -609,6 +609,7 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
 
         pB.setIndeterminate(false);
         pB.setProgress(100);
+        pB.setMax(100);
         pB.getProgressDrawable().setColorFilter(getResources().getColor(R.color.error), android.graphics.PorterDuff.Mode.SRC_IN);
 
     }
@@ -831,9 +832,14 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
     }
 
     /**
-     * Startet den Hintergrundservice neu.
+     * Startet den Hintergrundservice neu. Falls er nicht läuft, wird er nicht gestartet!
      */
     private void restartService() {
+
+        // Prüfen, ob der Service läuft
+        if (!ServiceUtil.isServiceRunning(getApplicationContext())) {
+
+        }
 
         // Hintergrundservice stoppen
         ServiceUtil.stopService(getApplicationContext());
@@ -917,7 +923,7 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
      */
     private void change_service_indicator() {
 
-        boolean res = ServiceUtil.checkServiceIsRunning(getApplicationContext(),BackgroundService.class);
+        boolean res = ServiceUtil.isServiceRunning(getApplicationContext());
         SwitchIconView siv = ((SwitchIconView) this.findViewById(R.id.switch_icon_view));
 
         if (siv.isIconEnabled() != res) {

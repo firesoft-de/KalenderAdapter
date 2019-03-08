@@ -72,7 +72,7 @@ public class ServiceUtil extends BroadcastReceiver {
         long attachedStart = DateAndTimeConversion.attachEpoch(start);
 
         if (BuildConfig.DEBUG) {
-            Log.d("LOG_SERVICE", "Starting Timestamp: " + String.valueOf(attachedStart));
+            Log.d("LOG_SERVICE", "Starting Timestamp: " + String.valueOf(attachedStart) + " | " + start);
             Log.d("LOG_SERVICE", "Interval: " + String.valueOf(interval));
         }
 
@@ -84,6 +84,8 @@ public class ServiceUtil extends BroadcastReceiver {
     }
 
     public static void stopService(Context context) {
+
+        Log.d("LOG_SERVICE", "Stopping!");
 
         // https://stackoverflow.com/questions/47545634/how-to-stop-service-using-alarmmanager
         Intent serviceIntent = new Intent(context, BackgroundService.class);
@@ -105,7 +107,7 @@ public class ServiceUtil extends BroadcastReceiver {
     /**
      * Prüft, ob der Hintergrundservice läuft oder nicht. Basiert auf https://stackoverflow.com/questions/600207/how-to-check-if-a-service-is-running-on-android
      */
-    public static boolean checkServiceIsRunning(Context context, Class serviceClass) {
+    public static boolean isServiceRunning(Context context) {
         //https://stackoverflow.com/questions/4556670/how-to-check-if-alarmmanager-already-has-an-alarm-set
         return (PendingIntent.getService(context, 0, new Intent(context,BackgroundService.class), PendingIntent.FLAG_NO_CREATE) != null);
     }
