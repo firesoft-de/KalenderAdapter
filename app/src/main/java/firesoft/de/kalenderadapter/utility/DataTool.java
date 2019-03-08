@@ -174,6 +174,10 @@ public class DataTool extends AsyncTaskLoader<ResultWrapper> implements IErrorCa
 
             // Alle bestehenden Einträge löschen
             cManager.deleteEntries();
+
+            // Liste aktualisieren
+            cManager.loadCalendarEntries();
+
             equalityCheckNeeded = false;
         }
         else {
@@ -184,6 +188,11 @@ public class DataTool extends AsyncTaskLoader<ResultWrapper> implements IErrorCa
         }
 
         int counter = 0;
+
+        // Es kann passieren, dass im ersten Eintrag der events-Liste der "Header" der ical Datei enthalten ist. Jetzt prüfen, ob dies der Fall ist und den Header ggf. entfernen
+        if (events.get(0).contains("BEGIN:VCALENDAR")) {
+            events.remove(0);
+        }
 
         // Die einzelnen Events durchgehen und jeweils einen Kalendereintrag erstellen
         for (String event: events
