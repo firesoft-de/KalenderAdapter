@@ -39,8 +39,10 @@ import firesoft.de.libfirenet.http.HttpWorker;
 import firesoft.de.libfirenet.method.GET;
 import firesoft.de.libfirenet.util.HttpState;
 
-
-public class DataTool extends AsyncTaskLoader<ResultWrapper> implements IErrorCallback {
+/**
+ * Diese Klasse ist als Loader für den Download und das Eintrage der Events zuständig. Über ein IErrorCallback Interface werden Nachrichten an die UI übergeben.
+ */
+public class DataLoader extends AsyncTaskLoader<ResultWrapper> implements IErrorCallback {
 
     //=======================================================
     //=====================VARIABLEN=========================
@@ -72,11 +74,11 @@ public class DataTool extends AsyncTaskLoader<ResultWrapper> implements IErrorCa
      * Instanziert ein neues DataToolkit
      * @param params Parametersatz
      * @param context Context in dem der Loader läuft
-     * @param cManager Ein CalendarManager
+     * @param cManager CalendarManager mit dem Kalenderoperationen durchgeführt werden können
      * @param progress Callback für Fortschrittsberichte an den Nutzer
      * @param managed Gibt an, ob der Loader durch einen Manager verwaltet wird. True = verwaltet, false = eigenständig (aktiviert oder deaktiviert forceLoad())
      */
-    public DataTool(ArrayList<ServerParameter> params, Context context, CalendarManager cManager, MutableLiveData<String> progress, MutableLiveData<Integer> progressValue, MutableLiveData<Integer> progressMax, PreferencesManager pManager, boolean managed) {
+    public DataLoader(ArrayList<ServerParameter> params, Context context, CalendarManager cManager, MutableLiveData<String> progress, MutableLiveData<Integer> progressValue, MutableLiveData<Integer> progressMax, PreferencesManager pManager, boolean managed) {
         super(context);
 
         this.params = params;
@@ -215,7 +217,7 @@ public class DataTool extends AsyncTaskLoader<ResultWrapper> implements IErrorCa
                 switch (response) {
                     case -1:
                         // Irgendwas ist schief gelaufen
-                        Exception e = new Exception("Konnte Eintrag nicht erstellen! Eintragsname: " + entry.getTitle() + " am " + entry.getStartMillis() + " (DataTool.loadIngBackground)");
+                        Exception e = new Exception("Konnte Eintrag nicht erstellen! Eintragsname: " + entry.getTitle() + " am " + entry.getStartMillis() + " (DataLoader.loadIngBackground)");
                         return new ResultWrapper(e);
 
                     case -2:

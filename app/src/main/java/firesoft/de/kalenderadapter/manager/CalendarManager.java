@@ -33,12 +33,15 @@ import firesoft.de.kalenderadapter.R;
 import firesoft.de.kalenderadapter.data.CustomCalendar;
 import firesoft.de.kalenderadapter.data.CustomCalendarEntry;
 import firesoft.de.kalenderadapter.interfaces.IErrorCallback;
-import firesoft.de.kalenderadapter.utility.DataTool;
+import firesoft.de.kalenderadapter.utility.DataLoader;
 
 import static firesoft.de.kalenderadapter.data.CustomCalendarEntry.TimeComparison.HIGHER;
 import static firesoft.de.kalenderadapter.data.CustomCalendarEntry.TimeComparison.LOWER;
 import static firesoft.de.kalenderadapter.manager.CalendarManager.Equality.EQUAL;
 
+/**
+ * Stellt eine Klasse zum Verwalten des aktiven Kalenders und seiner Einträge bereit
+ */
 public class CalendarManager {
 
     //=======================================================
@@ -245,7 +248,7 @@ public class CalendarManager {
 
         // Cursor für den Datenabruf erstellen. Es wird anhand der ID (welche in dem Array mitgeliefert wird) nach einem Event gesucht
         // Es wird zusätzlich die Spalte Deleted geprüft. Wenn diese = 1, dann wurde der Eintrag bereits gelöscht
-        Cursor cur = context.getContentResolver().query(CalendarContract.Events.CONTENT_URI, EVENT_PROJECTION, "(" + Events.ORGANIZER + " = ? AND " + Events.DELETED + " = 0)", new String[]{DataTool.MARKER_FOR_ORGANIZER},
+        Cursor cur = context.getContentResolver().query(CalendarContract.Events.CONTENT_URI, EVENT_PROJECTION, "(" + Events.ORGANIZER + " = ? AND " + Events.DELETED + " = 0)", new String[]{DataLoader.MARKER_FOR_ORGANIZER},
                 null);
 
         boolean moreItemsAvailable = cur.moveToFirst();

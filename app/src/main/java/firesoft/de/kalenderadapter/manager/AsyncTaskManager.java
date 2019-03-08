@@ -30,11 +30,10 @@ import android.support.v4.content.Loader;
 
 import java.util.ArrayList;
 
-import firesoft.de.kalenderadapter.R;
 import firesoft.de.kalenderadapter.data.ResultWrapper;
 import firesoft.de.kalenderadapter.data.ServerParameter;
 import firesoft.de.kalenderadapter.interfaces.IErrorCallback;
-import firesoft.de.kalenderadapter.utility.DataTool;
+import firesoft.de.kalenderadapter.utility.DataLoader;
 import firesoft.de.kalenderadapter.utility.DeleteTaskLoader;
 
 public class AsyncTaskManager implements LoaderManager.LoaderCallbacks<ResultWrapper> {
@@ -116,7 +115,7 @@ public class AsyncTaskManager implements LoaderManager.LoaderCallbacks<ResultWra
         switch (id) {
 
             case MAIN_LOADER:
-                return new DataTool(params,context, calendarManager, progress, progressValue, progressMax, pManager, true);
+                return new DataLoader(params,context, calendarManager, progress, progressValue, progressMax, pManager, true);
 
             case DELETE_LOADER:
                 return new DeleteTaskLoader(context,calendarManager,progress,progressValue,progressMax);
