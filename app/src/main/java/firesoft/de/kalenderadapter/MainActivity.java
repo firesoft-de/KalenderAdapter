@@ -542,7 +542,10 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
      */
     @Override
     public void publishError(String message) {
-        displayMessage(message,Snackbar.LENGTH_LONG);
+        //displayMessage(message,Snackbar.LENGTH_LONG);
+        TextView tv = this.findViewById(R.id.tV_progress);
+        tv.setText(message);
+        switchProgressbarErrorState();
     }
 
     /**

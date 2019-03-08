@@ -130,24 +130,22 @@ public class AsyncTaskManager implements LoaderManager.LoaderCallbacks<ResultWra
     @Override
     public void onLoadFinished(@NonNull Loader<ResultWrapper> loader, ResultWrapper data) {
 
+        // Loader zerstören, da er nicht mehr gebraucht wird und es ansonsten beim Wiederaufrufen der App aus dem Hintergrund (vom Backstack) zu einem ungewollten neustart des Loaders kommen würde.
+        this.loaderManager.destroyLoader(loader.getId());
+
+        if (data == null) {
+            return;
+        }
+
         if (data.getException() != null) {
             errorCallback.publishError(data.getException().getMessage());
             data.getException().printStackTrace();
         }
         else {
-
-//            calendarManager.setEntryIds(data.getIds());
-//            pManager.setEntryIds(calendarManager.getEntryIdsAsString());
-//            pManager.save();
-
             // Erfolgsmeldung abgeben
             errorCallback.publishProgress(data.getResult(),-1,-1);
 
-
         }
-
-        // Loader zerstören, da er nicht mehr gebraucht wird und es ansonsten beim Wiederaufrufen der App aus dem Hintergrund (vom Backstack) zu einem ungewollten neustart des Loaders kommen würde.
-        this.loaderManager.destroyLoader(loader.getId());
 
     }
 

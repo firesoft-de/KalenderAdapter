@@ -33,9 +33,15 @@ public class DeleteTaskLoader extends AsyncTaskLoader<ResultWrapper> implements 
 
         // Neue Liste der hinzugefügten Einträge holen und dann diese Einträge löschen
         cManager.loadCalendarEntries();
-        cManager.deleteEntries();
 
-        return new ResultWrapper(getContext().getString(R.string.info_extinction_successfull));
+        boolean ret = cManager.deleteEntries();
+
+        if (ret) {
+            return new ResultWrapper(getContext().getString(R.string.info_extinction_successfull));
+        }
+        else {
+            return null;
+        }
     }
 
     // region Unwichtige Methoden
