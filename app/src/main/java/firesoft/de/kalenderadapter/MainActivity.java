@@ -163,7 +163,7 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
         setVersion();
 
         // Prüfen, ob der Hintergrundservice läuft oder nicht
-        if (!ServiceUtil.checkServiceIsRunning(this, BackgroundService.class)) {
+        if (!ServiceUtil.isServiceRunning(this)) {
             // UI Switch setzen
             setServiceSwitch(false);
             ((SwitchIconView) this.findViewById(R.id.switch_icon_view)).setIconEnabled(false);
@@ -275,8 +275,7 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
         this.findViewById(R.id.bt_emptyCalendar).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                cManager.deleteEntries();
-//                pManager.setEntryIds("");
+                startDeleteLoader();
             }
         });
 
@@ -291,7 +290,6 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
                 informationDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
                 informationDialog.setCancelable(true);
                 informationDialog.setContentView(R.layout.layout_information_dialog);
-
 
                 ((TextView) informationDialog.findViewById(R.id.info_button)).setText(R.string.info_delete_text);
 
@@ -388,7 +386,7 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
         btCheckServiceAlive.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                boolean res = ServiceUtil.checkServiceIsRunning(getApplicationContext(),BackgroundService.class);
+                boolean res = ServiceUtil.isServiceRunning(getApplicationContext());
                 publishError("Status: " + String.valueOf(res));
             }
         });
@@ -481,7 +479,7 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
         }
 
         // Switch so einstellen, dass der aktuelle Zustand des Service angezeigt wird
-        setServiceSwitch(ServiceUtil.checkServiceIsRunning(this,BackgroundService.class));
+        setServiceSwitch(ServiceUtil.isServiceRunning(this));
 
         Button etSyncFrom = this.findViewById(R.id.service_sync_from);
         try {
@@ -499,7 +497,7 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
             return;
         }
 
-        // Einstellungen für die Erinnerungen abrufen
+        // Einstellungen abrufen
         ((CheckBox) this.findViewById(R.id.cB_set_reminder)).setChecked(pManager.isReminderActivated());
         ((CheckBox) this.findViewById(R.id.cB_inteligent_reminder)).setChecked(pManager.isInteligentReminderActivated());
 
@@ -544,7 +542,10 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
      */
     @Override
     public void publishError(String message) {
-        displayMessage(message,Snackbar.LENGTH_LONG);
+        //displayMessage(message,Snackbar.LENGTH_LONG);
+        TextView tv = this.findViewById(R.id.tV_progress);
+        tv.setText(message);
+        switchProgressbarErrorState();
     }
 
     /**
@@ -585,6 +586,32 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
         if (pB.isIndeterminate() != indeterminate) {
             pB.setIndeterminate(indeterminate);
         }
+    }
+
+    /**
+     * Versetzt die Fortschrittsanzeige wieder in den Ausgangszustand (Progress = 0 + determinate und Statustext = "")
+     */
+    public void resetProgressbar() {
+        ProgressBar pB = this.findViewById(R.id.progressBar);
+        TextView tv = this.findViewById(R.id.tV_progress);
+
+        tv.setText("");
+        pB.setProgress(0);
+        pB.setIndeterminate(false);
+        pB.getProgressDrawable().setColorFilter(getResources().getColor(R.color.colorPrimary), android.graphics.PorterDuff.Mode.SRC_IN);
+    }
+
+    /**
+     * Versetzt die Progressbar in die Fehlerdarstellung (rot, determinate und Progress = 100
+     */
+    public void switchProgressbarErrorState() {
+        ProgressBar pB = this.findViewById(R.id.progressBar);
+
+        pB.setIndeterminate(false);
+        pB.setProgress(100);
+        pB.setMax(100);
+        pB.getProgressDrawable().setColorFilter(getResources().getColor(R.color.error), android.graphics.PorterDuff.Mode.SRC_IN);
+
     }
 
     /**
@@ -805,9 +832,14 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
     }
 
     /**
-     * Startet den Hintergrundservice neu.
+     * Startet den Hintergrundservice neu. Falls er nicht läuft, wird er nicht gestartet!
      */
     private void restartService() {
+
+        // Prüfen, ob der Service läuft
+        if (!ServiceUtil.isServiceRunning(getApplicationContext())) {
+
+        }
 
         // Hintergrundservice stoppen
         ServiceUtil.stopService(getApplicationContext());
@@ -829,13 +861,18 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
      */
     private void startLoader() {
 
+        // Fortschrittsanzeige zurücksetzen
+        resetProgressbar();
+
         EditText user = this.findViewById(R.id.eT_user);
         EditText password = this.findViewById(R.id.et_pw);
         EditText url = this.findViewById(R.id.eT_url);
 
         // Daten aus den TextViews abfragen
         if (user.getText().toString().equals("") || password.getText().toString().equals("") || url.getText().toString().equals("")) {
-            displayMessage("Bitte fülle alle Felder aus!", Snackbar.LENGTH_LONG);
+            //displayMessage(getResources().getString(R.string.error_fields_not_filled), Snackbar.LENGTH_LONG);
+            publishProgress(getResources().getString(R.string.error_fields_not_filled),0,1);
+            switchProgressbarErrorState();
             return;
         }
 
@@ -859,6 +896,22 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
 
     }
 
+    /**
+     * Startet den AsyncTaskLoader der für das Löschen von Einträgen zuständig ist
+     */
+    private void startDeleteLoader() {
+
+        // Fortschrittsanzeige zurücksetzen
+        resetProgressbar();
+
+        if (taskManager == null) {
+            taskManager = new AsyncTaskManager(getSupportLoaderManager(), getApplicationContext(),this,cManager, pManager, messageFromBackground, progressValue,progressMax);
+        }
+
+        taskManager.startDelete(this);
+
+    }
+
     private void setServiceSwitch(boolean checked) {
         ((Switch) this.findViewById(R.id.switch_service)).setChecked(checked);
         this.findViewById(R.id.service_sync_interval).setEnabled(checked);
@@ -870,7 +923,7 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
      */
     private void change_service_indicator() {
 
-        boolean res = ServiceUtil.checkServiceIsRunning(getApplicationContext(),BackgroundService.class);
+        boolean res = ServiceUtil.isServiceRunning(getApplicationContext());
         SwitchIconView siv = ((SwitchIconView) this.findViewById(R.id.switch_icon_view));
 
         if (siv.isIconEnabled() != res) {

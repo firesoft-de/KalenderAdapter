@@ -18,7 +18,6 @@ package firesoft.de.kalenderadapter.service;
 import android.app.Service;
 import android.arch.lifecycle.MutableLiveData;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.os.IBinder;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -31,17 +30,15 @@ import java.util.ArrayList;
 import firesoft.de.kalenderadapter.BuildConfig;
 import firesoft.de.kalenderadapter.data.ResultWrapper;
 import firesoft.de.kalenderadapter.data.ServerParameter;
-import firesoft.de.kalenderadapter.interfaces.IErrorCallback;
-import firesoft.de.kalenderadapter.manager.AsyncTaskManager;
 import firesoft.de.kalenderadapter.manager.CalendarManager;
 import firesoft.de.kalenderadapter.manager.PreferencesManager;
-import firesoft.de.kalenderadapter.utility.DataTool;
+import firesoft.de.kalenderadapter.utility.DataLoader;
 
 public class BackgroundService extends Service implements Loader.OnLoadCompleteListener<ResultWrapper>{
 
     PreferencesManager pManager;
     CalendarManager cManager;
-    DataTool dataTool;
+    DataLoader dataLoader;
 
     @Nullable
     @Override
@@ -83,16 +80,16 @@ public class BackgroundService extends Service implements Loader.OnLoadCompleteL
         param = new ServerParameter("pw", pManager.getPassword());
         parameters.add(param);
 
-        // Kommunikationskanal mit Backgroundthreads. Wird im BackgroundService nicht benötigt. Muss aber dem DataTool mitgegeben werden.
+        // Kommunikationskanal mit Backgroundthreads. Wird im BackgroundService nicht benötigt. Muss aber dem DataLoader mitgegeben werden.
         MutableLiveData<String> messageFromBackground = new MutableLiveData<>();
         MutableLiveData<Integer> valFromBackground = new MutableLiveData<>();
         MutableLiveData<Integer> maxFromBackground = new MutableLiveData<>();
 
-        dataTool = new DataTool(parameters,getApplicationContext(),cManager,messageFromBackground, valFromBackground, maxFromBackground, pManager,false);
+        dataLoader = new DataLoader(parameters,getApplicationContext(),cManager,messageFromBackground, valFromBackground, maxFromBackground, pManager,false);
 
         // Basierend auf https://stackoverflow.com/questions/8696146/can-you-use-a-loadermanager-from-a-service/24393728
-        dataTool.registerListener(1,this); // 1 = Marker für MainLoader (im AsyncTaskManager definiert)
-        dataTool.startLoading();
+        dataLoader.registerListener(1,this); // 1 = Marker für MainLoader (im AsyncTaskManager definiert)
+        dataLoader.startLoading();
 
         return super.onStartCommand(intent, flags, startId);
     }
@@ -125,10 +122,10 @@ public class BackgroundService extends Service implements Loader.OnLoadCompleteL
     public void onDestroy() {
 
         // Loader stoppen
-        if (dataTool != null) {
-            dataTool.unregisterListener(this);
-            dataTool.cancelLoad();
-            dataTool.stopLoading();
+        if (dataLoader != null) {
+            dataLoader.unregisterListener(this);
+            dataLoader.cancelLoad();
+            dataLoader.stopLoading();
         }
 
     }

@@ -34,14 +34,15 @@ import firesoft.de.kalenderadapter.data.ServerParameter;
 import firesoft.de.kalenderadapter.interfaces.IErrorCallback;
 import firesoft.de.kalenderadapter.manager.CalendarManager;
 import firesoft.de.kalenderadapter.manager.PreferencesManager;
-import firesoft.de.libfirenet.authentication.*;
 import firesoft.de.libfirenet.authentication.Digest;
 import firesoft.de.libfirenet.http.HttpWorker;
 import firesoft.de.libfirenet.method.GET;
 import firesoft.de.libfirenet.util.HttpState;
 
-
-public class DataTool extends AsyncTaskLoader<ResultWrapper> implements IErrorCallback {
+/**
+ * Diese Klasse ist als Loader für den Download und das Eintrage der Events zuständig. Über ein IErrorCallback Interface werden Nachrichten an die UI übergeben.
+ */
+public class DataLoader extends AsyncTaskLoader<ResultWrapper> implements IErrorCallback {
 
     //=======================================================
     //=====================VARIABLEN=========================
@@ -73,11 +74,11 @@ public class DataTool extends AsyncTaskLoader<ResultWrapper> implements IErrorCa
      * Instanziert ein neues DataToolkit
      * @param params Parametersatz
      * @param context Context in dem der Loader läuft
-     * @param cManager Ein CalendarManager
+     * @param cManager CalendarManager mit dem Kalenderoperationen durchgeführt werden können
      * @param progress Callback für Fortschrittsberichte an den Nutzer
      * @param managed Gibt an, ob der Loader durch einen Manager verwaltet wird. True = verwaltet, false = eigenständig (aktiviert oder deaktiviert forceLoad())
      */
-    public DataTool(ArrayList<ServerParameter> params, Context context, CalendarManager cManager, MutableLiveData<String> progress, MutableLiveData<Integer> progressValue, MutableLiveData<Integer> progressMax, PreferencesManager pManager, boolean managed) {
+    public DataLoader(ArrayList<ServerParameter> params, Context context, CalendarManager cManager, MutableLiveData<String> progress, MutableLiveData<Integer> progressValue, MutableLiveData<Integer> progressMax, PreferencesManager pManager, boolean managed) {
         super(context);
 
         this.params = params;
@@ -170,17 +171,15 @@ public class DataTool extends AsyncTaskLoader<ResultWrapper> implements IErrorCa
         // Prüfen, ob die bestehenden Einträge überschrieben werden sollen. In diesem Fall können jetzt alle Einträge gelöscht und die neuen direkt eingefügt werden. Das ist einfacher, als bei allen zu prüfen, ob sich etwas geändert hat.
         if (pManager.isReplaceExistingActivated()) {
 
-//            // Prüfen, ob bereits Einträge geladen wurden. Falls dies nicht der Fall ist, sollte dies jetzt nachgeholt werden. Es kann sonst zu Fehlern in .deleteEntries() kommen.
-//            if (cManager.getEntryIds() == null ||cManager.getEntryIds().size() == 0) {
-//                cManager.loadCalendarEntries();
-//            }
-
             // Es sollte immer eine aktuelle Liste gezogen werden
             cManager.loadCalendarEntries();
 
             // Alle bestehenden Einträge löschen
             cManager.deleteEntries();
-            //pManager.setEntryIds("");
+
+            // Liste aktualisieren
+            cManager.loadCalendarEntries();
+
             equalityCheckNeeded = false;
         }
         else {
@@ -191,6 +190,11 @@ public class DataTool extends AsyncTaskLoader<ResultWrapper> implements IErrorCa
         }
 
         int counter = 0;
+
+        // Es kann passieren, dass im ersten Eintrag der events-Liste der "Header" der ical Datei enthalten ist. Jetzt prüfen, ob dies der Fall ist und den Header ggf. entfernen
+        if (events.get(0).contains("BEGIN:VCALENDAR")) {
+            events.remove(0);
+        }
 
         // Die einzelnen Events durchgehen und jeweils einen Kalendereintrag erstellen
         for (String event: events
@@ -213,7 +217,7 @@ public class DataTool extends AsyncTaskLoader<ResultWrapper> implements IErrorCa
                 switch (response) {
                     case -1:
                         // Irgendwas ist schief gelaufen
-                        Exception e = new Exception("Konnte Eintrag nicht erstellen! Eintragsname: " + entry.getTitle() + " am " + entry.getStartMillis() + " (DataTool.loadIngBackground)");
+                        Exception e = new Exception("Konnte Eintrag nicht erstellen! Eintragsname: " + entry.getTitle() + " am " + entry.getStartMillis() + " (DataLoader.loadIngBackground)");
                         return new ResultWrapper(e);
 
                     case -2:
@@ -243,7 +247,7 @@ public class DataTool extends AsyncTaskLoader<ResultWrapper> implements IErrorCa
         }
 
         // Liste mit den Event-IDs zurückgeben
-        return new ResultWrapper(eventIds);
+        return new ResultWrapper(eventIds,getContext().getString(R.string.info_import_successfull));
     }
 
     @Override

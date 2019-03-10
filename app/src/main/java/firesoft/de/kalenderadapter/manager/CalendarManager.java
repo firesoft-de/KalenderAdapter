@@ -33,12 +33,15 @@ import firesoft.de.kalenderadapter.R;
 import firesoft.de.kalenderadapter.data.CustomCalendar;
 import firesoft.de.kalenderadapter.data.CustomCalendarEntry;
 import firesoft.de.kalenderadapter.interfaces.IErrorCallback;
-import firesoft.de.kalenderadapter.utility.DataTool;
+import firesoft.de.kalenderadapter.utility.DataLoader;
 
 import static firesoft.de.kalenderadapter.data.CustomCalendarEntry.TimeComparison.HIGHER;
 import static firesoft.de.kalenderadapter.data.CustomCalendarEntry.TimeComparison.LOWER;
 import static firesoft.de.kalenderadapter.manager.CalendarManager.Equality.EQUAL;
 
+/**
+ * Stellt eine Klasse zum Verwalten des aktiven Kalenders und seiner Einträge bereit
+ */
 public class CalendarManager {
 
     //=======================================================
@@ -196,8 +199,7 @@ public class CalendarManager {
 
         ArrayList<CustomCalendarEntry> entries = new ArrayList<>();
 
-        ContentResolver cr = context.getContentResolver();
-
+        // Wenn keine ID's gespeichert wurden, können Einträge nur über den Marker gefunden werden
         if (entryIds.size() == 0) {
             return getExistingEntriesByMarker();
         }
@@ -206,7 +208,8 @@ public class CalendarManager {
                 ) {
 
             // Cursor für den Datenabruf erstellen. Es wird anhand der ID (welche in dem Array mitgeliefert wird) nach einem Event gesucht
-            Cursor cur = cr.query(CalendarContract.Events.CONTENT_URI, EVENT_PROJECTION, Events._ID + " = ?", new String[]{Integer.toString(id)},
+            // Es wird zusätzlich die Spalte Deleted geprüft. Wenn diese = 1, dann wurde der Eintrag bereits gelöscht
+            Cursor cur = context.getContentResolver().query(CalendarContract.Events.CONTENT_URI, EVENT_PROJECTION, "(" + Events._ID + " = ?) AND (" + Events.CALENDAR_ID + " = " + activeCalendar.getId() + " AND " + Events.DELETED + " = 0)", new String[]{Integer.toString(id)},
                     null);
 
             if (cur != null && cur.moveToFirst()) {
@@ -242,10 +245,10 @@ public class CalendarManager {
     private ArrayList<CustomCalendarEntry> getExistingEntriesByMarker() throws SecurityException {
 
         ArrayList<CustomCalendarEntry> entries = new ArrayList<>();
-        ContentResolver cr = context.getContentResolver();
 
         // Cursor für den Datenabruf erstellen. Es wird anhand der ID (welche in dem Array mitgeliefert wird) nach einem Event gesucht
-        Cursor cur = cr.query(CalendarContract.Events.CONTENT_URI, EVENT_PROJECTION, Events.ORGANIZER + " = ?", new String[]{DataTool.MARKER_FOR_ORGANIZER},
+        // Es wird zusätzlich die Spalte Deleted geprüft. Wenn diese = 1, dann wurde der Eintrag bereits gelöscht
+        Cursor cur = context.getContentResolver().query(CalendarContract.Events.CONTENT_URI, EVENT_PROJECTION, "(" + Events.ORGANIZER + " = ? AND " + Events.DELETED + " = 0)", new String[]{DataLoader.MARKER_FOR_ORGANIZER},
                 null);
 
         boolean moreItemsAvailable = cur.moveToFirst();
@@ -264,7 +267,6 @@ public class CalendarManager {
             entry.setEndMillis(Long.valueOf(cur.getString(EVENT_DTEND)));
             entry.setTitle(cur.getString(EVENT_TITLE));
 
-            // Prüfen, ob der Eintrag bereits vorhaden ist
             entries.add(entry);
 
             moreItemsAvailable = cur.moveToNext();
@@ -449,14 +451,16 @@ public class CalendarManager {
 
     /**
      * Löscht die übergebenen Eventids aus dem aktiven Kalender
+     * Anmerkung: Das Löschen als Anwendung (ohne SyncAdapter) führt nur dazu, dass die Spalte "Deleted" auf 1 gesetzt wird. Dies signalisiert einem SyncAdapter, dass die Zeile gelöscht wurde. Der Eintrag bleibt aber in der Datenbank!
+     * @return true falls Löschen erfolgreich verlauf ist, ansonsten false. Fehlerausgabe wird direkt durch die Funktion organisiert
      */
-    public void deleteEntries() {
+    public boolean deleteEntries() {
 
         int counter = 0;
 
         // Falls entryIds == null ist, muss beendet werden, da ansonsten Fehler auftreten.
         if (entryIds == null) {
-            return;
+            return false;
         }
 
         if (entryIds.size() != 0) {
@@ -465,9 +469,8 @@ public class CalendarManager {
                     ) {
 
                 // https://developer.android.com/guide/topics/providers/calendar-provider.html#attendees
-                ContentResolver cr = context.getContentResolver();
                 Uri deleteUri = ContentUris.withAppendedId(Events.CONTENT_URI, id);
-                int rows = cr.delete(deleteUri, null, null);
+                int rows = context.getContentResolver().delete(deleteUri, null, null);
 
                 counter++;
                 if (errorCallback != null) {
@@ -477,10 +480,12 @@ public class CalendarManager {
         } else {
             if (errorCallback != null) {
                 errorCallback.publishProgress("Keine Termine zum Löschen vorhanden!",1,1);
+                return false;
             }
         }
 
         entryIds.clear();
+        return true;
 
     }
 

@@ -15,6 +15,8 @@ package firesoft.de.kalenderadapter.data;
 
 import java.util.ArrayList;
 
+import javax.xml.transform.Result;
+
 /**
  * Wrapperklasse für die Rückgabewerte des DataTools
  */
@@ -26,6 +28,7 @@ public class ResultWrapper {
 
     private final ArrayList<Integer> entryIds;
     private final Exception exception;
+    private final String result;
 
     //=======================================================
     //====================KONSTRUKTOR========================
@@ -36,9 +39,16 @@ public class ResultWrapper {
      *
      * @param entryIds Das Datenpaket welches abgerufen wurde
      */
-    public ResultWrapper(ArrayList<Integer> entryIds) {
+    public ResultWrapper(ArrayList<Integer> entryIds, String result) {
         this.entryIds = entryIds;
+        this.result = result;
         this.exception = null;
+    }
+
+    public ResultWrapper(String result) {
+        this.result = result;
+        this.exception = null;
+        this.entryIds = null;
     }
 
     /**
@@ -49,6 +59,7 @@ public class ResultWrapper {
     public ResultWrapper(Exception exception) {
         this.entryIds = null;
         this.exception = exception;
+        this.result = "";
     }
 
     //=======================================================
@@ -70,5 +81,10 @@ public class ResultWrapper {
     public Exception getException() {
         return exception;
     }
+
+    /**
+     * Gibt das Ergebnis (als String aus)
+     */
+    public String getResult() {return result;}
 
 }
