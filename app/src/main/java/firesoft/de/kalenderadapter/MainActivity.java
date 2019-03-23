@@ -325,17 +325,15 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
         switch_service.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
-                pManager.setSyncDisabled(!checked); // Ist hier etwas unglücklich gelöst. Der PreferncesManager speichert, ob der Nutzer den Service deaktiviert hat (true = deaktiviert). Der Button gibt aber an, ob der Service aktiv ist (true = aktiv)
-                pManager.save();
 
+                // Etwas unschön gelöst: Beim Appstart die Änderung abfangen die entsteht wenn die gespeicherte Einstellung in die UI übertragen wird
                 if (blockServiceStart) {
-
                     blockServiceStart = false;
                     return;
-
                 }
 
-                //TODO: Rausnehmen oder anders lösen -> Führt wahrscheinlich zu doppeltem ausführen des Servicestart
+                pManager.setSyncDisabled(!checked); // Ist hier etwas unglücklich gelöst. Der PreferencesManager speichert, ob der Nutzer den Service deaktiviert hat (true = deaktiviert). Der Button gibt aber an, ob der Service aktiv ist (true = aktiv)
+                pManager.save();
 
                 // Service je nach Nutzerauswahl starten oder stoppen
                 if (!checked) {
@@ -479,7 +477,7 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
         }
 
         // Switch so einstellen, dass der aktuelle Zustand des Service angezeigt wird
-        setServiceSwitch(ServiceUtil.isServiceRunning(this));
+//        setServiceSwitch(ServiceUtil.isServiceRunning(this));
 
         Button etSyncFrom = this.findViewById(R.id.service_sync_from);
         try {
@@ -723,8 +721,7 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
 
         newFragment.setArguments(b);
         newFragment.show(getSupportFragmentManager(), "start");
-
-        }
+    }
 
     /**
      * Zeigt einen Auswahldialog für Zeiten an.
@@ -837,21 +834,20 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
     private void restartService() {
 
         // Prüfen, ob der Service läuft
-        if (!ServiceUtil.isServiceRunning(getApplicationContext())) {
+        if (ServiceUtil.isServiceRunning(getApplicationContext())) {
+
+            // Hintergrundservice stoppen
+            ServiceUtil.stopService(getApplicationContext());
+
+            // Service neustarten
+            try {
+                ServiceUtil.startService(getApplicationContext(), pManager.getSyncFrom(),pManager.getSyncInterval());
+            } catch (ParseException e) {
+                publishError(getString(R.string.error_service_times_unchangeable));
+                e.printStackTrace();
+            }
 
         }
-
-        // Hintergrundservice stoppen
-        ServiceUtil.stopService(getApplicationContext());
-
-        // Service neustarten
-        try {
-            ServiceUtil.startService(getApplicationContext(), pManager.getSyncFrom(),pManager.getSyncInterval());
-        } catch (ParseException e) {
-            publishError(getString(R.string.error_service_times_unchangeable));
-            e.printStackTrace();
-        }
-
         change_service_indicator();
 
     }

@@ -20,6 +20,7 @@ import android.content.Context;
 import android.net.Uri;
 import android.provider.CalendarContract;
 import android.support.v4.content.AsyncTaskLoader;
+import android.util.Log;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -27,6 +28,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Objects;
 
+import firesoft.de.kalenderadapter.BuildConfig;
 import firesoft.de.kalenderadapter.R;
 import firesoft.de.kalenderadapter.data.CustomCalendarEntry;
 import firesoft.de.kalenderadapter.data.ResultWrapper;
@@ -55,16 +57,6 @@ public class DataLoader extends AsyncTaskLoader<ResultWrapper> implements IError
     private MutableLiveData<Integer> progressMax;
     private boolean managed;
     private PreferencesManager pManager;
-
-    //=======================================================
-    //=====================KONSTANTEN========================
-    //=======================================================
-
-    private final String reminder_two_days = String.valueOf(2*24*60); // 2 Tag * 24 Stunden * 60 Minuten
-    private final String reminder_one_days = String.valueOf(24*60); // 1 Tag * 24 Stunden * 60 Minuten
-    private final String early_reminder = String.valueOf(7*24*60); // 7 Tage * 24 Stunden * 60 Minuten
-
-    public static final String MARKER_FOR_ORGANIZER = "kalenderadapter@firesoft.de";
 
     //=======================================================
     //====================KONSTRUKTOR========================
@@ -171,14 +163,8 @@ public class DataLoader extends AsyncTaskLoader<ResultWrapper> implements IError
         // Prüfen, ob die bestehenden Einträge überschrieben werden sollen. In diesem Fall können jetzt alle Einträge gelöscht und die neuen direkt eingefügt werden. Das ist einfacher, als bei allen zu prüfen, ob sich etwas geändert hat.
         if (pManager.isReplaceExistingActivated()) {
 
-            // Es sollte immer eine aktuelle Liste gezogen werden
-            cManager.loadCalendarEntries();
-
             // Alle bestehenden Einträge löschen
             cManager.deleteEntries();
-
-            // Liste aktualisieren
-            cManager.loadCalendarEntries();
 
             equalityCheckNeeded = false;
         }
@@ -211,7 +197,7 @@ public class DataLoader extends AsyncTaskLoader<ResultWrapper> implements IError
             if (entry != null && entry.getEntryState() != CustomCalendarEntry.EntryState.DECLINED && entry.getEntryState() != CustomCalendarEntry.EntryState.CANCELED) {
                 // Wenn der Eintrag abgelehnt oder gecancelt wurde, muss er auch nicht mehr zum Kalender hinzugefügt werden
 
-                int response = addCalenderEntry(entry, equalityCheckNeeded, pManager.isReminderActivated(),pManager.isInteligentReminderActivated());
+                int response = cManager.addCalenderEntry(entry, equalityCheckNeeded, pManager.isReminderActivated(),pManager.isInteligentReminderActivated());
 
                 // Antwort auswerten
                 switch (response) {
@@ -229,7 +215,7 @@ public class DataLoader extends AsyncTaskLoader<ResultWrapper> implements IError
                         equalityCheckNeeded = false;
 
                         // Ersten Eintrag nochmal hinzufügen, da er bei der Antwort -3 nicht bearbeitet wurde
-                        eventIds.add(addCalenderEntry(entry, false, pManager.isReminderActivated(),pManager.isInteligentReminderActivated()));
+                        eventIds.add(cManager.addCalenderEntry(entry, false, pManager.isReminderActivated(),pManager.isInteligentReminderActivated()));
                         break;
 
                     default:
@@ -276,158 +262,14 @@ public class DataLoader extends AsyncTaskLoader<ResultWrapper> implements IError
 
     }
 
-    /**
-     * Fügt einen neuen Eintrag in den Kalender ein
-     * @param entry Ein Abschnitt eines ICS Strings
-     * @param checkIfExists Gibt an, ob vor dem Hinzufügen des Eintrags geprüft werden soll, ob der Eintrag bereits existiert
-     * @param setReminder Gibt an, ob für die Einträge eine Erinnerung hinzugefügt werden soll (falls keine andere eingetragen wurde)
-     * @param useInteligentReminder Gibt an, ob die Erinnerungen in Abhängigkeit des (Rückmelde-)Status gesetzt werden sollen
-     * @return -1, falls der Eintrag nicht hinzugefügt wurde, -2 falls der Eintrag schon vorhanden ist, -3 falls keine Vergleichsdaten vorliegen
-     */
-    private int addCalenderEntry(CustomCalendarEntry entry, boolean checkIfExists, boolean setReminder, boolean useInteligentReminder) {
 
-        ContentResolver cr = getContext().getContentResolver();
-
-        ContentValues values = new ContentValues();
-        values.put(CalendarContract.Events.DTSTART, entry.getStartMillis());
-        values.put(CalendarContract.Events.DTEND, entry.getEndMillis());
-        values.put(CalendarContract.Events.TITLE, entry.getTitle());
-        values.put(CalendarContract.Events.DESCRIPTION, entry.getDescription());
-        values.put(CalendarContract.Events.EVENT_LOCATION, entry.getLocation());
-        values.put(CalendarContract.Events.CALENDAR_ID, entry.getEntryID());
-        values.put(CalendarContract.Events.EVENT_TIMEZONE, entry.getTimezone());
-
-        // Den Zeitraum des Eintrags als Beschäftigt markieren
-        values.put(CalendarContract.Events.AVAILABILITY, CalendarContract.Events.AVAILABILITY_BUSY);
-
-        // Die Spalte ORGANIZER wird als Marker verwendet. Durch diese kann die App erkennen, ob ein Eintrag von ihr angelegt wurde.
-        values.put(CalendarContract.Events.ORGANIZER, MARKER_FOR_ORGANIZER);
-
-        // Prüfen, ob der Eintrag bereits hinzugefügt wurde
-        if (checkIfExists) { // Wenn auf vorhandensein geprüft werden soll. Ansonsten wird übersprungen
-            switch (cManager.checkEntryExists(entry)) {
-
-                case EQUAL:
-                    return -2;
-
-                case UNKNOWN:
-                    // Der Eintrag ist unbekannt. Also wird hier nichts getan und die Switch Anweisung übersprungen
-                    break;
-
-                case NO_REFERENCE_VALUE:
-                    return -3;
-            }
-        }
-
-        // Eintrag in den Kalender einfügen
-        Uri uri;
-        try {
-            uri = cr.insert(CalendarContract.Events.CONTENT_URI, values);
-        } catch (SecurityException e) {
-            e.printStackTrace();
-            publishError("Eine Sicherheitsausnahme ist aufgertreten! (CalendarManager.addCalenderEntry");
-            return -1;
-        }
-
-        // ID des letzten Eintrags abrufen
-        int eventID = -1;
-        if (uri != null) {
-            eventID = Integer.parseInt(uri.getLastPathSegment());
-        }
-
-        // Erinnerungen hinzufügen, falls gewünscht
-        // Basierend auf https://www.quora.com/How-do-I-programmatically-set-a-reminder-message-for-a-particular-date-in-Android
-        if (setReminder && uri != null) {
-
-            int attachResponse = attachReminders(entry, cr, eventID, useInteligentReminder);
-            if (attachResponse < 0) {
-                values.put(CalendarContract.Events.HAS_ALARM, false);
-            }
-            else {
-                values.put(CalendarContract.Events.HAS_ALARM, true);
-            }
-
-        }
-
-        return eventID;
-
-    }
 
     // endregion
 
 
     // region Hilfsmethoden für Terminerinnerungen
 
-    /**
-     * Fügt einem Kalendereintrag Erinnerungen hinzu. Dabei wird die Auswahl des Nutzers berücksichtigt.
-     * @param entry Eintrag der hinzugefügt wird
-     * @param cr ContentResolver der zum hinzufügen des Eintrags verwendet wird
-     * @param eventID ID des zu bearbeitenden Kalendereintrags
-     * @param useInteligentReminder Gibt an, ob die Erinnerungen in Abhängigkeit des (Rückmelde-)Status gesetzt werden sollen
-     * @return -1 falls es beim Einfügen des Eintrags zu einem Fehler gekommen ist, >= 0 falls erfolgreich
-     */
-    private int attachReminders(CustomCalendarEntry entry, ContentResolver cr, int eventID, boolean useInteligentReminder) {
 
-        // Erinnerung erstellen und die ID des zugehörigen Events eintragen
-        ArrayList<ContentValues> reminders = new ArrayList<>();
-        // Erinnerungsart einfügen. Es wird nur DEFAULT und ALARM unterstützt.
-
-        // Welche Art von Erinnerung soll hinzugefügt werden? Standardmäßig oder intelligent?
-        if (useInteligentReminder) {
-            ContentValues reminder;
-
-            switch (entry.getEntryState()) {
-                case OPEN:
-                    // Erinnerung eine Woche zwei Tage und einen Tag vorher
-                    reminder = createNewReminder(eventID);
-                    reminder.put(CalendarContract.Reminders.MINUTES,early_reminder);
-                    reminders.add(reminder);
-                    // Kein break, da die nachfolgenden Einträge auch benötigt werden!
-
-                case CONFIRMED:
-                    // Erinnerung zwei und einen Tage vorher reicht aus
-                    reminder = createNewReminder(eventID);
-                    reminder.put(CalendarContract.Reminders.MINUTES,reminder_two_days);
-                    reminders.add(reminder);
-
-                    reminder = createNewReminder(eventID);
-                    reminder.put(CalendarContract.Reminders.MINUTES,reminder_one_days);
-                    reminders.add(reminder);
-                    break;
-            }
-        }
-        else {
-            // Einfache Erinnerung zwei Tage vorher hinzufügen
-            ContentValues reminder = createNewReminder(eventID);
-            reminder.put(CalendarContract.Reminders.MINUTES,reminder_two_days);
-            reminders.add(reminder);
-        }
-
-        // Alle Erinnerungen hinzufügen
-        for (ContentValues reminder: reminders
-                ) {
-            try {
-                cr.insert(CalendarContract.Reminders.CONTENT_URI, reminder);
-            } catch (SecurityException e) {
-                e.printStackTrace();
-                publishError(getContext().getString(R.string.error_addCalendarEntry));
-                return -1;
-            }
-        }
-
-        return 1;
-
-    }
-
-    /**
-     * Hilfsmethode die einen neuen ContentValue erzeugt der einen Reminder enthält
-     */
-    private ContentValues createNewReminder(int entryId) {
-        ContentValues reminder = new ContentValues();
-        reminder.put(CalendarContract.Reminders.EVENT_ID, entryId);
-        reminder.put(CalendarContract.Reminders.METHOD, CalendarContract.Reminders.METHOD_DEFAULT);
-        return reminder;
-    }
 
     // endregion
 

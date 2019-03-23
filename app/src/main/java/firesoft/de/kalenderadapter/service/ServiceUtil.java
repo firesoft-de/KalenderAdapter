@@ -58,7 +58,7 @@ public class ServiceUtil extends BroadcastReceiver {
     /**
      *
      * @param context Context des Aufrufs
-     * @param start Startzeit in Millisekunden (gezählt von Epoch)
+     * @param start Startzeit in Millisekunden (gezählt von Mitternacht)
      * @param interval Ausführungsintervall in Millisekunden
      */
     public static void startService(Context context, long start, long interval) throws ParseException{
@@ -72,8 +72,11 @@ public class ServiceUtil extends BroadcastReceiver {
         long attachedStart = DateAndTimeConversion.attachEpoch(start);
 
         if (BuildConfig.DEBUG) {
-            Log.d("LOG_SERVICE", "Starting Timestamp: " + String.valueOf(attachedStart) + " | " + start);
-            Log.d("LOG_SERVICE", "Interval: " + String.valueOf(interval));
+            Log.d("LOG_SERVICE", "Service time set!");
+            Log.d("LOG_SERVICE", "");
+            Log.d("LOG_SERVICE", "Timestamp: " + String.valueOf(attachedStart) + " | " + String.valueOf(attachedStart/1000));
+            Log.d("LOG_SERVICE", "Timestamp since midnight: " + start + " | " + String.valueOf(start/1000));
+            Log.d("LOG_SERVICE", "Interval: " + String.valueOf(interval)+ " | " + String.valueOf(interval/1000));
         }
 
         //AlarmManager aktivieren
@@ -109,7 +112,17 @@ public class ServiceUtil extends BroadcastReceiver {
      */
     public static boolean isServiceRunning(Context context) {
         //https://stackoverflow.com/questions/4556670/how-to-check-if-alarmmanager-already-has-an-alarm-set
-        return (PendingIntent.getService(context, 0, new Intent(context,BackgroundService.class), PendingIntent.FLAG_NO_CREATE) != null);
+        boolean res = (PendingIntent.getService(context, 0, new Intent(context,BackgroundService.class), PendingIntent.FLAG_NO_CREATE) != null);
+
+        if (res && BuildConfig.DEBUG) {
+            Log.d("LOG_SERVICE", "Checked service state. Current: active!");
+
+        }
+        else if (!res && BuildConfig.DEBUG) {
+            Log.d("LOG_SERVICE", "Checked service state. Current: not active!");
+        }
+
+        return res;
     }
 
 }

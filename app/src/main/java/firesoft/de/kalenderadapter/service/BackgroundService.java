@@ -50,7 +50,7 @@ public class BackgroundService extends Service implements Loader.OnLoadCompleteL
     public int onStartCommand(Intent intent, int flags, int startId) {
 
         if (BuildConfig.DEBUG) {
-            Log.d("LOG_SERVICE", "Service run!");
+            Log.d("LOG_SERVICE", "Service activated!");
         }
 
         // PreferencesManager starten
@@ -108,6 +108,10 @@ public class BackgroundService extends Service implements Loader.OnLoadCompleteL
             // Es ist ein Fehler aufgetreten. Machen kann man jetzt aber nicht wirklich viel.
             Toast.makeText(getApplicationContext(), "KalenderAdapter: Während der Hintergrundsynchronisation ist ein Fehler aufgetreten! Fehlermeldung: " + data.getException().getMessage(), Toast.LENGTH_LONG).show();
             return;
+        }
+
+        if (BuildConfig.DEBUG) {
+            Log.d("LOG_SERVICE", "Service completed!");
         }
 
         // Kein Fehler ist aufgetreten. Die IDs werden in den Preferences Manager geschrieben und gespeichert.
