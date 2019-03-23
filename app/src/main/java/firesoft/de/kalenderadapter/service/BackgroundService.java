@@ -15,9 +15,18 @@
 
 package firesoft.de.kalenderadapter.service;
 
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.arch.lifecycle.MutableLiveData;
+import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Color;
+import android.os.Build;
 import android.os.IBinder;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -28,6 +37,8 @@ import android.widget.Toast;
 import java.util.ArrayList;
 
 import firesoft.de.kalenderadapter.BuildConfig;
+import firesoft.de.kalenderadapter.MainActivity;
+import firesoft.de.kalenderadapter.R;
 import firesoft.de.kalenderadapter.data.ResultWrapper;
 import firesoft.de.kalenderadapter.data.ServerParameter;
 import firesoft.de.kalenderadapter.manager.CalendarManager;
@@ -112,6 +123,7 @@ public class BackgroundService extends Service implements Loader.OnLoadCompleteL
 
         if (BuildConfig.DEBUG) {
             Log.d("LOG_SERVICE", "Service completed!");
+            buildNotification();
         }
 
         // Kein Fehler ist aufgetreten. Die IDs werden in den Preferences Manager geschrieben und gespeichert.
@@ -134,5 +146,68 @@ public class BackgroundService extends Service implements Loader.OnLoadCompleteL
 
     }
 
+    private void buildNotification() {
+        //Notification erstellen
+        NotificationManager notificationManager =
+                (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+
+        Bitmap largeIcon = BitmapFactory.decodeResource(getResources(), R.mipmap.ic_icon);
+        Notification notification;
+
+        Intent resultIntent = new Intent(this, MainActivity.class);
+        resultIntent.setAction("");
+        PendingIntent resultPendingIntent =
+                PendingIntent.getActivity(
+                        this,
+                        0,
+                        resultIntent,
+                        PendingIntent.FLAG_UPDATE_CURRENT
+                );
+
+        //API Version prüfen und entsprechend eine Notification mit oder ohne NotificationChannel erstellen
+        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            // The id of the channel.
+            String id = "channel_01";
+            // The user-visible name of the channel.
+            CharSequence name = "Synchronisierung"; //getString(R.string.channel_name);
+            // The user-visible description of the channel.
+            String description = "Benachrichtigungen rund um Synchronisierungen";
+            int importance = 0;
+            importance = NotificationManager.IMPORTANCE_DEFAULT;
+
+            NotificationChannel mChannel = new NotificationChannel(id, name, importance);
+            // Configure the notification channel.
+            mChannel.setDescription(description);
+            mChannel.enableLights(true);
+            // Sets the notification light color for notifications posted to this
+            // channel, if the device supports this feature.
+            mChannel.setLightColor(Color.RED);
+            mChannel.enableVibration(true);
+            mChannel.setVibrationPattern(new long[]{100, 200, 300, 400, 500, 400, 300, 200, 400});
+            notificationManager.createNotificationChannel(mChannel);
+
+            notification = new Notification.Builder(getApplicationContext(), id)
+                    .setLargeIcon(largeIcon)
+                    .setSmallIcon(R.mipmap.ic_icon)
+                    .setContentTitle("Synchronisierung")
+                    .setContentText("Der lokale Kalender wurde mit dem Server synchronisiert.")
+                    .setChannelId(mChannel.getId())
+                    .setContentIntent(resultPendingIntent)
+                    .setAutoCancel(true)
+                    .build();
+
+        } else {
+            notification = new Notification.Builder(getApplicationContext())
+                    .setLargeIcon(largeIcon)
+                    .setSmallIcon(R.mipmap.ic_icon)
+                    .setContentTitle("Synchronisierung")
+                    .setContentText("Der lokale Kalender wurde mit dem Server synchronisiert.")
+                    .setContentIntent(resultPendingIntent)
+                    .setAutoCancel(true)
+                    .build();
+        }
+
+        notificationManager.notify(1, notification);
+    }
 
 }

@@ -550,7 +550,6 @@ public class CalendarManager {
         // Es sollte immer eine aktuelle Liste gezogen werden
         this.loadCalendarEntries();
 
-
         if (BuildConfig.DEBUG) {
             Log.d("LOG_SERVICE", "Deleting: " + getCrowdCount());
         }

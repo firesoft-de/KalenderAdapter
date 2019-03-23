@@ -182,11 +182,15 @@ public class DataLoader extends AsyncTaskLoader<ResultWrapper> implements IError
             events.remove(0);
         }
 
+        if (BuildConfig.DEBUG) {
+            Log.d("LOG_SERVICE", "Adding: " + events.size());
+        }
+
+
         // Die einzelnen Events durchgehen und jeweils einen Kalendereintrag erstellen
         for (String event: events
              ) {
             CustomCalendarEntry entry;
-
 
             try {
                 entry = CustomCalendarEntry.fromICS(event,cManager.getActiveCalendar().getId());
