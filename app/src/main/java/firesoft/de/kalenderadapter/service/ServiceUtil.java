@@ -15,7 +15,6 @@
 
 package firesoft.de.kalenderadapter.service;
 
-import android.app.ActivityManager;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
@@ -27,19 +26,23 @@ import java.text.ParseException;
 import java.util.Calendar;
 
 import firesoft.de.kalenderadapter.BuildConfig;
-import firesoft.de.kalenderadapter.MainActivity;
 import firesoft.de.kalenderadapter.utility.DateAndTimeConversion;
 
 import static android.content.Context.ALARM_SERVICE;
 
 public class ServiceUtil extends BroadcastReceiver {
 
+    /**
+     * Startet einen Alarm im AlarmManager welcher einen Service startet. Dieser lädt die aktuellen Daten vom Server. Die Methode ist veraltet! Es können keine Werte für Startzeit und Intervall übergeben werden.
+     * @param context Context des Aufrufs
+     */
+    @Deprecated
     public static void startService(Context context) {
 
         AlarmManager alarmManager = (AlarmManager) context.getSystemService(ALARM_SERVICE);
 
         Intent serviceIntent = new Intent(context, BackgroundService.class);
-        PendingIntent startServiceIntent = PendingIntent.getService(context,0,serviceIntent,0);
+        PendingIntent startServiceIntent = PendingIntent.getService(context,BackgroundService.ID,serviceIntent,PendingIntent.FLAG_UPDATE_CURRENT);
 
         //Server wird alle 24 Stunden um 03:00 Uhr überprüft
         Calendar calendar = Calendar.getInstance();
@@ -56,9 +59,9 @@ public class ServiceUtil extends BroadcastReceiver {
     }
 
     /**
-     *
+     * Startet einen Alarm im AlarmManager welcher einen Service startet. Dieser lädt die aktuellen Daten vom Server. Die Startzeit und das Intervall können definiert werden
      * @param context Context des Aufrufs
-     * @param start Startzeit in Millisekunden (gezählt von Mitternacht)
+     * @param start Startzeit in Millisekunden (gezählt von 00:00 Uhr)
      * @param interval Ausführungsintervall in Millisekunden
      */
     public static void startService(Context context, long start, long interval) throws ParseException{
@@ -66,7 +69,7 @@ public class ServiceUtil extends BroadcastReceiver {
         AlarmManager alarmManager = (AlarmManager) context.getSystemService(ALARM_SERVICE);
 
         Intent serviceIntent = new Intent(context, BackgroundService.class);
-        PendingIntent startServiceIntent = PendingIntent.getService(context,0,serviceIntent,0);
+        PendingIntent startServiceIntent = PendingIntent.getService(context,BackgroundService.ID,serviceIntent,PendingIntent.FLAG_UPDATE_CURRENT);
 
         // Epoch hinzufügen
         long attachedStart = DateAndTimeConversion.attachEpoch(start);
@@ -91,10 +94,24 @@ public class ServiceUtil extends BroadcastReceiver {
         Log.d("LOG_SERVICE", "Stopping!");
 
         // https://stackoverflow.com/questions/47545634/how-to-stop-service-using-alarmmanager
-        Intent serviceIntent = new Intent(context, BackgroundService.class);
-        PendingIntent pendingIntent = PendingIntent.getService(context, 0, serviceIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        // https://stackoverflow.com/questions/14485368/delete-alarm-from-alarmmanager-using-cancel-android
 
-        pendingIntent.cancel();
+        Intent serviceIntent = new Intent(context, BackgroundService.class);
+        AlarmManager alarmManager = (AlarmManager) context.getSystemService(ALARM_SERVICE);
+
+        // Die nachfolgende Schleife sorgt dafür, dass alle Intents die existieren gelöscht werden (ggf. können das mehrere sein, bspw. durch Fehler die beim Starten / Beenden aufgetreten sind)
+        PendingIntent pendingIntent;
+        do {
+            pendingIntent = PendingIntent.getService(context, BackgroundService.ID, serviceIntent, PendingIntent.FLAG_NO_CREATE);
+
+            if (pendingIntent != null) {
+                if (alarmManager != null) {
+                    alarmManager.cancel(pendingIntent);
+                }
+                pendingIntent.cancel();
+            }
+        } while (pendingIntent != null);
+
     }
 
     @Override
@@ -112,7 +129,7 @@ public class ServiceUtil extends BroadcastReceiver {
      */
     public static boolean isServiceRunning(Context context) {
         //https://stackoverflow.com/questions/4556670/how-to-check-if-alarmmanager-already-has-an-alarm-set
-        boolean res = (PendingIntent.getService(context, 0, new Intent(context,BackgroundService.class), PendingIntent.FLAG_NO_CREATE) != null);
+        boolean res = (PendingIntent.getService(context, BackgroundService.ID, new Intent(context,BackgroundService.class), PendingIntent.FLAG_NO_CREATE) != null);
 
         if (res && BuildConfig.DEBUG) {
             Log.d("LOG_SERVICE", "Checked service state. Current: active!");

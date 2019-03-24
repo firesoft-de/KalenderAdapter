@@ -30,6 +30,7 @@ import android.os.Build;
 import android.os.IBinder;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.Loader;
 import android.util.Log;
 import android.widget.Toast;
@@ -50,6 +51,8 @@ public class BackgroundService extends Service implements Loader.OnLoadCompleteL
     PreferencesManager pManager;
     CalendarManager cManager;
     DataLoader dataLoader;
+
+    public final static byte ID = 0;
 
     @Nullable
     @Override
@@ -181,29 +184,33 @@ public class BackgroundService extends Service implements Loader.OnLoadCompleteL
             mChannel.enableLights(true);
             // Sets the notification light color for notifications posted to this
             // channel, if the device supports this feature.
-            mChannel.setLightColor(Color.RED);
+            mChannel.setLightColor(Color.BLUE);
             mChannel.enableVibration(true);
-            mChannel.setVibrationPattern(new long[]{100, 200, 300, 400, 500, 400, 300, 200, 400});
+            mChannel.setVibrationPattern(new long[]{100, 200, 100, 200, 100});
             notificationManager.createNotificationChannel(mChannel);
 
             notification = new Notification.Builder(getApplicationContext(), id)
-                    .setLargeIcon(largeIcon)
+                    //.setLargeIcon(largeIcon)
                     .setSmallIcon(R.mipmap.ic_icon)
                     .setContentTitle("Synchronisierung")
                     .setContentText("Der lokale Kalender wurde mit dem Server synchronisiert.")
                     .setChannelId(mChannel.getId())
                     .setContentIntent(resultPendingIntent)
                     .setAutoCancel(true)
+                    .setStyle(new Notification.BigTextStyle()
+                            .bigText("Der lokale Kalender wurde mit dem Server synchronisiert."))
                     .build();
 
         } else {
             notification = new Notification.Builder(getApplicationContext())
-                    .setLargeIcon(largeIcon)
+                    //.setLargeIcon(largeIcon)
                     .setSmallIcon(R.mipmap.ic_icon)
                     .setContentTitle("Synchronisierung")
                     .setContentText("Der lokale Kalender wurde mit dem Server synchronisiert.")
                     .setContentIntent(resultPendingIntent)
                     .setAutoCancel(true)
+                    .setStyle(new Notification.BigTextStyle()
+                            .bigText("Der lokale Kalender wurde mit dem Server synchronisiert."))
                     .build();
         }
 
