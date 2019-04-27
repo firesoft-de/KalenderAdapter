@@ -685,9 +685,13 @@ public class CalendarManager {
             // entryids einfügen
             for (CustomCalendarEntry entry : crowd
                     ) {
-                if (!entryIds.contains(entry.getEntryID())) {
+//                if (!entryIds.contains(entry.getEntryID())) {
                     entryIds.add(entry.getEntryID());
-                }
+//                }
+//                else {
+//                    String s = "Das ist ein Test!";
+//                     s.concat("Zero");
+//                }
             }
         }
     }
