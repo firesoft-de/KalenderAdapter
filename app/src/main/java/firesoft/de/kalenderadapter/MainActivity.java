@@ -678,6 +678,112 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
     }
 
     /**
+     * Startet den AsyncTaskLoader (Hintergrundthread) für den Datendownload
+     */
+    private void startLoader() {
+
+        // Fortschrittsanzeige zurücksetzen
+        resetProgressbar();
+
+        EditText user = this.findViewById(R.id.eT_user);
+        EditText password = this.findViewById(R.id.et_pw);
+        EditText url = this.findViewById(R.id.eT_url);
+
+        // Daten aus den TextViews abfragen
+        if (user.getText().toString().equals("") || password.getText().toString().equals("") || url.getText().toString().equals("")) {
+            //displayMessage(getResources().getString(R.string.error_fields_not_filled), Snackbar.LENGTH_LONG);
+            publishProgress(getResources().getString(R.string.error_fields_not_filled),0,1);
+            switchProgressbarErrorState();
+            return;
+        }
+
+        // Eingabe speichern
+        savePrefs();
+
+        // Die einzelnen Parameter hinzufügen und im Preferences Manager speichern
+        ArrayList<ServerParameter> parameters = new ArrayList<>();
+        ServerParameter param = new ServerParameter("url", url.getText().toString());
+        parameters.add(param);
+
+        param = new ServerParameter("user", user.getText().toString());
+        parameters.add(param);
+
+        param = new ServerParameter("pw", password.getText().toString());
+        parameters.add(param);
+
+        // AsyncTask mit den Parametern starten
+        taskManager = new AsyncTaskManager(getSupportLoaderManager(), getApplicationContext(),this,cManager, pManager, messageFromBackground, progressValue,progressMax);
+        taskManager.startDownload(this,parameters);
+
+    }
+
+    /**
+     * Startet den AsyncTaskLoader der für das Löschen von Einträgen zuständig ist
+     */
+    private void startDeleteLoader() {
+
+        // Fortschrittsanzeige zurücksetzen
+        resetProgressbar();
+
+        if (taskManager == null) {
+            taskManager = new AsyncTaskManager(getSupportLoaderManager(), getApplicationContext(),this,cManager, pManager, messageFromBackground, progressValue,progressMax);
+        }
+
+        taskManager.startDelete(this);
+
+    }
+
+    // region Service
+
+    private void setServiceSwitch(boolean checked) {
+        ((Switch) this.findViewById(R.id.switch_service)).setChecked(checked);
+        this.findViewById(R.id.service_sync_interval).setEnabled(checked);
+        this.findViewById(R.id.service_sync_from).setEnabled(checked);
+    }
+
+    /**
+     * Ändert den Anzeigestatus und zwei Einstellungselemente auf Basis des Hintergrundstatus
+     */
+    private void change_service_indicator() {
+
+        boolean res = ServiceUtil.isServiceRunning(getApplicationContext());
+        SwitchIconView siv = ((SwitchIconView) this.findViewById(R.id.switch_icon_view));
+
+        if (siv.isIconEnabled() != res) {
+            siv.switchState();
+        }
+
+        // Felder ein- bzw. ausschalten
+        this.findViewById(R.id.service_sync_interval).setEnabled(res);
+        this.findViewById(R.id.service_sync_from).setEnabled(res);
+
+    }
+
+    /**
+     * Startet den Hintergrundservice neu. Falls er nicht läuft, wird er nicht gestartet!
+     */
+    private void restartService() {
+
+        // Prüfen, ob der Service läuft
+        if (ServiceUtil.isServiceRunning(getApplicationContext())) {
+
+            // Hintergrundservice stoppen
+            ServiceUtil.stopService(getApplicationContext());
+
+            // Service neustarten
+            try {
+                ServiceUtil.startService(getApplicationContext(), pManager.getSyncFrom(),pManager.getSyncInterval());
+            } catch (ParseException e) {
+                publishError(getString(R.string.error_service_times_unchangeable));
+                e.printStackTrace();
+            }
+
+        }
+        change_service_indicator();
+
+    }
+
+    /**
      * Zeigt den Dialog der bei fehlerhafter Eingabe der Zeiten angezeigt werden soll.
      */
     private void displayTimeErrorDialog() {
@@ -828,109 +934,7 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
 
     }
 
-    /**
-     * Startet den Hintergrundservice neu. Falls er nicht läuft, wird er nicht gestartet!
-     */
-    private void restartService() {
-
-        // Prüfen, ob der Service läuft
-        if (ServiceUtil.isServiceRunning(getApplicationContext())) {
-
-            // Hintergrundservice stoppen
-            ServiceUtil.stopService(getApplicationContext());
-
-            // Service neustarten
-            try {
-                ServiceUtil.startService(getApplicationContext(), pManager.getSyncFrom(),pManager.getSyncInterval());
-            } catch (ParseException e) {
-                publishError(getString(R.string.error_service_times_unchangeable));
-                e.printStackTrace();
-            }
-
-        }
-        change_service_indicator();
-
-    }
-
-    /**
-     * Startet den AsyncTaskLoader (Hintergrundthread) für den Datendownload
-     */
-    private void startLoader() {
-
-        // Fortschrittsanzeige zurücksetzen
-        resetProgressbar();
-
-        EditText user = this.findViewById(R.id.eT_user);
-        EditText password = this.findViewById(R.id.et_pw);
-        EditText url = this.findViewById(R.id.eT_url);
-
-        // Daten aus den TextViews abfragen
-        if (user.getText().toString().equals("") || password.getText().toString().equals("") || url.getText().toString().equals("")) {
-            //displayMessage(getResources().getString(R.string.error_fields_not_filled), Snackbar.LENGTH_LONG);
-            publishProgress(getResources().getString(R.string.error_fields_not_filled),0,1);
-            switchProgressbarErrorState();
-            return;
-        }
-
-        // Eingabe speichern
-        savePrefs();
-
-        // Die einzelnen Parameter hinzufügen und im Preferences Manager speichern
-        ArrayList<ServerParameter> parameters = new ArrayList<>();
-        ServerParameter param = new ServerParameter("url", url.getText().toString());
-        parameters.add(param);
-
-        param = new ServerParameter("user", user.getText().toString());
-        parameters.add(param);
-
-        param = new ServerParameter("pw", password.getText().toString());
-        parameters.add(param);
-
-        // AsyncTask mit den Parametern starten
-        taskManager = new AsyncTaskManager(getSupportLoaderManager(), getApplicationContext(),this,cManager, pManager, messageFromBackground, progressValue,progressMax);
-        taskManager.startDownload(this,parameters);
-
-    }
-
-    /**
-     * Startet den AsyncTaskLoader der für das Löschen von Einträgen zuständig ist
-     */
-    private void startDeleteLoader() {
-
-        // Fortschrittsanzeige zurücksetzen
-        resetProgressbar();
-
-        if (taskManager == null) {
-            taskManager = new AsyncTaskManager(getSupportLoaderManager(), getApplicationContext(),this,cManager, pManager, messageFromBackground, progressValue,progressMax);
-        }
-
-        taskManager.startDelete(this);
-
-    }
-
-    private void setServiceSwitch(boolean checked) {
-        ((Switch) this.findViewById(R.id.switch_service)).setChecked(checked);
-        this.findViewById(R.id.service_sync_interval).setEnabled(checked);
-        this.findViewById(R.id.service_sync_from).setEnabled(checked);
-    }
-
-    /**
-     * Ändert den Anzeigestatus und zwei Einstellungselemente auf Basis des Hintergrundstatus
-     */
-    private void change_service_indicator() {
-
-        boolean res = ServiceUtil.isServiceRunning(getApplicationContext());
-        SwitchIconView siv = ((SwitchIconView) this.findViewById(R.id.switch_icon_view));
-
-        if (siv.isIconEnabled() != res) {
-            siv.switchState();
-        }
-
-        // Felder ein- bzw. ausschalten
-        this.findViewById(R.id.service_sync_interval).setEnabled(res);
-        this.findViewById(R.id.service_sync_from).setEnabled(res);
-
-    }
+    // end region
 
     /**
      * Schaltet alle UI-Elemente ein oder aus
