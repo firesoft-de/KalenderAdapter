@@ -26,6 +26,7 @@ import java.text.ParseException;
 import java.util.Calendar;
 
 import firesoft.de.kalenderadapter.BuildConfig;
+import firesoft.de.kalenderadapter.manager.PreferencesManager;
 import firesoft.de.kalenderadapter.utility.DateAndTimeConversion;
 
 import static android.content.Context.ALARM_SERVICE;
@@ -71,15 +72,20 @@ public class ServiceUtil extends BroadcastReceiver {
         Intent serviceIntent = new Intent(context, BackgroundService.class);
         PendingIntent startServiceIntent = PendingIntent.getService(context,BackgroundService.ID,serviceIntent,PendingIntent.FLAG_UPDATE_CURRENT);
 
+        // Prüfen, ob das Intervall null ist. Falls ja -> auf Standardwert setzen
+        if (interval == 0) {
+            interval = PreferencesManager.DEFAULT_SYNC_INTERVAL;
+        }
+
         // Epoch hinzufügen
         long attachedStart = DateAndTimeConversion.attachEpoch(start);
 
         if (BuildConfig.DEBUG) {
             Log.d("LOG_SERVICE", "Service time set!");
             Log.d("LOG_SERVICE", "");
-            Log.d("LOG_SERVICE", "Timestamp: " + String.valueOf(attachedStart) + " | " + String.valueOf(attachedStart/1000));
-            Log.d("LOG_SERVICE", "Timestamp since midnight: " + start + " | " + String.valueOf(start/1000));
-            Log.d("LOG_SERVICE", "Interval: " + String.valueOf(interval)+ " | " + String.valueOf(interval/1000));
+            Log.d("LOG_SERVICE", "Timestamp: " + String.valueOf(attachedStart) + " ms | " + String.valueOf(attachedStart/1000) + " s");
+            Log.d("LOG_SERVICE", "Timestamp since midnight: " + start + " ms | " + String.valueOf(start/1000) + " s");
+            Log.d("LOG_SERVICE", "Interval: " + String.valueOf(interval)+ " ms | " + String.valueOf(interval/1000) + " s");
         }
 
         //AlarmManager aktivieren
