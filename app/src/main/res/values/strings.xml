@@ -16,7 +16,7 @@
 
     <string name="card_about">Über</string>
     <string name="about_text">Diese App ermöglicht den Import von Kalenderdaten im ICS in einen lokalen Kalender. Die Datenübertragung erfolgt dabei über eine sichere HTTPS-Verbindung und eine Digest-Authentifizierung beim Datenabruf.</string>
-    <string name="about_security">Sicherheitshinweis!\nDie eingegbenen Zugangsdaten werden aus Kompatibilitätsgründen in einer nicht gesicherten Form abgespeichert. Für den gängigen Anwendungsfall stellt dies kein Risiko dar. Sollte aber ein Driter physischen Zugriff auf das Gerät bekommen oder ein gerootetes Gerät verwendet werden, sind die Zugangsdaten gefährdet!\nEs wird die Verwendung eines Gerätepasswortes empfholen!</string>
+    <string name="about_security">Sicherheitshinweis!\nDie eingegbenen Zugangsdaten werden aus Kompatibilitätsgründen in einer nicht gesicherten Form abgespeichert. Für den gängigen Anwendungsfall stellt dies kein Risiko dar. Sollte aber ein Dritter physischen Zugriff auf das Gerät bekommen oder ein gerootetes Gerät verwendet werden, sind die Zugangsdaten gefährdet!\nEs wird die Verwendung eines Gerätepasswortes empfholen!</string>
     <string name="about_license">Dieses Projekt ist Open Source und steht unter der GNU GPL v3.0!\nDu findest das Repository unter\n<a href="https://github.com/firesoft-de/KalenderAdapter">https://github.com/firesoft-de/KalenderAdapter</a>\n\nDer Lizenztext ist unter\n<a href="https://www.gnu.org/licenses/gpl-3.0.de.html#content">https://www.gnu.org/licenses/gpl-3.0.html</a>\neinsehbar. \n\n Eingesetzte Bibliotheken \n - Android-SwitchIcon von Evgenii Zagumennyi \n - Material Icons von Google</string>
     <string name="about_version">App-Version</string>
     <string name="about_appname">KalenderAdapter</string>
@@ -37,6 +37,9 @@
     <string name="info_text">Um die Termine korrekt in den Kalender übernehmen zu können, benötigt diese App eine Zugriffsberechtigung auf Ihren Kalender.\nSie werden nun einen Systemdialog zur Freigabe der Berechtigung angezeigt bekommen. Falls Sie die Berechtigung verweigern, wird die App nicht wie erwartet funktionieren.</string>
     <string name="info_delete_text">Achtung!\nSie sind dabei alle Einträge des Kalenders zu löschen. Sind Sie sich sicher das Sie dies tun wollen?\nFalls nein, verwenden Sie bitte die Zurück-Funktion Ihres Telefons.</string>
     <string name="info_import_successfull">Alle Termine erfolgreich hinzugefügt</string>
+
+    <string name="info_notification_text">Der lokale Kalender wurde mit dem Server synchronisiert.</string>
+    <string name="info_notification_title">Synchronisierung</string>
 
     <string name="error_time_text">Die eingegebene Zeit ist fehlerhaft formatiert. Es wird eine Eingabe in Form von HH:MM erwartet. Dabei steht HH für die Stunden und MM für die Minuten.</string>
 
