@@ -120,21 +120,16 @@ public class BackgroundService extends Service implements Loader.OnLoadCompleteL
 
         if (data.getException() != null) {
             // Es ist ein Fehler aufgetreten. Machen kann man jetzt aber nicht wirklich viel.
-            Toast.makeText(getApplicationContext(), "KalenderAdapter: Während der Hintergrundsynchronisation ist ein Fehler aufgetreten! Fehlermeldung: " + data.getException().getMessage(), Toast.LENGTH_LONG).show();
+            Toast.makeText(getApplicationContext(), "KalenderAdapter: " + getString(R.string.error_background_service) + data.getException().getMessage(), Toast.LENGTH_LONG).show();
+            buildNotification(getString(R.string.error_background_service) + data.getException().getMessage());
             return;
         }
 
         if (BuildConfig.DEBUG) {
             Log.d("LOG_SERVICE", "Service completed!");
-            buildNotification();
+            buildNotification(null);
         }
 
-        // Kein Fehler ist aufgetreten. Die IDs werden in den Preferences Manager geschrieben und gespeichert.
-//        cManager.setEntryIds(data.getIds());
-//        pManager.setEntryIds(cManager.getEntryIdsAsString());
-//        pManager.save();
-
-        // Nichts tun und sich freuen das alles geklappt hat.
     }
 
     @Override
@@ -149,7 +144,11 @@ public class BackgroundService extends Service implements Loader.OnLoadCompleteL
 
     }
 
-    private void buildNotification() {
+    /**
+     *
+     * @param text String, Text der in der Notification angezeigt werden soll
+     */
+    private void buildNotification(@Nullable String text) {
         //Notification erstellen
         NotificationManager notificationManager =
                 (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
@@ -174,7 +173,7 @@ public class BackgroundService extends Service implements Loader.OnLoadCompleteL
             // The user-visible name of the channel.
             CharSequence name = "Synchronisierung"; //getString(R.string.channel_name);
             // The user-visible description of the channel.
-            String description = "Benachrichtigungen rund um Synchronisierungen";
+            String description = "Synchronisierungsbenachrichtigung";
             int importance = 0;
             importance = NotificationManager.IMPORTANCE_DEFAULT;
 
@@ -189,29 +188,56 @@ public class BackgroundService extends Service implements Loader.OnLoadCompleteL
             mChannel.setVibrationPattern(new long[]{100, 200, 100, 200, 100});
             notificationManager.createNotificationChannel(mChannel);
 
-            notification = new Notification.Builder(getApplicationContext(), id)
-                    //.setLargeIcon(largeIcon)
-                    .setSmallIcon(R.mipmap.ic_icon)
-                    .setContentTitle("Synchronisierung")
-                    .setContentText("Der lokale Kalender wurde mit dem Server synchronisiert.")
-                    .setChannelId(mChannel.getId())
-                    .setContentIntent(resultPendingIntent)
-                    .setAutoCancel(true)
-                    .setStyle(new Notification.BigTextStyle()
-                            .bigText("Der lokale Kalender wurde mit dem Server synchronisiert."))
-                    .build();
+            if (text != null) {
+                notification = new Notification.Builder(getApplicationContext(), id)
+                        .setSmallIcon(R.mipmap.ic_icon)
+                        .setContentTitle(getString(R.string.info_notification_title))
+                        .setContentText(getString(R.string.info_notification_text))
+                        .setChannelId(mChannel.getId())
+                        .setContentIntent(resultPendingIntent)
+                        .setAutoCancel(true)
+                        .setStyle(new Notification.BigTextStyle()
+                                .bigText(text))
+                        .build();
+            }
+            else {
+                notification = new Notification.Builder(getApplicationContext(), id)
+                        .setSmallIcon(R.mipmap.ic_icon)
+                        .setContentTitle(getString(R.string.info_notification_title))
+                        .setContentText(getString(R.string.info_notification_text))
+                        .setChannelId(mChannel.getId())
+                        .setContentIntent(resultPendingIntent)
+                        .setAutoCancel(true)
+                        .setStyle(new Notification.BigTextStyle()
+                                .bigText(getString(R.string.info_notification_text)))
+                        .build();
+            }
 
         } else {
-            notification = new Notification.Builder(getApplicationContext())
-                    //.setLargeIcon(largeIcon)
-                    .setSmallIcon(R.mipmap.ic_icon)
-                    .setContentTitle("Synchronisierung")
-                    .setContentText("Der lokale Kalender wurde mit dem Server synchronisiert.")
-                    .setContentIntent(resultPendingIntent)
-                    .setAutoCancel(true)
-                    .setStyle(new Notification.BigTextStyle()
-                            .bigText("Der lokale Kalender wurde mit dem Server synchronisiert."))
-                    .build();
+
+            if (text != null) {
+                notification = new Notification.Builder(getApplicationContext())
+                        .setSmallIcon(R.mipmap.ic_icon)
+                        .setContentTitle(getString(R.string.info_notification_title))
+                        .setContentText(text)
+                        .setContentIntent(resultPendingIntent)
+                        .setAutoCancel(true)
+                        .setStyle(new Notification.BigTextStyle()
+                                .bigText(text))
+                        .build();
+            }
+            else {
+                notification = new Notification.Builder(getApplicationContext())
+                        .setSmallIcon(R.mipmap.ic_icon)
+                        .setContentTitle(getString(R.string.info_notification_title))
+                        .setContentText(getString(R.string.info_notification_text))
+                        .setContentIntent(resultPendingIntent)
+                        .setAutoCancel(true)
+                        .setStyle(new Notification.BigTextStyle()
+                                .bigText(getString(R.string.info_notification_text)))
+                        .build();
+            }
+
         }
 
         notificationManager.notify(1, notification);
