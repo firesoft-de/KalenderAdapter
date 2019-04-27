@@ -134,6 +134,14 @@ public class DataLoader extends AsyncTaskLoader<ResultWrapper> implements IError
             // HTTP-Worker initalisieren
             worker = new HttpWorker(url, GET.class, getContext(), authenticator, null, false, null);
 
+            // Internetverbindung testen
+            if (!worker.checkNetwork(getContext())) {
+
+                // Es ist keine Internetverbindung vorhanden
+                return new ResultWrapper(new IOException(getContext().getString(R.string.error_no_network)));
+
+            }
+
             // Anfrage ausführen
             worker.execute();
         } catch (InstantiationException | IllegalAccessException | InvocationTargetException | IOException | NoSuchMethodException e)
@@ -147,7 +155,7 @@ public class DataLoader extends AsyncTaskLoader<ResultWrapper> implements IError
 
         if (serverResponse == null || serverResponse.equals("")) {
             // Laut Status stimmt irgendwas nicht. -> Fehlermeldung werfen
-            return new ResultWrapper(new Exception("Download fehlgeschlagen! HTTP-Response: " + Objects.requireNonNull(worker.getResponseCode().getValue()).toString()));
+            return new ResultWrapper(new Exception(getContext().getString(R.string.error_download_failed) + Objects.requireNonNull(worker.getResponseCode().getValue()).toString()));
         }
 
         // Verbindung trennen
@@ -207,7 +215,7 @@ public class DataLoader extends AsyncTaskLoader<ResultWrapper> implements IError
                 switch (response) {
                     case -1:
                         // Irgendwas ist schief gelaufen
-                        Exception e = new Exception("Konnte Eintrag nicht erstellen! Eintragsname: " + entry.getTitle() + " am " + entry.getStartMillis() + " (DataLoader.loadIngBackground)");
+                        Exception e = new Exception(getContext().getString(R.string.error_failed_to_create_entry) + entry.getTitle() + " @ " + entry.getStartMillis() + " (DataLoader.loadIngBackground)");
                         return new ResultWrapper(e);
 
                     case -2:

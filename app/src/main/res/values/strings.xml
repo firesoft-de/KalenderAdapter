@@ -51,5 +51,8 @@
     <string name="error_addCalendarEntry">Eine Sicherheitsausnahme ist aufgetreten! (CalendarManager.addCalenderEntry (Reminders)</string>
     <string name="error_service_times_unchangeable">Änderung konnte nicht übernommen werden! Hintergrundservice läuft nicht!</string>
     <string name="info_extinction_successfull">Alle Einträge erfolgreich gelöscht!</string>
+    <string name="error_no_network">Es konnte keine Netzwerkverbindung gefunden werden!</string>
+    <string name="error_download_failed">Download fehlgeschlagen! HTTP-Response:</string>
+    <string name="error_failed_to_create_entry">Konnte Eintrag nicht erstellen! Eintragsname:</string>
 
 </resources>
