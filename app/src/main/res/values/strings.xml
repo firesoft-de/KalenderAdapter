@@ -57,5 +57,6 @@
     <string name="error_no_network">Es konnte keine Netzwerkverbindung gefunden werden!</string>
     <string name="error_download_failed">Download fehlgeschlagen! HTTP-Response:</string>
     <string name="error_failed_to_create_entry">Konnte Eintrag nicht erstellen! Eintragsname:</string>
+    <string name="error_background_service">Während der Hintergrundsynchronisation ist ein Fehler aufgetreten! Fehlermeldung:</string>
 
 </resources>
