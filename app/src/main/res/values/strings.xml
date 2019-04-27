@@ -39,6 +39,8 @@
     <string name="info_import_successfull">Alle Termine erfolgreich hinzugefügt</string>
 
     <string name="info_notification_text">Der lokale Kalender wurde mit dem Server synchronisiert.</string>
+    <string name="info_notification_deleted_entries">Gelöschte Einträge: </string>
+    <string name="info_notification_added_entries">Hinzugefügte Einträge: </string>
     <string name="info_notification_title">Synchronisierung</string>
 
     <string name="error_time_text">Die eingegebene Zeit ist fehlerhaft formatiert. Es wird eine Eingabe in Form von HH:MM erwartet. Dabei steht HH für die Stunden und MM für die Minuten.</string>

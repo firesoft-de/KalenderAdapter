@@ -102,6 +102,10 @@ public class DataLoader extends AsyncTaskLoader<ResultWrapper> implements IError
         String user = null;
         String pass = null;
 
+        // Variablen für Feedback an Nutzer
+        int addedEntries = 0;
+        int deletedEntries = 0;
+
         for (ServerParameter param : params
                 ) {
 
@@ -168,6 +172,9 @@ public class DataLoader extends AsyncTaskLoader<ResultWrapper> implements IError
         // Marker der angibt, ob auf bereits getätigte Eintragungen geprüft werden muss
         boolean equalityCheckNeeded;
 
+        cManager.loadCalendarEntries();
+        deletedEntries = cManager.getCrowdCount();
+
         // Prüfen, ob die bestehenden Einträge überschrieben werden sollen. In diesem Fall können jetzt alle Einträge gelöscht und die neuen direkt eingefügt werden. Das ist einfacher, als bei allen zu prüfen, ob sich etwas geändert hat.
         if (pManager.isReplaceExistingActivated()) {
 
@@ -193,6 +200,8 @@ public class DataLoader extends AsyncTaskLoader<ResultWrapper> implements IError
         if (BuildConfig.DEBUG) {
             Log.d("LOG_SERVICE", "Adding: " + events.size());
         }
+
+        addedEntries = events.size();
 
 
         // Die einzelnen Events durchgehen und jeweils einen Kalendereintrag erstellen
@@ -245,7 +254,7 @@ public class DataLoader extends AsyncTaskLoader<ResultWrapper> implements IError
         }
 
         // Liste mit den Event-IDs zurückgeben
-        return new ResultWrapper(eventIds,getContext().getString(R.string.info_import_successfull));
+        return new ResultWrapper(eventIds,getContext().getString(R.string.info_import_successfull),deletedEntries,addedEntries);
     }
 
     @Override

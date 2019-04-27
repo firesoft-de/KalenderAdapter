@@ -121,13 +121,13 @@ public class BackgroundService extends Service implements Loader.OnLoadCompleteL
         if (data.getException() != null) {
             // Es ist ein Fehler aufgetreten. Machen kann man jetzt aber nicht wirklich viel.
             Toast.makeText(getApplicationContext(), "KalenderAdapter: " + getString(R.string.error_background_service) + data.getException().getMessage(), Toast.LENGTH_LONG).show();
-            buildNotification(getString(R.string.error_background_service) + data.getException().getMessage());
+            buildNotification(getString(R.string.error_background_service) + data.getException().getMessage(), data.getAddedEntrys(),data.getDeletedEntrys());
             return;
         }
 
         if (BuildConfig.DEBUG) {
             Log.d("LOG_SERVICE", "Service completed!");
-            buildNotification(null);
+            buildNotification(null, data.getAddedEntrys(),data.getDeletedEntrys());
         }
 
     }
@@ -148,7 +148,7 @@ public class BackgroundService extends Service implements Loader.OnLoadCompleteL
      *
      * @param text String, Text der in der Notification angezeigt werden soll
      */
-    private void buildNotification(@Nullable String text) {
+    private void buildNotification(@Nullable String text, @Nullable int addedEntries, @Nullable int deletedEntries) {
         //Notification erstellen
         NotificationManager notificationManager =
                 (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
@@ -165,6 +165,24 @@ public class BackgroundService extends Service implements Loader.OnLoadCompleteL
                         resultIntent,
                         PendingIntent.FLAG_UPDATE_CURRENT
                 );
+
+        // Inhalt der Notification zusammenbauen
+        String notificationText;
+
+        if (text != null) {
+            notificationText = text;
+        }
+        else if (addedEntries >= 0 || deletedEntries >= 0) {
+
+            if (addedEntries < 0) {addedEntries = 0;}
+            if (deletedEntries < 0) {deletedEntries = 0;}
+
+            notificationText = getString(R.string.info_notification_text) + " - " + getString(R.string.info_notification_added_entries) + String.valueOf(addedEntries)
+                    + " " + getString(R.string.info_notification_deleted_entries) + String.valueOf(deletedEntries);
+        }
+        else {
+            notificationText = getString(R.string.info_notification_text);
+        }
 
         //API Version prüfen und entsprechend eine Notification mit oder ohne NotificationChannel erstellen
         if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -188,56 +206,27 @@ public class BackgroundService extends Service implements Loader.OnLoadCompleteL
             mChannel.setVibrationPattern(new long[]{100, 200, 100, 200, 100});
             notificationManager.createNotificationChannel(mChannel);
 
-            if (text != null) {
-                notification = new Notification.Builder(getApplicationContext(), id)
-                        .setSmallIcon(R.mipmap.ic_icon)
-                        .setContentTitle(getString(R.string.info_notification_title))
-                        .setContentText(getString(R.string.info_notification_text))
-                        .setChannelId(mChannel.getId())
-                        .setContentIntent(resultPendingIntent)
-                        .setAutoCancel(true)
-                        .setStyle(new Notification.BigTextStyle()
-                                .bigText(text))
-                        .build();
-            }
-            else {
-                notification = new Notification.Builder(getApplicationContext(), id)
-                        .setSmallIcon(R.mipmap.ic_icon)
-                        .setContentTitle(getString(R.string.info_notification_title))
-                        .setContentText(getString(R.string.info_notification_text))
-                        .setChannelId(mChannel.getId())
-                        .setContentIntent(resultPendingIntent)
-                        .setAutoCancel(true)
-                        .setStyle(new Notification.BigTextStyle()
-                                .bigText(getString(R.string.info_notification_text)))
-                        .build();
-            }
+            notification = new Notification.Builder(getApplicationContext(), id)
+                    .setSmallIcon(R.mipmap.ic_icon)
+                    .setContentTitle(getString(R.string.info_notification_title))
+                    .setContentText(notificationText)
+                    .setChannelId(mChannel.getId())
+                    .setContentIntent(resultPendingIntent)
+                    .setAutoCancel(true)
+                    .setStyle(new Notification.BigTextStyle()
+                            .bigText(notificationText))
+                    .build();
 
         } else {
-
-            if (text != null) {
-                notification = new Notification.Builder(getApplicationContext())
-                        .setSmallIcon(R.mipmap.ic_icon)
-                        .setContentTitle(getString(R.string.info_notification_title))
-                        .setContentText(text)
-                        .setContentIntent(resultPendingIntent)
-                        .setAutoCancel(true)
-                        .setStyle(new Notification.BigTextStyle()
-                                .bigText(text))
-                        .build();
-            }
-            else {
-                notification = new Notification.Builder(getApplicationContext())
-                        .setSmallIcon(R.mipmap.ic_icon)
-                        .setContentTitle(getString(R.string.info_notification_title))
-                        .setContentText(getString(R.string.info_notification_text))
-                        .setContentIntent(resultPendingIntent)
-                        .setAutoCancel(true)
-                        .setStyle(new Notification.BigTextStyle()
-                                .bigText(getString(R.string.info_notification_text)))
-                        .build();
-            }
-
+            notification = new Notification.Builder(getApplicationContext())
+                    .setSmallIcon(R.mipmap.ic_icon)
+                    .setContentTitle(getString(R.string.info_notification_title))
+                    .setContentText(notificationText)
+                    .setContentIntent(resultPendingIntent)
+                    .setAutoCancel(true)
+                    .setStyle(new Notification.BigTextStyle()
+                            .bigText(notificationText))
+                    .build();
         }
 
         notificationManager.notify(1, notification);

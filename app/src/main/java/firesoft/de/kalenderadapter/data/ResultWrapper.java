@@ -29,6 +29,8 @@ public class ResultWrapper {
     private final ArrayList<Integer> entryIds;
     private final Exception exception;
     private final String result;
+    private final int deletedEntrys;
+    private final int addedEntrys;
 
     //=======================================================
     //====================KONSTRUKTOR========================
@@ -36,19 +38,54 @@ public class ResultWrapper {
 
     /**
      * Erstellt eine neue Instanz
-     *
-     * @param entryIds Das Datenpaket welches abgerufen wurde
+     * @param deletedEntrys Integer, Anzahl der gelöschten Einträge <0  wird als 0 interpretiert
+     * @param addedEntrys Integer, Anzahl der hinzugefügten Einträge. <0 wird als 0 interpretiert
+     * @param entryIds ArrayList(Integer), Liste mit den ID's der Einträge die beim Durchlauf hinzugefügt wurden.
      */
-    public ResultWrapper(ArrayList<Integer> entryIds, String result) {
+    public ResultWrapper(ArrayList<Integer> entryIds, String result, int deletedEntrys, int addedEntrys) {
         this.entryIds = entryIds;
         this.result = result;
         this.exception = null;
+
+        if (deletedEntrys <= 0) {
+            this.deletedEntrys = 0;
+        }
+        else {
+            this.deletedEntrys = deletedEntrys;
+        }
+
+        if (addedEntrys <= 0) {
+            this.addedEntrys = 0;
+        }
+        else {
+            this.addedEntrys = addedEntrys;
+        }
     }
 
-    public ResultWrapper(String result) {
+    /**
+     * Erstellt eine neue Instanz
+     * @param result String, Textnachricht die den erreichten Zustand beschreibt. Kann bspw. an den Benutzer ausgegeben werden.
+     * @param deletedEntrys Integer, Anzahl der gelöschten Einträge <0  wird als 0 interpretiert
+     * @param addedEntrys Integer, Anzahl der hinzugefügten Einträge. <0 wird als 0 interpretiert
+     */
+    public ResultWrapper(String result, int deletedEntrys, int addedEntrys) {
         this.result = result;
         this.exception = null;
         this.entryIds = null;
+
+        if (deletedEntrys <= 0) {
+            this.deletedEntrys = 0;
+        }
+        else {
+            this.deletedEntrys = deletedEntrys;
+        }
+
+        if (addedEntrys <= 0) {
+            this.addedEntrys = 0;
+        }
+        else {
+            this.addedEntrys = addedEntrys;
+        }
     }
 
     /**
@@ -60,6 +97,8 @@ public class ResultWrapper {
         this.entryIds = null;
         this.exception = exception;
         this.result = "";
+        deletedEntrys = -1;
+        addedEntrys = -1;
     }
 
     //=======================================================
@@ -87,4 +126,17 @@ public class ResultWrapper {
      */
     public String getResult() {return result;}
 
+    /**
+     * Gibt die Anzahl der gelöschten Einträge aus.Sollten keine Werte vorliegen, wird ein negativer Wert ausgegeben.
+     */
+    public int getDeletedEntrys() {
+        return deletedEntrys;
+    }
+
+    /**
+     * Gibt die Anzahl der hinzugefügten Einträge aus. Sollten keine Werte vorliegen, wird ein negativer Wert ausgegeben.
+     */
+    public int getAddedEntrys() {
+        return addedEntrys;
+    }
 }
