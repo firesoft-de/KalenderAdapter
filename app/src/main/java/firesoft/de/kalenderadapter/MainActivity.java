@@ -29,6 +29,7 @@ import android.support.v4.app.DialogFragment;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.CardView;
+import android.view.KeyEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
@@ -386,6 +387,22 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
             public void onClick(View view) {
                 boolean res = ServiceUtil.isServiceRunning(getApplicationContext());
                 publishError("Status: " + String.valueOf(res));
+            }
+        });
+
+        // OK Button im letzten Textfeld
+        EditText txtPW = this.findViewById(R.id.et_pw);
+        txtPW.setOnKeyListener(new EditText.OnKeyListener() {
+            public boolean onKey(View v, int keyCode, KeyEvent event) {
+                // If the event is a key-down event on the "enter" button
+                if ((event.getAction() == KeyEvent.ACTION_DOWN) &&
+                        (keyCode == KeyEvent.KEYCODE_ENTER)) {
+                    // Download auslösen
+                    setProgressbarState(false);
+                    startLoader();
+                    return true;
+                }
+                return false;
             }
         });
 

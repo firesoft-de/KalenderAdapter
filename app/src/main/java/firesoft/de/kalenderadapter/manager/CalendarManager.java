@@ -679,6 +679,7 @@ public class CalendarManager {
      */
     public void loadCalendarEntries() {
         crowd = getExistingEntries();
+        entryIds.clear();
 
         if (crowd != null) {
 

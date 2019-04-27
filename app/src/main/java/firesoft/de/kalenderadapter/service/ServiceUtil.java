@@ -33,6 +33,8 @@ import static android.content.Context.ALARM_SERVICE;
 
 public class ServiceUtil extends BroadcastReceiver {
 
+    private static final int ALARMMANAGER_MODE = AlarmManager.RTC;
+
     /**
      * Startet einen Alarm im AlarmManager welcher einen Service startet. Dieser lädt die aktuellen Daten vom Server. Die Methode ist veraltet! Es können keine Werte für Startzeit und Intervall übergeben werden.
      * @param context Context des Aufrufs
@@ -54,7 +56,7 @@ public class ServiceUtil extends BroadcastReceiver {
 
         //AlarmManager aktivieren
         if (alarmManager != null) {
-            alarmManager.setRepeating(AlarmManager.RTC_WAKEUP,calendar.getTimeInMillis(),AlarmManager.INTERVAL_DAY,startServiceIntent);
+            alarmManager.setRepeating(ALARMMANAGER_MODE,calendar.getTimeInMillis(),AlarmManager.INTERVAL_DAY,startServiceIntent);
         }
 
     }
@@ -90,7 +92,7 @@ public class ServiceUtil extends BroadcastReceiver {
 
         //AlarmManager aktivieren
         if (alarmManager != null) {
-            alarmManager.setRepeating(AlarmManager.RTC_WAKEUP,attachedStart,interval,startServiceIntent);
+            alarmManager.setRepeating(ALARMMANAGER_MODE ,attachedStart,interval,startServiceIntent);
         }
 
     }

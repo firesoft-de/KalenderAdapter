@@ -35,7 +35,12 @@ import android.support.v4.content.Loader;
 import android.util.Log;
 import android.widget.Toast;
 
+import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
 
 import firesoft.de.kalenderadapter.BuildConfig;
 import firesoft.de.kalenderadapter.MainActivity;
@@ -64,46 +69,77 @@ public class BackgroundService extends Service implements Loader.OnLoadCompleteL
     public int onStartCommand(Intent intent, int flags, int startId) {
 
         if (BuildConfig.DEBUG) {
+            writeToFile("Service started!");
             Log.d("LOG_SERVICE", "Service activated!");
         }
 
-        // PreferencesManager starten
-        pManager = new PreferencesManager(getApplicationContext());
-        pManager.load();
+        try {
 
-        // CalendarManager starten
-        cManager = new CalendarManager(getApplicationContext(),null);
-        cManager.setActiveCalendar(pManager.getActiveCalendarId());             // Aktiven Kalender laden
-//        cManager.setEntryIdsFromString(pManager.getEntryIds());                 // Die von der App gesetzten Einträge laden
-        cManager.loadCalendarEntries();                                         // Die Kalender laden
+            // PreferencesManager starten
+            pManager = new PreferencesManager(getApplicationContext());
+            pManager.load();
 
-        // Prüfen, ob alle benötigten Daten vorliegen
-        if (pManager.getUrl().equals("") || pManager.getPassword().equals("") || pManager.getUrl().equals("") || cManager.getActiveCalendar() == null) {
-            // Es fehlen Daten
-            return Service.START_NOT_STICKY; // Aussage für das OS: Service nicht neustarten. Siehe https://stackoverflow.com/questions/9093271/start-sticky-and-start-not-sticky
+            if (BuildConfig.DEBUG) {
+                writeToFile("PreferencesManager loaded");
+                Log.d("LOG_SERVICE", "PreferencesManager loaded!");
+            }
+
+            // CalendarManager starten
+            cManager = new CalendarManager(getApplicationContext(),null);
+            cManager.setActiveCalendar(pManager.getActiveCalendarId());             // Aktiven Kalender laden
+    //        cManager.setEntryIdsFromString(pManager.getEntryIds());                 // Die von der App gesetzten Einträge laden
+            cManager.loadCalendarEntries();                                         // Die Kalender laden
+
+            if (BuildConfig.DEBUG) {
+                writeToFile("CalendarManager loaded");
+                Log.d("LOG_SERVICE", "CalendarManager loaded!");
+            }
+
+            // Prüfen, ob alle benötigten Daten vorliegen
+            if (pManager.getUrl().equals("") || pManager.getPassword().equals("") || pManager.getUrl().equals("") || cManager.getActiveCalendar() == null) {
+                // Es fehlen Daten
+                return Service.START_NOT_STICKY; // Aussage für das OS: Service nicht neustarten. Siehe https://stackoverflow.com/questions/9093271/start-sticky-and-start-not-sticky
+            }
+
+            // Die einzelnen Parameter hinzufügen und im Preferences Manager speichern
+            ArrayList<ServerParameter> parameters = new ArrayList<>();
+            ServerParameter param = new ServerParameter("url", pManager.getUrl());
+            parameters.add(param);
+
+            param = new ServerParameter("user", pManager.getUser());
+            parameters.add(param);
+
+            param = new ServerParameter("pw", pManager.getPassword());
+            parameters.add(param);
+
+            // Kommunikationskanal mit Backgroundthreads. Wird im BackgroundService nicht benötigt. Muss aber dem DataLoader mitgegeben werden.
+            MutableLiveData<String> messageFromBackground = new MutableLiveData<>();
+            MutableLiveData<Integer> valFromBackground = new MutableLiveData<>();
+            MutableLiveData<Integer> maxFromBackground = new MutableLiveData<>();
+
+            dataLoader = new DataLoader(parameters,getApplicationContext(),cManager,messageFromBackground, valFromBackground, maxFromBackground, pManager,false);
+
+            if (BuildConfig.DEBUG) {
+                writeToFile("DataLoader initalized!");
+                Log.d("LOG_SERVICE", "DataLoader initalized!");
+            }
+
+            // Basierend auf https://stackoverflow.com/questions/8696146/can-you-use-a-loadermanager-from-a-service/24393728
+            dataLoader.registerListener(1,this); // 1 = Marker für MainLoader (im AsyncTaskManager definiert)
+            dataLoader.startLoading();
+
+            if (BuildConfig.DEBUG) {
+                writeToFile("DataLoader running!");
+                Log.d("LOG_SERVICE", "DataLoader running!");
+            }
+
+        } catch (Exception e) {
+            if (BuildConfig.DEBUG) {
+                Log.d("LOG_SERVICE", "Error! " + e.getMessage());
+                writeToFile("Error! " + e.getMessage());
+            }
+            e.printStackTrace();
         }
-
-        // Die einzelnen Parameter hinzufügen und im Preferences Manager speichern
-        ArrayList<ServerParameter> parameters = new ArrayList<>();
-        ServerParameter param = new ServerParameter("url", pManager.getUrl());
-        parameters.add(param);
-
-        param = new ServerParameter("user", pManager.getUser());
-        parameters.add(param);
-
-        param = new ServerParameter("pw", pManager.getPassword());
-        parameters.add(param);
-
-        // Kommunikationskanal mit Backgroundthreads. Wird im BackgroundService nicht benötigt. Muss aber dem DataLoader mitgegeben werden.
-        MutableLiveData<String> messageFromBackground = new MutableLiveData<>();
-        MutableLiveData<Integer> valFromBackground = new MutableLiveData<>();
-        MutableLiveData<Integer> maxFromBackground = new MutableLiveData<>();
-
-        dataLoader = new DataLoader(parameters,getApplicationContext(),cManager,messageFromBackground, valFromBackground, maxFromBackground, pManager,false);
-
-        // Basierend auf https://stackoverflow.com/questions/8696146/can-you-use-a-loadermanager-from-a-service/24393728
-        dataLoader.registerListener(1,this); // 1 = Marker für MainLoader (im AsyncTaskManager definiert)
-        dataLoader.startLoading();
 
         return super.onStartCommand(intent, flags, startId);
     }
@@ -121,15 +157,39 @@ public class BackgroundService extends Service implements Loader.OnLoadCompleteL
         if (data.getException() != null) {
             // Es ist ein Fehler aufgetreten. Machen kann man jetzt aber nicht wirklich viel.
             Toast.makeText(getApplicationContext(), "KalenderAdapter: " + getString(R.string.error_background_service) + data.getException().getMessage(), Toast.LENGTH_LONG).show();
-            buildNotification(getString(R.string.error_background_service) + data.getException().getMessage(), data.getAddedEntrys(),data.getDeletedEntrys());
+            if (BuildConfig.DEBUG) {
+                buildNotification(getString(R.string.error_background_service) + " " + data.getException().getMessage(), data.getAddedEntrys(), data.getDeletedEntrys());
+            }
             return;
         }
 
         if (BuildConfig.DEBUG) {
             Log.d("LOG_SERVICE", "Service completed!");
+            writeToFile("Service completed!");
+
             buildNotification(null, data.getAddedEntrys(),data.getDeletedEntrys());
         }
 
+    }
+
+    private void writeToFile(String data) {
+
+        String message;
+
+        Date cur = Calendar.getInstance().getTime();
+        message = cur.toString();
+        message = message.concat(" - ");
+        message = message.concat(data);
+        message = message.concat("\n");
+
+        try {
+            OutputStreamWriter outputStreamWriter = new OutputStreamWriter(getApplicationContext().openFileOutput("background_log.txt", Context.MODE_APPEND));
+            outputStreamWriter.write(message);
+            outputStreamWriter.close();
+        }
+        catch (IOException e) {
+            Log.e("Exception", "File write failed: " + e.toString());
+        }
     }
 
     @Override
@@ -177,7 +237,7 @@ public class BackgroundService extends Service implements Loader.OnLoadCompleteL
             if (addedEntries < 0) {addedEntries = 0;}
             if (deletedEntries < 0) {deletedEntries = 0;}
 
-            notificationText = getString(R.string.info_notification_text) + " - " + getString(R.string.info_notification_added_entries) + String.valueOf(addedEntries)
+            notificationText = getString(R.string.info_notification_text) + " " + getString(R.string.info_notification_added_entries) + String.valueOf(addedEntries)
                     + " " + getString(R.string.info_notification_deleted_entries) + String.valueOf(deletedEntries);
         }
         else {
