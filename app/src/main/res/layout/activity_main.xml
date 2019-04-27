@@ -42,7 +42,7 @@
                     android:id="@+id/tV_Information"
                     style="@style/AboutText"
                     android:layout_width="0dp"
-                    android:layout_height="119dp"
+                    android:layout_height="wrap_content"
                     android:text="@string/usage_informations"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintHorizontal_bias="0.0"
