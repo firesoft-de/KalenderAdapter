@@ -119,7 +119,8 @@ public class PreferencesManager {
     private static final String REPLACE_EXISTING = "replace_existing";
     private static final String VERSION = "version";
 
-    private static final long default_sync_start = 10800000;
+    private static final long DEFAULT_SYNC_START = 10800000;
+    public static final long DEFAULT_SYNC_INTERVAL = AlarmManager.INTERVAL_DAY;
 
     //=======================================================
     //===================PUBLIC METHODEN=====================
@@ -229,8 +230,8 @@ public class PreferencesManager {
         activeCalendarId = 0;
         //entryIds = "";
         logEnabled = false;
-        sync_from = default_sync_start; // Standard 03:00 Uhr
-        sync_from = AlarmManager.INTERVAL_DAY; // Standard 24 Stunden
+        sync_from = DEFAULT_SYNC_START; // Standard 03:00 Uhr
+        sync_from = DEFAULT_SYNC_INTERVAL; // Standard 24 Stunden
         set_reminder = true;
         set_inteligent_reminder = true;
     }
@@ -248,7 +249,7 @@ public class PreferencesManager {
         user = preferences.getString(USER,"");
         password = preferences.getString(PASSWORD,"");
         activeCalendarId = preferences.getInt(ACTIVE_CALENDAR,0);
-        sync_from = preferences.getLong(SYNC_FROM,default_sync_start ); // Standard 03:00 Uhr
+        sync_from = preferences.getLong(SYNC_FROM, DEFAULT_SYNC_START); // Standard 03:00 Uhr
         sync_interval = preferences.getLong(SYNC_INTERVAL, AlarmManager.INTERVAL_DAY); // Standard 24 Stunden
         sync_disabled = preferences.getBoolean(SYNC_DISABLED, true);
         set_reminder = preferences.getBoolean(SET_REMINDER, true);
@@ -266,7 +267,7 @@ public class PreferencesManager {
         //entryIds = preferences.getString(ENTRYIDS,"");
         password = preferences.getString(PASSWORD,"");
         activeCalendarId = preferences.getInt(ACTIVE_CALENDAR,0);
-        sync_from = preferences.getLong(SYNC_FROM,default_sync_start ); // Standard 03:00 Uhr
+        sync_from = preferences.getLong(SYNC_FROM, DEFAULT_SYNC_START); // Standard 03:00 Uhr
         sync_interval = preferences.getLong(SYNC_INTERVAL, AlarmManager.INTERVAL_DAY); // Standard 24 Stunden
         sync_disabled = preferences.getBoolean(SYNC_DISABLED, true);
         set_reminder = preferences.getBoolean(SET_REMINDER, true);
@@ -284,7 +285,7 @@ public class PreferencesManager {
         //entryIds = preferences.getString(ENTRYIDS,"");
         password = preferences.getString(PASSWORD,"");
         activeCalendarId = preferences.getInt(ACTIVE_CALENDAR,0);
-        sync_from = preferences.getLong(SYNC_FROM,default_sync_start ); // Standard 03:00 Uhr
+        sync_from = preferences.getLong(SYNC_FROM, DEFAULT_SYNC_START); // Standard 03:00 Uhr
         sync_interval = preferences.getLong(SYNC_INTERVAL, AlarmManager.INTERVAL_DAY); // Standard 24 Stunden
         sync_disabled = preferences.getBoolean(SYNC_DISABLED, true);
     }
