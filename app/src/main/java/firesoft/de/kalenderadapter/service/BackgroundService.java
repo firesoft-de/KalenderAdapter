@@ -176,8 +176,7 @@ public class BackgroundService extends Service implements Loader.OnLoadCompleteL
 
         String message;
 
-        Date cur = Calendar.getInstance().getTime();
-        message = cur.toString();
+        message = Calendar.getInstance().getTime().toString();
         message = message.concat(" - ");
         message = message.concat(data);
         message = message.concat("\n");
@@ -229,6 +228,9 @@ public class BackgroundService extends Service implements Loader.OnLoadCompleteL
         // Inhalt der Notification zusammenbauen
         String notificationText;
 
+        Calendar cal = Calendar.getInstance();
+        String time = cal.get(Calendar.HOUR_OF_DAY) + ":" +cal.get(Calendar.MINUTE);
+
         if (text != null) {
             notificationText = text;
         }
@@ -237,12 +239,16 @@ public class BackgroundService extends Service implements Loader.OnLoadCompleteL
             if (addedEntries < 0) {addedEntries = 0;}
             if (deletedEntries < 0) {deletedEntries = 0;}
 
-            notificationText = getString(R.string.info_notification_text) + " " + getString(R.string.info_notification_added_entries) + String.valueOf(addedEntries)
-                    + " " + getString(R.string.info_notification_deleted_entries) + String.valueOf(deletedEntries);
+            notificationText = getString(R.string.info_notification_text) + " " + getString(R.string.info_notification_added_entries)
+                    + "\n" + String.valueOf(addedEntries)
+                    + "\n" + " " + getString(R.string.info_notification_deleted_entries) + String.valueOf(deletedEntries);
         }
         else {
             notificationText = getString(R.string.info_notification_text);
         }
+
+        // Zeit einfügen
+        notificationText = time + " " + notificationText;
 
         //API Version prüfen und entsprechend eine Notification mit oder ohne NotificationChannel erstellen
         if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
