@@ -29,7 +29,7 @@
     <string name="background_service">Hintergrundsynchronisierung</string>
     <string name="replace_existing_events">Vorhandene Einträge bei der Synchronisierung ersetzen</string>
     <string name="add_reminder">Erinnerungen hinzufügen</string>
-    <string name="inteligent_reminder">Erinnerungen anhand des Terminstatus setzen</string>
+    <string name="inteligent_reminder">Erinnerungen intelligent (anhand des Terminstatus) setzen</string>
     <string name="settings_reset">Einstellungen zurücksetzen</string>
     <string name="usage_informations">Bitte zuerst im nachfolgenden Auswahlfeld einen Kalender auswählen in welchen die Kalenderdaten importiert werden sollen. Anschließend die URL und die Zugangsdaten zum Server eingeben und auf "Kalendereinträge importieren" klicken.\nEs wird empfohlen über die vorinstallierte oder eine andere Kalenderanwendung einen neuen Kalender anzulegen der nur durch diese App genutzt wird. Bei gemeinsamer Nutzung mit anderen Anwendungen kann es zu Datenverlusten kommen.</string>
 
@@ -40,7 +40,7 @@
 
     <string name="info_notification_text">Der lokale Kalender wurde mit dem Server synchronisiert.</string>
     <string name="info_notification_deleted_entries">Gelöschte Einträge: </string>
-    <string name="info_notification_added_entries">Hinzugefügte Einträge: </string>
+    <string name="info_notification_added_entries">Hinzugefügt Einträge: </string>
     <string name="info_notification_title">Synchronisierung</string>
 
     <string name="error_time_text">Die eingegebene Zeit ist fehlerhaft formatiert. Es wird eine Eingabe in Form von HH:MM erwartet. Dabei steht HH für die Stunden und MM für die Minuten.</string>
