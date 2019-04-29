@@ -268,8 +268,8 @@ public class BackgroundService extends Service implements Loader.OnLoadCompleteL
             // Sets the notification light color for notifications posted to this
             // channel, if the device supports this feature.
             mChannel.setLightColor(Color.BLUE);
-            mChannel.enableVibration(true);
-            mChannel.setVibrationPattern(new long[]{100, 200, 100, 200, 100});
+//            mChannel.enableVibration(true);
+//            mChannel.setVibrationPattern(new long[]{100, 200, 100, 200, 100});
             notificationManager.createNotificationChannel(mChannel);
 
             notification = new Notification.Builder(getApplicationContext(), id)
