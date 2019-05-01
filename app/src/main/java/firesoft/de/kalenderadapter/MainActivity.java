@@ -167,6 +167,7 @@ public class MainActivity extends AppCompatActivity implements IErrorCallback {
         if (!ServiceUtil.isServiceRunning(this)) {
             // UI Switch setzen
             setServiceSwitch(false);
+            changeUiElementsEnabled((ViewGroup) this.findViewById(R.id.MainFrame),false);
             ((SwitchIconView) this.findViewById(R.id.switch_icon_view)).setIconEnabled(false);
         }
         else {
