@@ -15,6 +15,7 @@
 
 package firesoft.de.kalenderadapter.service;
 
+import android.annotation.SuppressLint;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -41,6 +42,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.Locale;
 
 import firesoft.de.kalenderadapter.BuildConfig;
 import firesoft.de.kalenderadapter.MainActivity;
@@ -57,7 +59,7 @@ public class BackgroundService extends Service implements Loader.OnLoadCompleteL
     CalendarManager cManager;
     DataLoader dataLoader;
 
-    public final static byte ID = 0;
+    public final static byte ID = 15;
 
     @Nullable
     @Override
@@ -229,7 +231,7 @@ public class BackgroundService extends Service implements Loader.OnLoadCompleteL
         String notificationText;
 
         Calendar cal = Calendar.getInstance();
-        String time = cal.get(Calendar.HOUR_OF_DAY) + ":" +cal.get(Calendar.MINUTE);
+        @SuppressLint("DefaultLocale") String time = String.format("%02d:%02d",cal.get(Calendar.HOUR_OF_DAY),cal.get(Calendar.MINUTE));
 
         if (text != null) {
             notificationText = text;
